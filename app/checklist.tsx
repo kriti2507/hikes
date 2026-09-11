@@ -2,7 +2,7 @@
 
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { addPerson, setAscent } from "./actions";
+import { addPerson, deletePerson, setAscent, updatePerson } from "./actions";
 
 // Type aliases rather than interfaces: aliases get an implicit index signature,
 // which is what lib/db.ts's `query<T>` constraint wants.
@@ -101,6 +101,7 @@ export function Checklist({
               <span>
                 {person.name} · of {mountains.length}
               </span>
+              <PersonActions person={person} onChanged={() => router.refresh()} />
             </li>
           ))}
         </ul>
@@ -235,6 +236,100 @@ function AddPerson({ onAdded }: { onAdded: () => void }) {
         {pending ? "Adding…" : "Add"}
       </button>
       {failed ? <span className="error">Could not add that person.</span> : null}
+    </form>
+  );
+}
+
+function PersonActions({ person, onChanged }: { person: Person; onChanged: () => void }) {
+  const [mode, setMode] = useState<"closed" | "edit" | "delete">("closed");
+  const [name, setName] = useState(person.name);
+  const [password, setPassword] = useState("");
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function open(nextMode: "edit" | "delete") {
+    setMode(nextMode);
+    setName(person.name);
+    setPassword("");
+    setError(null);
+  }
+
+  function close() {
+    if (pending) return;
+    setMode("closed");
+    setPassword("");
+    setError(null);
+  }
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    startTransition(async () => {
+      try {
+        if (mode === "edit") await updatePerson(person.id, name, password);
+        else if (mode === "delete") await deletePerson(person.id, password);
+        setMode("closed");
+        setPassword("");
+        onChanged();
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Could not save that change.");
+      }
+    });
+  }
+
+  if (mode === "closed") {
+    return (
+      <span className="person-actions">
+        <button type="button" className="text-button" onClick={() => open("edit")}>
+          Edit
+        </button>
+        <button type="button" className="text-button danger-text" onClick={() => open("delete")}>
+          Delete
+        </button>
+      </span>
+    );
+  }
+
+  return (
+    <form className="person-action-form" onSubmit={submit}>
+      {mode === "edit" ? (
+        <>
+          <label htmlFor={`edit-person-${person.id}`}>New name</label>
+          <input
+            id={`edit-person-${person.id}`}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            disabled={pending}
+            autoFocus
+          />
+        </>
+      ) : (
+        <p>Delete {person.name} and all of their ascents?</p>
+      )}
+      <label htmlFor={`confirm-password-${person.id}`}>Password</label>
+      <input
+        id={`confirm-password-${person.id}`}
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        disabled={pending}
+        autoComplete="current-password"
+        required
+      />
+      {error ? <span className="error">{error}</span> : null}
+      <span className="person-form-buttons">
+        <button
+          type="submit"
+          className={mode === "delete" ? "danger-button" : undefined}
+          disabled={pending || (mode === "edit" && !name.trim())}
+        >
+          {pending ? "Saving…" : mode === "edit" ? "Save" : "Delete"}
+        </button>
+        <button type="button" className="secondary-button" onClick={close} disabled={pending}>
+          Cancel
+        </button>
+      </span>
     </form>
   );
 }

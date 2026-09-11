@@ -71,6 +71,7 @@ header h1 span {
 }
 
 .tally li {
+  position: relative;
   min-width: 6.5rem;
   padding: 0.6rem 0.9rem;
   border: 1px solid var(--rule);
@@ -89,6 +90,30 @@ header h1 span {
 .tally span {
   font-size: 0.75rem;
   color: var(--ink-soft);
+}
+
+.person-actions {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+
+.text-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.7rem;
+  text-decoration: underline;
+}
+
+.text-button:hover,
+.text-button:focus-visible {
+  color: var(--ink);
+}
+
+.danger-text {
+  color: var(--danger);
 }
 
 /* ---------- table ---------- */
@@ -261,6 +286,61 @@ button {
 button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.secondary-button {
+  border-color: var(--rule);
+  background: var(--card);
+  color: var(--ink-soft);
+}
+
+.danger-button {
+  border-color: var(--danger);
+  background: var(--danger);
+}
+
+.person-action-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 13rem;
+  margin-top: 0.55rem;
+}
+
+.person-action-form label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.person-action-form input {
+  width: 100%;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.person-action-form p {
+  margin: 0 0 0.15rem;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+
+.person-form-buttons {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.person-form-buttons button {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
 }
 
 /* ---------- login ---------- */
