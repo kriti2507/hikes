@@ -1,0 +1,1382 @@
+[
+  {
+    "fukadaNumber": 1,
+    "nameKanji": "利尻山",
+    "nameKana": "りしりざん",
+    "nameEn": "Mt. Rishiri",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 1721,
+    "region": "Rishiri Is.",
+    "bestSeason": "Jun–Sep",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 2,
+    "nameKanji": "羅臼岳",
+    "nameKana": "らうすだけ",
+    "nameEn": "Mt. Rausu",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 1661,
+    "region": "Shiretoko",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 3,
+    "nameKanji": "斜里岳",
+    "nameKana": "しゃりだけ",
+    "nameEn": "Mt. Shari",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 1547,
+    "region": "Shiretoko",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 4,
+    "nameKanji": "阿寒岳",
+    "nameKana": "あかんだけ",
+    "nameEn": "Mt. Akan",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 1499,
+    "region": "Akan",
+    "bestSeason": "Jun–Oct",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 5,
+    "nameKanji": "大雪山",
+    "nameKana": "たいせつざん",
+    "nameEn": "Mt. Daisetsu",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 2291,
+    "region": "Daisetsuzan",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 6,
+    "nameKanji": "トムラウシ山",
+    "nameKana": "とむらうしやま",
+    "nameEn": "Mt. Tomuraushi",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 2141,
+    "region": "Daisetsuzan",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 7,
+    "nameKanji": "十勝岳",
+    "nameKana": "とかちだけ",
+    "nameEn": "Mt. Tokachi",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 2077,
+    "region": "Tokachi",
+    "bestSeason": "Jul–Sep",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 8,
+    "nameKanji": "幌尻岳",
+    "nameKana": "ぽろしりだけ",
+    "nameEn": "Mt. Poroshiri",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 2052,
+    "region": "Hidaka",
+    "bestSeason": "Jul–Sep",
+    "notes": "river fords",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 9,
+    "nameKanji": "羊蹄山",
+    "nameKana": "ようていざん",
+    "nameEn": "Mt. Yotei",
+    "prefecture": "Hokkaido",
+    "prefectureJa": "北海道",
+    "elevationM": 1898,
+    "region": "Shiribeshi",
+    "bestSeason": "Jun–Oct",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 10,
+    "nameKanji": "岩木山",
+    "nameKana": "いわきさん",
+    "nameEn": "Mt. Iwaki",
+    "prefecture": "Aomori",
+    "prefectureJa": "青森県",
+    "elevationM": 1625,
+    "region": "Tsugaru",
+    "bestSeason": "May–Oct",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 11,
+    "nameKanji": "八甲田山",
+    "nameKana": "はっこうださん",
+    "nameEn": "Mt. Hakkoda",
+    "prefecture": "Aomori",
+    "prefectureJa": "青森県",
+    "elevationM": 1585,
+    "region": "Hakkoda",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 12,
+    "nameKanji": "八幡平",
+    "nameKana": "はちまんたい",
+    "nameEn": "Mt. Hachimantai",
+    "prefecture": "Iwate",
+    "prefectureJa": "岩手県",
+    "elevationM": 1613,
+    "region": "Ou",
+    "bestSeason": "Jun–Oct",
+    "notes": "road to top",
+    "alsoIn": [
+      "Akita"
+    ]
+  },
+  {
+    "fukadaNumber": 13,
+    "nameKanji": "岩手山",
+    "nameKana": "いわてさん",
+    "nameEn": "Mt. Iwate",
+    "prefecture": "Iwate",
+    "prefectureJa": "岩手県",
+    "elevationM": 2038,
+    "region": "Ou",
+    "bestSeason": "Jul–Oct",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 14,
+    "nameKanji": "早池峰山",
+    "nameKana": "はやちねさん",
+    "nameEn": "Mt. Hayachine",
+    "prefecture": "Iwate",
+    "prefectureJa": "岩手県",
+    "elevationM": 1917,
+    "region": "Kitakami",
+    "bestSeason": "Jun–Oct",
+    "notes": "alpine flora",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 15,
+    "nameKanji": "鳥海山",
+    "nameKana": "ちょうかいさん",
+    "nameEn": "Mt. Chokai",
+    "prefecture": "Akita",
+    "prefectureJa": "秋田県",
+    "elevationM": 2236,
+    "region": "Dewa",
+    "bestSeason": "Jul–Sep",
+    "notes": "volcano",
+    "alsoIn": [
+      "Yamagata"
+    ]
+  },
+  {
+    "fukadaNumber": 16,
+    "nameKanji": "月山",
+    "nameKana": "がっさん",
+    "nameEn": "Mt. Gassan",
+    "prefecture": "Yamagata",
+    "prefectureJa": "山形県",
+    "elevationM": 1984,
+    "region": "Dewa Sanzan",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 17,
+    "nameKanji": "朝日岳",
+    "nameKana": "あさひだけ",
+    "nameEn": "Mt. Asahi",
+    "prefecture": "Yamagata",
+    "prefectureJa": "山形県",
+    "elevationM": 1871,
+    "region": "Asahi",
+    "bestSeason": "Jul–Oct",
+    "notes": "2 days",
+    "alsoIn": [
+      "Niigata"
+    ]
+  },
+  {
+    "fukadaNumber": 18,
+    "nameKanji": "蔵王山",
+    "nameKana": "ざおうさん",
+    "nameEn": "Mt. Zao",
+    "prefecture": "Yamagata",
+    "prefectureJa": "山形県",
+    "elevationM": 1841,
+    "region": "Zo",
+    "bestSeason": "May–Oct",
+    "notes": "crater lake",
+    "alsoIn": [
+      "Miyagi"
+    ]
+  },
+  {
+    "fukadaNumber": 19,
+    "nameKanji": "飯豊山",
+    "nameKana": "いいでさん",
+    "nameEn": "Mt. Iide",
+    "prefecture": "Fukushima",
+    "prefectureJa": "福島県",
+    "elevationM": 2105,
+    "region": "Iide",
+    "bestSeason": "Jul–Sep",
+    "notes": "2–3 days",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 20,
+    "nameKanji": "吾妻山",
+    "nameKana": "あづまやま",
+    "nameEn": "Mt. Azuma",
+    "prefecture": "Fukushima",
+    "prefectureJa": "福島県",
+    "elevationM": 2035,
+    "region": "Azuma",
+    "bestSeason": "Jun–Oct",
+    "notes": "volcano",
+    "alsoIn": [
+      "Yamagata"
+    ]
+  },
+  {
+    "fukadaNumber": 21,
+    "nameKanji": "安達太良山",
+    "nameKana": "あだたらやま",
+    "nameEn": "Mt. Adatara",
+    "prefecture": "Fukushima",
+    "prefectureJa": "福島県",
+    "elevationM": 1700,
+    "region": "Adatara",
+    "bestSeason": "May–Oct",
+    "notes": "ropeway",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 22,
+    "nameKanji": "磐梯山",
+    "nameKana": "ばんだいさん",
+    "nameEn": "Mt. Bandai",
+    "prefecture": "Fukushima",
+    "prefectureJa": "福島県",
+    "elevationM": 1816,
+    "region": "Bandai",
+    "bestSeason": "May–Oct",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 23,
+    "nameKanji": "会津駒ヶ岳",
+    "nameKana": "あいづこまがたけ",
+    "nameEn": "Mt. Aizu-Komagatake",
+    "prefecture": "Fukushima",
+    "prefectureJa": "福島県",
+    "elevationM": 2133,
+    "region": "Minami-Aizu",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 24,
+    "nameKanji": "燧ヶ岳",
+    "nameKana": "ひうちがたけ",
+    "nameEn": "Mt. Hiuchigatake",
+    "prefecture": "Fukushima",
+    "prefectureJa": "福島県",
+    "elevationM": 2356,
+    "region": "Oze",
+    "bestSeason": "Jul–Oct",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 43,
+    "nameKanji": "筑波山",
+    "nameKana": "つくばさん",
+    "nameEn": "Mt. Tsukuba",
+    "prefecture": "Ibaraki",
+    "prefectureJa": "茨城県",
+    "elevationM": 877,
+    "region": "Kanto",
+    "bestSeason": "all year",
+    "notes": "cable car",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 25,
+    "nameKanji": "那須岳",
+    "nameKana": "なすだけ",
+    "nameEn": "Mt. Nasu",
+    "prefecture": "Tochigi",
+    "prefectureJa": "栃木県",
+    "elevationM": 1917,
+    "region": "Nasu",
+    "bestSeason": "May–Oct",
+    "notes": "ropeway",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 26,
+    "nameKanji": "男体山",
+    "nameKana": "なんたいさん",
+    "nameEn": "Mt. Nantai",
+    "prefecture": "Tochigi",
+    "prefectureJa": "栃木県",
+    "elevationM": 2486,
+    "region": "Nikko",
+    "bestSeason": "May–Oct",
+    "notes": "shrine gate",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 27,
+    "nameKanji": "奥白根山",
+    "nameKana": "おくしらねさん",
+    "nameEn": "Mt. Nikko-Shirane",
+    "prefecture": "Tochigi",
+    "prefectureJa": "栃木県",
+    "elevationM": 2578,
+    "region": "Nikko",
+    "bestSeason": "Jun–Oct",
+    "notes": "ropeway",
+    "alsoIn": [
+      "Gunma"
+    ]
+  },
+  {
+    "fukadaNumber": 35,
+    "nameKanji": "至仏山",
+    "nameKana": "しぶつさん",
+    "nameEn": "Mt. Shibutsu",
+    "prefecture": "Gunma",
+    "prefectureJa": "群馬県",
+    "elevationM": 2228,
+    "region": "Oze",
+    "bestSeason": "Jul–Oct",
+    "notes": "serpentine",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 36,
+    "nameKanji": "谷川岳",
+    "nameKana": "たにがわだけ",
+    "nameEn": "Mt. Tanigawa",
+    "prefecture": "Gunma",
+    "prefectureJa": "群馬県",
+    "elevationM": 1977,
+    "region": "Mikuni",
+    "bestSeason": "Jun–Oct",
+    "notes": "ropeway",
+    "alsoIn": [
+      "Niigata"
+    ]
+  },
+  {
+    "fukadaNumber": 37,
+    "nameKanji": "皇海山",
+    "nameKana": "すかいさん",
+    "nameEn": "Mt. Sukai",
+    "prefecture": "Gunma",
+    "prefectureJa": "群馬県",
+    "elevationM": 2144,
+    "region": "Ashio",
+    "bestSeason": "Jun–Oct",
+    "notes": "rough access",
+    "alsoIn": [
+      "Tochigi"
+    ]
+  },
+  {
+    "fukadaNumber": 38,
+    "nameKanji": "武尊山",
+    "nameKana": "ほたかやま",
+    "nameEn": "Mt. Hotaka",
+    "prefecture": "Gunma",
+    "prefectureJa": "群馬県",
+    "elevationM": 2158,
+    "region": "Joshu",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 39,
+    "nameKanji": "赤城山",
+    "nameKana": "あかぎやま",
+    "nameEn": "Mt. Akagi",
+    "prefecture": "Gunma",
+    "prefectureJa": "群馬県",
+    "elevationM": 1828,
+    "region": "Jomo",
+    "bestSeason": "Apr–Nov",
+    "notes": "caldera",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 40,
+    "nameKanji": "草津白根山",
+    "nameKana": "くさつしらねさん",
+    "nameEn": "Mt. Kusatsu-Shirane",
+    "prefecture": "Gunma",
+    "prefectureJa": "群馬県",
+    "elevationM": 2160,
+    "region": "Joshu",
+    "bestSeason": "May–Oct",
+    "notes": "gas alerts",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 41,
+    "nameKanji": "四阿山",
+    "nameKana": "あずまやさん",
+    "nameEn": "Mt. Azumaya",
+    "prefecture": "Gunma",
+    "prefectureJa": "群馬県",
+    "elevationM": 2354,
+    "region": "Joshu",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 42,
+    "nameKanji": "浅間山",
+    "nameKana": "あさまやま",
+    "nameEn": "Mt. Asama",
+    "prefecture": "Gunma",
+    "prefectureJa": "群馬県",
+    "elevationM": 2568,
+    "region": "Joshu",
+    "bestSeason": "May–Nov",
+    "notes": "active",
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 44,
+    "nameKanji": "両神山",
+    "nameKana": "りょうかみさん",
+    "nameEn": "Mt. Ryokami",
+    "prefecture": "Saitama",
+    "prefectureJa": "埼玉県",
+    "elevationM": 1723,
+    "region": "Oku-Chichibu",
+    "bestSeason": "Apr–Nov",
+    "notes": "chains",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 45,
+    "nameKanji": "雲取山",
+    "nameKana": "くもとりやま",
+    "nameEn": "Mt. Kumotori",
+    "prefecture": "Tokyo",
+    "prefectureJa": "東京都",
+    "elevationM": 2017,
+    "region": "Oku-Chichibu",
+    "bestSeason": "Apr–Nov",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 46,
+    "nameKanji": "丹沢山",
+    "nameKana": "たんざわさん",
+    "nameEn": "Mt. Tanzawa",
+    "prefecture": "Kanagawa",
+    "prefectureJa": "神奈川県",
+    "elevationM": 1567,
+    "region": "Tanzawa",
+    "bestSeason": "all year",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 28,
+    "nameKanji": "越後駒ヶ岳",
+    "nameKana": "えちごこまがたけ",
+    "nameEn": "Mt. Echigo-Komagatake",
+    "prefecture": "Niigata",
+    "prefectureJa": "新潟県",
+    "elevationM": 2003,
+    "region": "Echigo",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 29,
+    "nameKanji": "平ヶ岳",
+    "nameKana": "ひらがたけ",
+    "nameEn": "Mt. Hiragatake",
+    "prefecture": "Niigata",
+    "prefectureJa": "新潟県",
+    "elevationM": 2141,
+    "region": "Oze",
+    "bestSeason": "Jun–Oct",
+    "notes": "long day",
+    "alsoIn": [
+      "Gunma"
+    ]
+  },
+  {
+    "fukadaNumber": 30,
+    "nameKanji": "巻機山",
+    "nameKana": "まきはたやま",
+    "nameEn": "Mt. Makihata",
+    "prefecture": "Niigata",
+    "prefectureJa": "新潟県",
+    "elevationM": 1967,
+    "region": "Echigo",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": [
+      "Gunma"
+    ]
+  },
+  {
+    "fukadaNumber": 31,
+    "nameKanji": "雨飾山",
+    "nameKana": "あまかざりやま",
+    "nameEn": "Mt. Amakazari",
+    "prefecture": "Niigata",
+    "prefectureJa": "新潟県",
+    "elevationM": 1963,
+    "region": "Nyu",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 32,
+    "nameKanji": "苗場山",
+    "nameKana": "なえばさん",
+    "nameEn": "Mt. Naeba",
+    "prefecture": "Niigata",
+    "prefectureJa": "新潟県",
+    "elevationM": 2145,
+    "region": "Mikuni",
+    "bestSeason": "Jun–Oct",
+    "notes": "marsh top",
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 33,
+    "nameKanji": "妙高山",
+    "nameKana": "みょうこうさん",
+    "nameEn": "Mt. Myoko",
+    "prefecture": "Niigata",
+    "prefectureJa": "新潟県",
+    "elevationM": 2454,
+    "region": "Myoko",
+    "bestSeason": "Jun–Oct",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 34,
+    "nameKanji": "火打山",
+    "nameKana": "ひうちやま",
+    "nameEn": "Mt. Hiuchiyama",
+    "prefecture": "Niigata",
+    "prefectureJa": "新潟県",
+    "elevationM": 2462,
+    "region": "Myoko",
+    "bestSeason": "Jul–Oct",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 66,
+    "nameKanji": "剱岳",
+    "nameKana": "つるぎだけ",
+    "nameEn": "Mt. Tsurugi",
+    "prefecture": "Toyama",
+    "prefectureJa": "富山県",
+    "elevationM": 2999,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "chains",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 67,
+    "nameKanji": "立山",
+    "nameKana": "たてやま",
+    "nameEn": "Mt. Tate",
+    "prefecture": "Toyama",
+    "prefectureJa": "富山県",
+    "elevationM": 3015,
+    "region": "N. Alps",
+    "bestSeason": "Jun–Oct",
+    "notes": "Alpine Route",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 68,
+    "nameKanji": "薬師岳",
+    "nameKana": "やくしだけ",
+    "nameEn": "Mt. Yakushi",
+    "prefecture": "Toyama",
+    "prefectureJa": "富山県",
+    "elevationM": 2926,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 69,
+    "nameKanji": "黒部五郎岳",
+    "nameKana": "くろべごろうだけ",
+    "nameEn": "Mt. Kurobegoro",
+    "prefecture": "Toyama",
+    "prefectureJa": "富山県",
+    "elevationM": 2840,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "remote",
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 70,
+    "nameKanji": "黒岳",
+    "nameKana": "くろだけ",
+    "nameEn": "Mt. Kurodake",
+    "prefecture": "Toyama",
+    "prefectureJa": "富山県",
+    "elevationM": 2986,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "Suishodake",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 71,
+    "nameKanji": "鷲羽岳",
+    "nameKana": "わしばだけ",
+    "nameEn": "Mt. Washiba",
+    "prefecture": "Toyama",
+    "prefectureJa": "富山県",
+    "elevationM": 2924,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "remote",
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 87,
+    "nameKanji": "白山",
+    "nameKana": "はくさん",
+    "nameEn": "Mt. Haku",
+    "prefecture": "Ishikawa",
+    "prefectureJa": "石川県",
+    "elevationM": 2702,
+    "region": "Hakusan",
+    "bestSeason": "Jul–Oct",
+    "notes": "sacred",
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 88,
+    "nameKanji": "荒島岳",
+    "nameKana": "あらしまだけ",
+    "nameEn": "Mt. Arashima",
+    "prefecture": "Fukui",
+    "prefectureJa": "福井県",
+    "elevationM": 1523,
+    "region": "Echizen",
+    "bestSeason": "May–Nov",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 73,
+    "nameKanji": "甲武信ヶ岳",
+    "nameKana": "こぶしがたけ",
+    "nameEn": "Mt. Kobushigatake",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 2475,
+    "region": "Oku-Chichibu",
+    "bestSeason": "May–Nov",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 74,
+    "nameKanji": "金峰山",
+    "nameKana": "きんぷさん",
+    "nameEn": "Mt. Kinpu",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 2599,
+    "region": "Oku-Chichibu",
+    "bestSeason": "May–Nov",
+    "notes": null,
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 75,
+    "nameKanji": "瑞牆山",
+    "nameKana": "みずがきやま",
+    "nameEn": "Mt. Mizugaki",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 2230,
+    "region": "Oku-Chichibu",
+    "bestSeason": "May–Nov",
+    "notes": "granite",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 76,
+    "nameKanji": "大菩薩岳",
+    "nameKana": "だいぼさつだけ",
+    "nameEn": "Mt. Daibosatsu",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 2057,
+    "region": "Oku-Chichibu",
+    "bestSeason": "Apr–Nov",
+    "notes": "easy",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 77,
+    "nameKanji": "富士山",
+    "nameKana": "ふじさん",
+    "nameEn": "Mt. Fuji",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 3776,
+    "region": "Fuji",
+    "bestSeason": "Jul–early Sep",
+    "notes": "permit",
+    "alsoIn": [
+      "Shizuoka"
+    ]
+  },
+  {
+    "fukadaNumber": 78,
+    "nameKanji": "甲斐駒ヶ岳",
+    "nameKana": "かいこまがたけ",
+    "nameEn": "Mt. Kaikomagatake",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 2967,
+    "region": "S. Alps",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 79,
+    "nameKanji": "仙丈ヶ岳",
+    "nameKana": "せんじょうがたけ",
+    "nameEn": "Mt. Senjogatake",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 3033,
+    "region": "S. Alps",
+    "bestSeason": "Jun–Oct",
+    "notes": "cirques",
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 80,
+    "nameKanji": "鳳凰山",
+    "nameKana": "ほうおうざん",
+    "nameEn": "Mt. Hoo",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 2841,
+    "region": "S. Alps",
+    "bestSeason": "Jun–Oct",
+    "notes": "Jizo rock",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 81,
+    "nameKanji": "北岳",
+    "nameKana": "きただけ",
+    "nameEn": "Mt. Kita",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 3193,
+    "region": "S. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "2nd highest",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 82,
+    "nameKanji": "間ノ岳",
+    "nameKana": "あいのだけ",
+    "nameEn": "Mt. Ainodake",
+    "prefecture": "Yamanashi",
+    "prefectureJa": "山梨県",
+    "elevationM": 3190,
+    "region": "S. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": [
+      "Shizuoka"
+    ]
+  },
+  {
+    "fukadaNumber": 47,
+    "nameKanji": "白馬岳",
+    "nameKana": "しろうまだけ",
+    "nameEn": "Mt. Shirouma",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2932,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "snow gully",
+    "alsoIn": [
+      "Toyama"
+    ]
+  },
+  {
+    "fukadaNumber": 48,
+    "nameKanji": "五竜岳",
+    "nameKana": "ごりゅうだけ",
+    "nameEn": "Mt. Goryu",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2814,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": [
+      "Toyama"
+    ]
+  },
+  {
+    "fukadaNumber": 49,
+    "nameKanji": "鹿島槍ヶ岳",
+    "nameKana": "かしまやりがたけ",
+    "nameEn": "Mt. Kashimayari",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2889,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": null,
+    "alsoIn": [
+      "Toyama"
+    ]
+  },
+  {
+    "fukadaNumber": 50,
+    "nameKanji": "高妻山",
+    "nameKana": "たかつまやま",
+    "nameEn": "Mt. Takatsuma",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2353,
+    "region": "Togakushi",
+    "bestSeason": "Jun–Oct",
+    "notes": null,
+    "alsoIn": [
+      "Niigata"
+    ]
+  },
+  {
+    "fukadaNumber": 51,
+    "nameKanji": "槍ヶ岳",
+    "nameKana": "やりがたけ",
+    "nameEn": "Mt. Yari",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 3180,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "2–3 days",
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 52,
+    "nameKanji": "穂高岳",
+    "nameKana": "ほたかだけ",
+    "nameEn": "Mt. Hotakadake",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 3190,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "exposed",
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 53,
+    "nameKanji": "常念岳",
+    "nameKana": "じょうねんだけ",
+    "nameEn": "Mt. Jonen",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2857,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Oct",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 54,
+    "nameKanji": "焼岳",
+    "nameKana": "やけだけ",
+    "nameEn": "Mt. Yakedake",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2455,
+    "region": "N. Alps",
+    "bestSeason": "Jun–Oct",
+    "notes": "active",
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 55,
+    "nameKanji": "乗鞍岳",
+    "nameKana": "のりくらだけ",
+    "nameEn": "Mt. Norikura",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 3026,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Oct",
+    "notes": "bus to 2700m",
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 56,
+    "nameKanji": "御嶽山",
+    "nameKana": "おんたけさん",
+    "nameEn": "Mt. Ontake",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 3067,
+    "region": "Kiso",
+    "bestSeason": "Jul–Oct",
+    "notes": "helmet zone",
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 57,
+    "nameKanji": "美ヶ原",
+    "nameKana": "うつくしがはら",
+    "nameEn": "Utsukushigahara",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2034,
+    "region": "Chikuma",
+    "bestSeason": "Apr–Nov",
+    "notes": "plateau",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 58,
+    "nameKanji": "霧ヶ峰",
+    "nameKana": "きりがみね",
+    "nameEn": "Kirigamine",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 1925,
+    "region": "Chikuma",
+    "bestSeason": "Apr–Nov",
+    "notes": "plateau",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 59,
+    "nameKanji": "蓼科山",
+    "nameKana": "たてしなやま",
+    "nameEn": "Mt. Tateshina",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2531,
+    "region": "Yatsugatake",
+    "bestSeason": "May–Nov",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 60,
+    "nameKanji": "八ヶ岳",
+    "nameKana": "やつがたけ",
+    "nameEn": "Mt. Yatsugatake",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2899,
+    "region": "Yatsugatake",
+    "bestSeason": "Jun–Oct",
+    "notes": "Akadake",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 61,
+    "nameKanji": "木曽駒ヶ岳",
+    "nameKana": "きそこまがたけ",
+    "nameEn": "Mt. Kiso-Komagatake",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2956,
+    "region": "C. Alps",
+    "bestSeason": "Jun–Oct",
+    "notes": "ropeway",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 62,
+    "nameKanji": "空木岳",
+    "nameKana": "うつぎだけ",
+    "nameEn": "Mt. Utsugi",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2864,
+    "region": "C. Alps",
+    "bestSeason": "Jul–Oct",
+    "notes": null,
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 63,
+    "nameKanji": "恵那山",
+    "nameKana": "えなさん",
+    "nameEn": "Mt. Ena",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 2191,
+    "region": "C. Alps",
+    "bestSeason": "May–Nov",
+    "notes": null,
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 64,
+    "nameKanji": "塩見岳",
+    "nameKana": "しおみだけ",
+    "nameEn": "Mt. Shiomi",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 3052,
+    "region": "S. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "2–3 days",
+    "alsoIn": [
+      "Shizuoka"
+    ]
+  },
+  {
+    "fukadaNumber": 65,
+    "nameKanji": "赤石岳",
+    "nameKana": "あかいしだけ",
+    "nameEn": "Mt. Akaishi",
+    "prefecture": "Nagano",
+    "prefectureJa": "長野県",
+    "elevationM": 3121,
+    "region": "S. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "remote",
+    "alsoIn": [
+      "Shizuoka"
+    ]
+  },
+  {
+    "fukadaNumber": 72,
+    "nameKanji": "笠ヶ岳",
+    "nameKana": "かさがたけ",
+    "nameEn": "Mt. Kasagatake",
+    "prefecture": "Gifu",
+    "prefectureJa": "岐阜県",
+    "elevationM": 2898,
+    "region": "N. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "steep",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 83,
+    "nameKanji": "天城山",
+    "nameKana": "あまぎさん",
+    "nameEn": "Mt. Amagi",
+    "prefecture": "Shizuoka",
+    "prefectureJa": "静岡県",
+    "elevationM": 1406,
+    "region": "Izu",
+    "bestSeason": "all year",
+    "notes": "shakunage",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 84,
+    "nameKanji": "悪沢岳",
+    "nameKana": "わるさわだけ",
+    "nameEn": "Mt. Warusawa",
+    "prefecture": "Shizuoka",
+    "prefectureJa": "静岡県",
+    "elevationM": 3141,
+    "region": "S. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "Higashidake",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 85,
+    "nameKanji": "聖岳",
+    "nameKana": "ひじりだけ",
+    "nameEn": "Mt. Hijiri",
+    "prefecture": "Shizuoka",
+    "prefectureJa": "静岡県",
+    "elevationM": 3013,
+    "region": "S. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "remote",
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 86,
+    "nameKanji": "光岳",
+    "nameKana": "てかりだけ",
+    "nameEn": "Mt. Tekari",
+    "prefecture": "Shizuoka",
+    "prefectureJa": "静岡県",
+    "elevationM": 2592,
+    "region": "S. Alps",
+    "bestSeason": "Jul–Sep",
+    "notes": "remote",
+    "alsoIn": [
+      "Nagano"
+    ]
+  },
+  {
+    "fukadaNumber": 89,
+    "nameKanji": "伊吹山",
+    "nameKana": "いぶきやま",
+    "nameEn": "Mt. Ibuki",
+    "prefecture": "Shiga",
+    "prefectureJa": "滋賀県",
+    "elevationM": 1377,
+    "region": "Ibuki",
+    "bestSeason": "Apr–Nov",
+    "notes": "herbs",
+    "alsoIn": [
+      "Gifu"
+    ]
+  },
+  {
+    "fukadaNumber": 90,
+    "nameKanji": "大台ヶ原山",
+    "nameKana": "おおだいがはらさん",
+    "nameEn": "Mt. Odaigahara",
+    "prefecture": "Nara",
+    "prefectureJa": "奈良県",
+    "elevationM": 1695,
+    "region": "Daiko",
+    "bestSeason": "Apr–Nov",
+    "notes": "rainiest",
+    "alsoIn": [
+      "Mie"
+    ]
+  },
+  {
+    "fukadaNumber": 91,
+    "nameKanji": "大峰山",
+    "nameKana": "おおみねさん",
+    "nameEn": "Mt. Omine",
+    "prefecture": "Nara",
+    "prefectureJa": "奈良県",
+    "elevationM": 1915,
+    "region": "Omine",
+    "bestSeason": "May–Nov",
+    "notes": "Hakkyogatake",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 92,
+    "nameKanji": "大山",
+    "nameKana": "だいせん",
+    "nameEn": "Mt. Daisen",
+    "prefecture": "Tottori",
+    "prefectureJa": "鳥取県",
+    "elevationM": 1729,
+    "region": "Chugoku",
+    "bestSeason": "Apr–Nov",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 93,
+    "nameKanji": "剣山",
+    "nameKana": "つるぎさん",
+    "nameEn": "Mt. Tsurugisan",
+    "prefecture": "Tokushima",
+    "prefectureJa": "徳島県",
+    "elevationM": 1955,
+    "region": "Shikoku",
+    "bestSeason": "Apr–Nov",
+    "notes": "chairlift",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 94,
+    "nameKanji": "石鎚山",
+    "nameKana": "いしづちさん",
+    "nameEn": "Mt. Ishizuchi",
+    "prefecture": "Ehime",
+    "prefectureJa": "愛媛県",
+    "elevationM": 1982,
+    "region": "Shikoku",
+    "bestSeason": "Apr–Nov",
+    "notes": "chains",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 97,
+    "nameKanji": "阿蘇山",
+    "nameKana": "あそさん",
+    "nameEn": "Mt. Aso",
+    "prefecture": "Kumamoto",
+    "prefectureJa": "熊本県",
+    "elevationM": 1592,
+    "region": "Kyushu",
+    "bestSeason": "all year",
+    "notes": "gas alerts",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 95,
+    "nameKanji": "九重山",
+    "nameKana": "くじゅうさん",
+    "nameEn": "Mt. Kuju",
+    "prefecture": "Oita",
+    "prefectureJa": "大分県",
+    "elevationM": 1791,
+    "region": "Kyushu",
+    "bestSeason": "all year",
+    "notes": "volcano",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 96,
+    "nameKanji": "祖母山",
+    "nameKana": "そぼさん",
+    "nameEn": "Mt. Sobo",
+    "prefecture": "Oita",
+    "prefectureJa": "大分県",
+    "elevationM": 1756,
+    "region": "Kyushu",
+    "bestSeason": "Mar–Nov",
+    "notes": null,
+    "alsoIn": [
+      "Miyazaki"
+    ]
+  },
+  {
+    "fukadaNumber": 98,
+    "nameKanji": "霧島山",
+    "nameKana": "きりしまやま",
+    "nameEn": "Mt. Kirishima",
+    "prefecture": "Kagoshima",
+    "prefectureJa": "鹿児島県",
+    "elevationM": 1700,
+    "region": "Kyushu",
+    "bestSeason": "all year",
+    "notes": "Karakuni",
+    "alsoIn": [
+      "Miyazaki"
+    ]
+  },
+  {
+    "fukadaNumber": 99,
+    "nameKanji": "開聞岳",
+    "nameKana": "かいもんだけ",
+    "nameEn": "Mt. Kaimon",
+    "prefecture": "Kagoshima",
+    "prefectureJa": "鹿児島県",
+    "elevationM": 924,
+    "region": "Satsuma",
+    "bestSeason": "all year",
+    "notes": "sea cone",
+    "alsoIn": []
+  },
+  {
+    "fukadaNumber": 100,
+    "nameKanji": "宮之浦岳",
+    "nameKana": "みやのうらだけ",
+    "nameEn": "Mt. Miyanoura",
+    "prefecture": "Kagoshima",
+    "prefectureJa": "鹿児島県",
+    "elevationM": 1936,
+    "region": "Yakushima",
+    "bestSeason": "Mar–Nov",
+    "notes": "wet",
+    "alsoIn": []
+  }
+]

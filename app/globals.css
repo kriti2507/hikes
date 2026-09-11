@@ -1,0 +1,350 @@
+:root {
+  --ink: #1a1a18;
+  --ink-soft: #6b6b63;
+  --ink-faint: #9b9b92;
+  --rule: #e0ded6;
+  --paper: #faf9f5;
+  --card: #ffffff;
+  --accent: #2f6b4f;
+  --danger: #a3382c;
+  --font: ui-sans-serif, system-ui, "Helvetica Neue", "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #eceae2;
+    --ink-soft: #a3a196;
+    --ink-faint: #75736a;
+    --rule: #33322d;
+    --paper: #161614;
+    --card: #1e1e1b;
+    --accent: #7fbf9b;
+    --danger: #e0847a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+/* ---------- header ---------- */
+
+header h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.9rem;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+header h1 span {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.5rem 0 1.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.tally li {
+  min-width: 6.5rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--card);
+}
+
+.tally strong {
+  display: block;
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--accent);
+}
+
+.tally span {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- table ---------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 0.5rem 0.6rem;
+  background: var(--paper);
+  border-bottom: 1px solid var(--ink);
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+tbody tr:hover td {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+tr.group th {
+  position: sticky;
+  top: 2rem;
+  z-index: 1;
+  padding: 1.4rem 0.6rem 0.4rem;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+tr.group th span {
+  margin-left: 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+td.num,
+th.num {
+  width: 2.5rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+td.mountain .kanji {
+  display: block;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+}
+
+td.mountain .kana {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+
+td.mountain .en {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+td.elev,
+th.elev {
+  width: 5.5rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+td.season,
+th.season {
+  width: 7rem;
+  white-space: nowrap;
+  color: var(--ink-soft);
+}
+
+td.notes {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+td.person,
+th.person {
+  width: 6.5rem;
+  text-align: center;
+}
+
+td.person input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+td.person .date {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.1rem 0.2rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 0.68rem;
+}
+
+/* ---------- forms ---------- */
+
+.add-person {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.add-person label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+input[type="text"],
+input[type="password"],
+.add-person input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  background: var(--card);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+button {
+  padding: 0.42rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  background: var(--accent);
+  color: var(--paper);
+  font-family: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------- login ---------- */
+
+.login {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.login form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(20rem, 100%);
+  padding: 2rem;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.login h1 {
+  margin: 0 0 0.8rem;
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.login h1 span {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.login label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ---------- misc ---------- */
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+
+.banner {
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--danger);
+  border-radius: 5px;
+}
+
+.empty {
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+footer {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+code {
+  font-size: 0.95em;
+}
+
+@media (max-width: 720px) {
+  td.season,
+  th.season,
+  td.notes,
+  th.notes {
+    display: none;
+  }
+}
