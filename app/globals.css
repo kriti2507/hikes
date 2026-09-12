@@ -1,25 +1,46 @@
+/* Ukiyo-e treatment: washi paper, sumi hairlines, Prussian blue and vermilion.
+   See docs/superpowers/specs/2026-09-11-ukiyoe-redesign-design.md */
+
 :root {
-  --ink: #1a1a18;
-  --ink-soft: #6b6b63;
-  --ink-faint: #9b9b92;
-  --rule: #e0ded6;
-  --paper: #faf9f5;
-  --card: #ffffff;
-  --accent: #2f6b4f;
-  --danger: #a3382c;
-  --font: ui-sans-serif, system-ui, "Helvetica Neue", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --washi: #f1e7d2;
+  --washi-deep: #e7dcc3;
+  --sumi: #1b1713;
+  --sumi-soft: #5c5348;
+  --sumi-faint: #6b6253;
+  --rule: #cdbe9e;
+  --bero-ai: #1d3f66;
+  --beni: #b03327;
+
+  /* Day and night are a matched pair from Hokusai's Thirty-six Views: the same
+     mountain in fair weather and in storm, so dark mode changes the weather
+     rather than the theme. */
+  --print: url("/red-fuji.jpg");
+  --print-x: 72%;
+  --print-y: 40%;
+
+  /* Kasumi — the stylised mist band that separates scenes in a print. */
+  --kasumi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 26' preserveAspectRatio='none'%3E%3Cpath d='M0,26L0,16Q15,6,34,13Q52,19,70,11Q88,4,108,12Q126,19,146,12Q168,5,188,14Q206,21,226,14Q248,6,268,15Q288,22,308,15Q330,7,350,16Q368,23,388,16Q410,8,430,17Q450,24,470,17Q492,9,512,18Q532,24,552,18Q574,11,600,17L600,26Z' fill='%23e7dcc3'/%3E%3C/svg%3E");
+
+  --font-ja: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "Noto Serif JP", "Songti SC", serif;
+  --font-en: Georgia, "Iowan Old Style", "Times New Roman", serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink: #eceae2;
-    --ink-soft: #a3a196;
-    --ink-faint: #75736a;
-    --rule: #33322d;
-    --paper: #161614;
-    --card: #1e1e1b;
-    --accent: #7fbf9b;
-    --danger: #e0847a;
+    --washi: #14120f;
+    --washi-deep: #1c1916;
+    --sumi: #ece2cc;
+    --sumi-soft: #a89c85;
+    --sumi-faint: #8a8070;
+    --rule: #3a332a;
+    --bero-ai: #7fa5cc;
+    --beni: #d9573f;
+
+    --print: url("/black-fuji.jpg");
+    --print-x: 62%;
+    --print-y: 34%;
+
+    --kasumi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 26' preserveAspectRatio='none'%3E%3Cpath d='M0,26L0,16Q15,6,34,13Q52,19,70,11Q88,4,108,12Q126,19,146,12Q168,5,188,14Q206,21,226,14Q248,6,268,15Q288,22,308,15Q330,7,350,16Q368,23,388,16Q410,8,430,17Q450,24,470,17Q492,9,512,18Q532,24,552,18Q574,11,600,17L600,26Z' fill='%231c1916'/%3E%3C/svg%3E");
   }
 }
 
@@ -28,68 +49,169 @@
 }
 
 body {
+  position: relative;
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font);
+  background: var(--washi);
+  color: var(--sumi);
+  font-family: var(--font-ja);
   font-size: 15px;
-  line-height: 1.45;
+  line-height: 1.5;
   -webkit-text-size-adjust: 100%;
 }
 
+/* Washi fibre — fractal noise, not crossed gradients. Two gradients at different
+   angles interfere into a visible grid that reads as graph paper; turbulence is
+   irregular the way pulped fibre actually is. Still no image asset, and it tiles
+   at 180px so the repeat is not legible. `overlay` lets one texture serve both
+   colour schemes, lightening the dark page and darkening the light one. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.32;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23w)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* `overlay` collapses toward multiply on a near-black ground, so the grain would
+   vanish at night. `screen` lets it read as flecks in the paper instead. */
+@media (prefers-color-scheme: dark) {
+  body::before {
+    opacity: 0.07;
+    mix-blend-mode: screen;
+  }
+}
+
+/* `main` runs the full width so the banner can bleed to the window edge; the
+   1100px measure lives on `.sheet` instead. Doing it this way rather than with
+   negative `vw` margins avoids the scrollbar-width overflow that trick causes. */
 main {
+  position: relative;
+  z-index: 1;
+  padding: 0 0 4rem;
+}
+
+.sheet {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 2.5rem 1.25rem 4rem;
+  padding: 0 1.5rem;
 }
 
-/* ---------- header ---------- */
+/* ---------- banner ---------- */
 
-header h1 {
-  margin: 0 0 0.35rem;
-  font-size: 1.9rem;
-  letter-spacing: 0.06em;
-  font-weight: 600;
+.banner {
+  position: relative;
+  overflow: hidden;
+  min-height: 16.25rem;
+  /* Line the title up with the table below, while the print keeps running to
+     the window edge. */
+  padding-top: 2.5rem;
+  padding-bottom: 1.75rem;
+  padding-left: max(1.5rem, calc((100% - 1100px) / 2 + 1.5rem));
+  padding-right: max(1.5rem, calc((100% - 1100px) / 2));
 }
 
-header h1 span {
-  display: block;
-  margin-top: 0.4rem;
-  font-size: 0.8rem;
+.banner-print {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 54%;
+  background-image: var(--print);
+  background-size: cover;
+  background-position: var(--print-x) var(--print-y);
+  pointer-events: none;
+  /* Baseline: feather the left edge only. Widely supported. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+}
+
+/* Where masks can be composited, feather the bottom as well. Intersecting two
+   masks dissolves the corner properly and lets the paper fibre show through the
+   fade, which a stacked gradient overlay painted on top cannot do. */
+@supports (mask-composite: intersect) or (-webkit-mask-composite: source-in) {
+  .banner-print {
+    -webkit-mask-image:
+      linear-gradient(90deg, transparent 0%, #000 30%),
+      linear-gradient(180deg, #000 58%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(90deg, transparent 0%, #000 30%),
+      linear-gradient(180deg, #000 58%, transparent 100%);
+    mask-composite: intersect;
+  }
+}
+
+.banner-text {
+  position: relative;
+  max-width: min(30rem, 46%);
+}
+
+.banner h1 {
+  margin: 0;
+  font-size: 2rem;
   font-weight: 400;
-  letter-spacing: 0.02em;
-  color: var(--ink-soft);
+  letter-spacing: 0.18em;
 }
+
+.banner h1 span {
+  display: block;
+  margin-top: 0.6rem;
+  font-family: var(--font-en);
+  font-size: 0.6rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  line-height: 1.9;
+  text-transform: uppercase;
+  color: var(--bero-ai);
+}
+
+/* ---------- tally seals ---------- */
 
 .tally {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1.5rem 0 1.75rem;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 1.5rem 0 0;
   padding: 0;
   list-style: none;
 }
 
 .tally li {
-  position: relative;
-  min-width: 6.5rem;
-  padding: 0.6rem 0.9rem;
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.tally strong {
-  display: block;
-  font-size: 1.5rem;
+.tally-seal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  border: 2px solid var(--beni);
+  border-radius: 5px;
+  color: var(--beni);
+}
+
+.tally-seal strong {
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-  color: var(--accent);
 }
 
-.tally span {
-  font-size: 0.75rem;
-  color: var(--ink-soft);
+.tally-seal span {
+  margin-top: 0.2rem;
+  font-family: var(--font-en);
+  font-size: 0.47rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .person-actions {
@@ -102,18 +224,20 @@ header h1 span {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--accent);
-  font-size: 0.7rem;
+  color: var(--bero-ai);
+  font-family: var(--font-en);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
   text-decoration: underline;
 }
 
 .text-button:hover,
 .text-button:focus-visible {
-  color: var(--ink);
+  color: var(--sumi);
 }
 
 .danger-text {
-  color: var(--danger);
+  color: var(--beni);
 }
 
 /* ---------- table ---------- */
@@ -129,14 +253,15 @@ thead th {
   top: 0;
   z-index: 2;
   padding: 0.5rem 0.6rem;
-  background: var(--paper);
-  border-bottom: 1px solid var(--ink);
+  background: var(--washi);
+  border-bottom: 1px solid var(--sumi);
   text-align: left;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
+  font-family: var(--font-en);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
   white-space: nowrap;
 }
 
@@ -147,54 +272,65 @@ tbody td {
 }
 
 tbody tr:hover td {
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  background: color-mix(in srgb, var(--bero-ai) 5%, transparent);
 }
 
+/* Prefecture headers rise out of a mist band. */
 tr.group th {
   position: sticky;
   top: 2rem;
   z-index: 1;
-  padding: 1.4rem 0.6rem 0.4rem;
-  background: var(--paper);
-  border-bottom: 1px solid var(--rule);
+  padding: 2.25rem 0.6rem 0.45rem;
+  background-color: var(--washi);
+  background-image: var(--kasumi);
+  /* Tiling at a fixed width keeps the cloud lobes their own shape. Stretching
+     one copy across the table flattens them into a smear. */
+  background-repeat: repeat-x;
+  background-position: 0 0.7rem;
+  background-size: 320px 1.5rem;
+  border-bottom: 1.5px solid var(--sumi);
   text-align: left;
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
 }
 
 tr.group th span {
   margin-left: 0.7rem;
-  font-size: 0.68rem;
+  font-family: var(--font-en);
+  font-size: 0.62rem;
   font-weight: 400;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--sumi-faint);
 }
 
 td.num,
 th.num {
   width: 2.5rem;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-faint);
+  color: var(--sumi-faint);
+  font-size: 0.8rem;
 }
 
 td.mountain .kanji {
   display: block;
   font-size: 1rem;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
 
 td.mountain .kana {
   display: block;
   font-size: 0.7rem;
-  color: var(--ink-faint);
+  color: var(--sumi-faint);
 }
 
 td.mountain .en {
   display: block;
+  font-family: var(--font-en);
+  font-style: italic;
   font-size: 0.78rem;
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
 }
 
 td.elev,
@@ -208,11 +344,11 @@ td.season,
 th.season {
   width: 7rem;
   white-space: nowrap;
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
 }
 
 td.notes {
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
   font-size: 0.8rem;
 }
 
@@ -222,24 +358,74 @@ th.person {
   text-align: center;
 }
 
+/* ---------- hanko seal checkbox ---------- */
+
+/* A real checkbox, restyled — it keeps native keyboard behaviour, focus, and
+   the existing aria-labels. */
 td.person input[type="checkbox"] {
-  width: 1.15rem;
-  height: 1.15rem;
-  accent-color: var(--accent);
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--sumi);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--sumi);
+  font-family: var(--font-ja);
+  font-size: 0.78rem;
+  line-height: 1;
+  opacity: 0.3;
   cursor: pointer;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+td.person input[type="checkbox"]::after {
+  content: "〇";
+}
+
+td.person input[type="checkbox"]:checked {
+  border-color: var(--beni);
+  background: var(--beni);
+  color: var(--washi);
+  opacity: 1;
+  /* Tilt is seeded from the mountain id, not random, so a given seal always
+     sits the same way instead of jumping on every render. */
+  transform: rotate(var(--tilt, 0deg));
+}
+
+td.person input[type="checkbox"]:checked::after {
+  content: "登";
+}
+
+td.person input[type="checkbox"]:hover {
+  opacity: 0.6;
+}
+
+td.person input[type="checkbox"]:checked:hover {
+  opacity: 1;
+}
+
+td.person input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--bero-ai);
+  outline-offset: 2px;
+  opacity: 1;
 }
 
 td.person .date {
   display: block;
   width: 100%;
-  margin-top: 0.3rem;
+  margin-top: 0.35rem;
   padding: 0.1rem 0.2rem;
   border: 1px solid var(--rule);
   border-radius: 4px;
-  background: var(--card);
-  color: var(--ink-soft);
-  font-family: inherit;
-  font-size: 0.68rem;
+  background: var(--washi-deep);
+  color: var(--sumi-soft);
+  font-family: var(--font-en);
+  font-size: 0.65rem;
 }
 
 /* ---------- forms ---------- */
@@ -253,11 +439,11 @@ td.person .date {
 }
 
 .add-person label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
+  font-family: var(--font-en);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
 }
 
 input[type="text"],
@@ -265,38 +451,50 @@ input[type="password"],
 .add-person input {
   padding: 0.4rem 0.6rem;
   border: 1px solid var(--rule);
-  border-radius: 5px;
-  background: var(--card);
-  color: var(--ink);
-  font-family: inherit;
+  border-radius: 4px;
+  background: var(--washi-deep);
+  color: var(--sumi);
+  font-family: var(--font-ja);
   font-size: 0.875rem;
 }
 
+input:focus-visible {
+  outline: 2px solid var(--bero-ai);
+  outline-offset: 1px;
+}
+
+/* Buttons are seals too. */
 button {
-  padding: 0.42rem 1rem;
-  border: 1px solid var(--accent);
-  border-radius: 5px;
-  background: var(--accent);
-  color: var(--paper);
-  font-family: inherit;
+  padding: 0.42rem 1.2rem;
+  border: 2px solid var(--beni);
+  border-radius: 4px;
+  background: var(--beni);
+  color: var(--washi);
+  font-family: var(--font-ja);
   font-size: 0.875rem;
+  letter-spacing: 0.08em;
   cursor: pointer;
 }
 
+button:focus-visible {
+  outline: 2px solid var(--bero-ai);
+  outline-offset: 2px;
+}
+
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: default;
 }
 
 .secondary-button {
   border-color: var(--rule);
-  background: var(--card);
-  color: var(--ink-soft);
+  background: var(--washi-deep);
+  color: var(--sumi-soft);
 }
 
 .danger-button {
-  border-color: var(--danger);
-  background: var(--danger);
+  border-color: var(--beni);
+  background: var(--beni);
 }
 
 .person-action-form {
@@ -308,11 +506,11 @@ button:disabled {
 }
 
 .person-action-form label {
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-family: var(--font-en);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
 }
 
 .person-action-form input {
@@ -320,15 +518,15 @@ button:disabled {
   padding: 0.3rem 0.45rem;
   border: 1px solid var(--rule);
   border-radius: 4px;
-  background: var(--card);
-  color: var(--ink);
+  background: var(--washi-deep);
+  color: var(--sumi);
   font: inherit;
   font-size: 0.78rem;
 }
 
 .person-action-form p {
   margin: 0 0 0.15rem;
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
   font-size: 0.75rem;
 }
 
@@ -350,61 +548,73 @@ button:disabled {
   min-height: 100vh;
   align-items: center;
   justify-content: center;
+  padding: 1.5rem;
 }
 
 .login form {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  width: min(20rem, 100%);
-  padding: 2rem;
+  width: min(22rem, 100%);
+  padding: 2.25rem 2rem 2rem;
   border: 1px solid var(--rule);
-  border-radius: 8px;
-  background: var(--card);
+  background: var(--washi-deep);
+}
+
+/* Cartouche: the double-ruled box a print carries its series title in. */
+.login form::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid var(--bero-ai);
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .login h1 {
-  margin: 0 0 0.8rem;
-  font-size: 1.4rem;
-  letter-spacing: 0.08em;
-  font-weight: 600;
+  margin: 0 0 0.9rem;
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
 }
 
 .login h1 span {
   display: block;
-  margin-top: 0.3rem;
-  font-size: 0.7rem;
+  margin-top: 0.45rem;
+  font-family: var(--font-en);
+  font-size: 0.6rem;
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--bero-ai);
 }
 
 .login label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
+  font-family: var(--font-en);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
 }
 
 /* ---------- misc ---------- */
 
 .error {
   margin: 0;
-  color: var(--danger);
+  color: var(--beni);
   font-size: 0.8rem;
 }
 
-.banner {
+.banner-error {
   padding: 0.6rem 0.8rem;
   margin-bottom: 1rem;
-  border: 1px solid var(--danger);
-  border-radius: 5px;
+  border: 1px solid var(--beni);
+  border-radius: 4px;
 }
 
 .empty {
-  color: var(--ink-soft);
+  color: var(--sumi-soft);
   font-size: 0.875rem;
 }
 
@@ -413,18 +623,122 @@ footer {
   padding-top: 1rem;
   border-top: 1px solid var(--rule);
   font-size: 0.72rem;
-  color: var(--ink-faint);
+  line-height: 1.7;
+  color: var(--sumi-faint);
+}
+
+footer .credit {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-en);
+  font-size: 0.68rem;
+  font-style: italic;
 }
 
 code {
   font-size: 0.95em;
 }
 
+/* ---------- responsive ---------- */
+
 @media (max-width: 720px) {
+  .banner {
+    min-height: 0;
+    padding: 2rem 1.25rem 1.5rem;
+  }
+
+  /* Too narrow for a side panel — the print becomes a faint full-width wash
+     behind the title, fading downward instead of leftward. */
+  .banner-print {
+    width: 100%;
+    opacity: 0.16;
+    background-position: 60% 30%;
+    -webkit-mask-image: linear-gradient(180deg, #000 35%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 35%, transparent 100%);
+  }
+
+  .banner-text {
+    max-width: none;
+  }
+
+  .banner h1 {
+    font-size: 1.6rem;
+  }
+
+  .sheet {
+    padding: 0 1.25rem;
+  }
+
   td.season,
   th.season,
   td.notes,
   th.notes {
     display: none;
+  }
+
+  /* Dropping two columns is not enough on a 375px screen — three people at the
+     desktop width still push the last column off the edge. A horizontal scroll
+     wrapper would trap the sticky header inside it, so the columns tighten
+     instead.
+
+     `fixed` matters: with the default `auto`, the declared widths below are only
+     suggestions and the table still overflows to fit its content. Fixed makes
+     them binding and lets the mountain column absorb what is left. */
+  table {
+    table-layout: fixed;
+  }
+
+  tbody td,
+  thead th {
+    padding: 0.45rem 0.3rem;
+  }
+
+  thead th {
+    letter-spacing: 0.1em;
+  }
+
+  td.num,
+  th.num {
+    width: 1.75rem;
+  }
+
+  td.elev,
+  th.elev {
+    width: 4.25rem;
+  }
+
+  td.elev {
+    font-size: 0.75rem;
+  }
+
+  td.person,
+  th.person {
+    width: 2.9rem;
+  }
+
+  td.mountain .kanji {
+    font-size: 0.95rem;
+  }
+
+  td.person input[type="checkbox"] {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 0.7rem;
+  }
+}
+
+@supports (mask-composite: intersect) or (-webkit-mask-composite: source-in) {
+  @media (max-width: 720px) {
+    .banner-print {
+      -webkit-mask-image: linear-gradient(180deg, #000 35%, transparent 100%);
+      -webkit-mask-composite: source-in;
+      mask-image: linear-gradient(180deg, #000 35%, transparent 100%);
+      mask-composite: intersect;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  td.person input[type="checkbox"] {
+    transition: none;
   }
 }

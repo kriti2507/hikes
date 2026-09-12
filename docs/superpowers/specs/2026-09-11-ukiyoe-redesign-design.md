@@ -17,8 +17,8 @@ Presentation only. `app/page.tsx`, `app/actions.ts`, `lib/`, `db/`, and
 | `app/checklist.tsx` | Header markup, seal checkbox, group-header markup |
 | `app/layout.tsx` | `theme-color` on the `viewport` export |
 | `app/login/page.tsx` | Markup for the print-card login |
-| `public/red-fuji.jpg` | New — 1280×854, 427 KB |
-| `public/black-fuji.jpg` | New — 1280×886, 252 KB |
+| `public/red-fuji.jpg` | New — 1200×800, 282 KB |
+| `public/black-fuji.jpg` | New — 1136×792, 222 KB |
 | `README.md` | Attribution section |
 
 ## Design decisions already settled
@@ -52,16 +52,27 @@ Defined as custom properties on `:root`, overridden in
 | `--washi-deep` | `#e7dcc3` | `#1c1916` | cartouche fill, inputs |
 | `--sumi` | `#1b1713` | `#ece2cc` | body ink |
 | `--sumi-soft` | `#5c5348` | `#a89c85` | secondary text |
-| `--sumi-faint` | `#8d8270` | `#6d6456` | row numbers, captions |
+| `--sumi-faint` | `#6b6253` | `#8a8070` | row numbers, captions |
 | `--rule` | `#cdbe9e` | `#3a332a` | hairlines |
 | `--bero-ai` | `#1d3f66` | `#7fa5cc` | labels, links, hover wash |
-| `--beni` | `#bf3a2b` | `#d9573f` | seals, errors |
+| `--beni` | `#b03327` | `#d9573f` | seals, errors |
 
 `--beni` doubles as the danger colour; the print's vermilion slope is the same
 hue, which is why this palette holds together.
 
-**Paper texture**: two `repeating-linear-gradient`s at 94° and 2°, roughly 5%
-opacity, on a `::before` pinned to the page. No image asset.
+Two values moved during implementation, both for contrast (see Accessibility):
+`--beni` from `#bf3a2b` to `#b03327`, and `--sumi-faint` from `#8d8270`/`#6d6456`
+to the values above.
+
+**Paper texture**: SVG `feTurbulence` fractal noise, tiled at 180px, on a
+`::before` pinned to the page. No image asset.
+
+The first attempt used two `repeating-linear-gradient`s at 94° and 2°. Rendered,
+they interfere into a legible cross-hatch — the page reads as graph paper, not
+washi. Turbulence is irregular the way pulped fibre is. One texture serves both
+schemes via blend mode: `overlay` at 0.32 by day, and `screen` at 0.07 at night,
+because `overlay` collapses toward `multiply` on a near-black ground and the
+grain would otherwise disappear.
 
 ## Typography
 
@@ -119,11 +130,20 @@ Elevations and counts use `font-variant-numeric: tabular-nums`, as they do now.
 - **Fallback**: wrap the mask rules in `@supports (mask-composite: intersect)`.
   Without support, the panel keeps a single left-edge gradient overlay — a
   square-cornered fade rather than a hard-edged photograph.
-- Hokusai's cartouche and signature stay unobscured. Nothing is overlaid on the
-  print.
-- The image is `next/image` with `fill` (the panel is the positioned parent) and
-  `preload` — **not** `priority`, which is deprecated in Next.js 16 — since it is
-  the LCP element. `sizes="54vw"` so the optimiser doesn't serve the full width.
+- No wash is laid over the print; the only thing touching it is the mask. Its
+  cartouche sits in the left third and so fades with that edge — visible but
+  dissolving, which is the intended effect rather than a crop through it.
+- `main` runs the full window width and `.sheet` carries the 1100px measure, so
+  the print genuinely bleeds off the right edge of the window. Left inside a
+  1100px `main`, it stops dead at the content boundary and reads as a pasted
+  rectangle on wide screens. Doing it this way rather than with negative `vw`
+  margins avoids the scrollbar-width horizontal overflow that trick causes.
+- The print is a CSS `background-image` swapped by media query, **not**
+  `next/image`. `next/image` cannot art-direct between two sources, and
+  rendering both with one hidden downloads both. A media-scoped
+  `<link rel="preload">` pair in the root layout restores the preload-scanner
+  discovery that a CSS background otherwise loses, and only the matching scheme's
+  file is fetched.
 
 **Tallies** become bordered seal squares: 60×60, 2px `--beni` border, 5px radius,
 count in tabular numerals over the person's name in letterspaced small caps.
@@ -172,17 +192,31 @@ provenance survives independently of the page.
 ## Responsive
 
 At `<720px` the header stacks: the print becomes a faint full-width wash *behind*
-the title (mask flipped to fade from the top) rather than a side panel, and the
-tallies wrap. The `season` and `notes` columns stay hidden, as they are today.
+the title at 0.16 opacity (mask flipped to fade from the top) rather than a side
+panel, and the tallies wrap. The `season` and `notes` columns stay hidden, as
+they are today.
+
+Hiding those two columns is not sufficient. At 375px with three people, the
+desktop column widths still push the last person off-screen — a pre-existing
+condition, not a regression, since the old CSS used the same 6.5rem person
+columns. The table therefore switches to `table-layout: fixed` on mobile with
+tightened widths (person 2.9rem, elevation 4.25rem, number 1.75rem) and a
+smaller seal. `fixed` is the load-bearing part: under the default `auto`, the
+declared widths are only suggestions and the table overflows anyway.
+
+A horizontal scroll wrapper was rejected: `overflow-x: auto` forces a scroll
+container on the block axis too, which traps the sticky header inside it.
 
 ## Accessibility
 
 - Checkboxes keep native semantics, labels, and focus; the existing
   `aria-label`s (`"{person} climbed {mountain}"`) are unchanged.
 - The header image is decorative — `alt=""`.
-- Contrast to verify during implementation, not assume: `--washi` on `--beni`
-  for the `登` glyph computes to roughly 4.6:1. If it misses, darken `--beni`
-  toward `#b03327` rather than lightening the glyph.
+- Contrast was verified, and the `登` glyph did miss: `#f1e7d2` on `#bf3a2b` is
+  4.44:1, under the 4.5 floor for text at that size. `--beni` was darkened to
+  `#b03327` as the spec prescribed, giving 5.14:1. Night is 4.82:1.
+  `--sumi-faint` also missed in both schemes (3.08:1 and 3.18:1) and was moved to
+  4.96:1 and 4.83:1 — it carries the Fukada numbers, which are content.
 - `prefers-reduced-motion` respected.
 - `prefers-color-scheme` drives the day/night print swap; both must be legible.
 
@@ -191,10 +225,25 @@ tallies wrap. The `season` and `notes` columns stay hidden, as they are today.
 No map, no per-mountain photography, no animation beyond the seal press, no new
 runtime dependency, no change to how data is added.
 
+## Assets
+
+Both prints were resized to ~1200px wide and recompressed (sips, quality 60),
+roughly halving them. `black-fuji.jpg` was additionally cropped to 1136×792: the
+Library of Congress scan includes the sheet's paper margins, and with no
+horizontal crop at banner proportions the right-hand margin showed as a pale
+vertical strip against the night palette.
+
 ## Verification
 
+Done:
+
 - `npm run typecheck` and `npm run build` clean.
-- Page renders at 375px, 768px, and 1440px in both colour schemes.
+- Rendered at 1440px and 375px in both colour schemes, and the checked seal state
+  against the compiled stylesheet — vermilion `登`, per-row tilt, date field.
+
+Still open:
+
 - Keyboard-only pass: tab to a checkbox, toggle it, confirm the focus ring is
-  visible and the date field appears.
+  visible and the date field appears. Needs a real interactive session.
 - Confirm the mask fallback by disabling `mask-composite` support in devtools.
+- Confirm the system mincho stack on Windows (Yu Mincho) and Linux.

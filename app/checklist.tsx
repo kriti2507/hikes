@@ -1,8 +1,11 @@
 "use client";
 
-import { Fragment, useMemo, useState, useTransition } from "react";
+import { type CSSProperties, Fragment, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addPerson, deletePerson, setAscent, updatePerson } from "./actions";
+
+// Degrees of tilt a seal can land at, picked by mountain id.
+const TILTS = [-3, -1.5, 0, 1.5, 3];
 
 // Type aliases rather than interfaces: aliases get an implicit index signature,
 // which is what lib/db.ts's `query<T>` constraint wants.
@@ -89,114 +92,138 @@ export function Checklist({
 
   return (
     <main>
-      <header>
-        <h1>
-          日本百名山
-          <span>The 100 Famous Mountains of Japan · Fukada Kyūya, 1964</span>
-        </h1>
-        <ul className="tally">
-          {people.map((person) => (
-            <li key={person.id}>
-              <strong>{counts.get(person.id) ?? 0}</strong>
-              <span>
-                {person.name} · of {mountains.length}
-              </span>
-              <PersonActions person={person} onChanged={() => router.refresh()} />
-            </li>
-          ))}
-        </ul>
+      <header className="banner">
+        {/* Decorative: the print carries no information the text does not. */}
+        <div className="banner-print" aria-hidden="true" />
+        <div className="banner-text">
+          <h1>
+            日本百名山
+            <span>
+              The Hundred Famous Mountains
+              <br />
+              Fukada Kyūya, 1964
+            </span>
+          </h1>
+          <ul className="tally">
+            {people.map((person) => (
+              <li key={person.id}>
+                {/* The seal is a fixed square, so edit/delete sit below it rather
+                    than inside — the stamp keeps its proportions either way. */}
+                <div
+                  className="tally-seal"
+                  title={`${person.name}: ${counts.get(person.id) ?? 0} of ${mountains.length}`}
+                >
+                  <strong>{counts.get(person.id) ?? 0}</strong>
+                  <span>{person.name}</span>
+                </div>
+                <PersonActions person={person} onChanged={() => router.refresh()} />
+              </li>
+            ))}
+          </ul>
+        </div>
       </header>
 
-      {error ? <p className="error banner">{error}</p> : null}
+      <div className="sheet">
+        {error ? <p className="error banner-error">{error}</p> : null}
 
-      {people.length === 0 ? (
-        <p className="empty">No people yet — add someone below to start a column.</p>
-      ) : null}
+        {people.length === 0 ? (
+          <p className="empty">No people yet — add someone below to start a column.</p>
+        ) : null}
 
-      <table>
-        <thead>
-          <tr>
-            <th className="num">#</th>
-            <th className="mountain">Mountain</th>
-            <th className="elev">Height</th>
-            <th className="season">Best time</th>
-            <th className="notes">Notes</th>
-            {people.map((person) => (
-              <th key={person.id} className="person">
-                {person.name}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {groups.map((group) => (
-            <Fragment key={group.prefecture}>
-              <tr className="group">
-                <th colSpan={5 + people.length}>
-                  {group.prefectureJa}
-                  <span>
-                    {group.prefecture} · {group.mountains.length}
-                  </span>
+        <table>
+          <thead>
+            <tr>
+              <th className="num">#</th>
+              <th className="mountain">Mountain</th>
+              <th className="elev">Height</th>
+              <th className="season">Best time</th>
+              <th className="notes">Notes</th>
+              {people.map((person) => (
+                <th key={person.id} className="person">
+                  {person.name}
                 </th>
-              </tr>
-              {group.mountains.map((m) => (
-                <tr key={m.id}>
-                  <td className="num">{m.fukadaNumber ?? "—"}</td>
-                  <td className="mountain">
-                    <span className="kanji">{m.nameKanji}</span>
-                    <span className="kana">{m.nameKana}</span>
-                    <span className="en">{m.nameEn}</span>
-                  </td>
-                  <td className="elev">{m.elevationM.toLocaleString("en-US")} m</td>
-                  <td className="season">{m.bestSeason ?? "—"}</td>
-                  <td className="notes">
-                    {[m.region, m.notes, m.alsoIn && `also ${m.alsoIn}`].filter(Boolean).join(" · ")}
-                  </td>
-                  {people.map((person) => {
-                    const entry = entries[key(person.id, m.id)];
-                    const climbed = entry?.climbed ?? false;
-                    return (
-                      <td key={person.id} className="person">
-                        <input
-                          type="checkbox"
-                          checked={climbed}
-                          aria-label={`${person.name} climbed ${m.nameEn}`}
-                          onChange={(event) =>
-                            save(person.id, m.id, {
-                              climbed: event.target.checked,
-                              // Unchecking discards the date: the row means
-                              // "not climbed", so a date would contradict it.
-                              dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
-                            })
-                          }
-                        />
-                        {climbed ? (
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {groups.map((group) => (
+              <Fragment key={group.prefecture}>
+                <tr className="group">
+                  <th colSpan={5 + people.length}>
+                    {group.prefectureJa}
+                    <span>
+                      {group.prefecture} · {group.mountains.length}
+                    </span>
+                  </th>
+                </tr>
+                {group.mountains.map((m) => (
+                  <tr key={m.id}>
+                    <td className="num">{m.fukadaNumber ?? "—"}</td>
+                    <td className="mountain">
+                      <span className="kanji">{m.nameKanji}</span>
+                      <span className="kana">{m.nameKana}</span>
+                      <span className="en">{m.nameEn}</span>
+                    </td>
+                    <td className="elev">{m.elevationM.toLocaleString("en-US")} m</td>
+                    <td className="season">{m.bestSeason ?? "—"}</td>
+                    <td className="notes">
+                      {[m.region, m.notes, m.alsoIn && `also ${m.alsoIn}`].filter(Boolean).join(" · ")}
+                    </td>
+                    {people.map((person) => {
+                      const entry = entries[key(person.id, m.id)];
+                      const climbed = entry?.climbed ?? false;
+                      return (
+                        <td key={person.id} className="person">
                           <input
-                            type="date"
-                            className="date"
-                            value={entry?.dateClimbed ?? ""}
-                            aria-label={`Date ${person.name} climbed ${m.nameEn}`}
+                            type="checkbox"
+                            checked={climbed}
+                            aria-label={`${person.name} climbed ${m.nameEn}`}
+                            // A seal is pressed by hand, so no two sit quite square.
+                            // Seeding the tilt from the id keeps it stable across
+                            // renders — random would reshuffle on every keystroke.
+                            style={{ "--tilt": `${TILTS[m.id % TILTS.length]}deg` } as CSSProperties}
                             onChange={(event) =>
-                              save(person.id, m.id, { climbed: true, dateClimbed: event.target.value || null })
+                              save(person.id, m.id, {
+                                climbed: event.target.checked,
+                                // Unchecking discards the date: the row means
+                                // "not climbed", so a date would contradict it.
+                                dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
+                              })
                             }
                           />
-                        ) : null}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
+                          {climbed ? (
+                            <input
+                              type="date"
+                              className="date"
+                              value={entry?.dateClimbed ?? ""}
+                              aria-label={`Date ${person.name} climbed ${m.nameEn}`}
+                              onChange={(event) =>
+                                save(person.id, m.id, { climbed: true, dateClimbed: event.target.value || null })
+                              }
+                            />
+                          ) : null}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
 
-      <AddPerson onAdded={() => router.refresh()} />
+        <AddPerson onAdded={() => router.refresh()} />
 
-      <footer>
-        Coordinates in the database are approximate (see <code>db/coordinates.json</code>). Add mountains with SQL
-        against the <code>mountains</code> table.
-      </footer>
+        <footer>
+          Coordinates in the database are approximate (see <code>db/coordinates.json</code>). Add mountains with SQL
+          against the <code>mountains</code> table.
+          <p className="credit">
+            Header print: Katsushika Hokusai, <i>Fine Wind, Clear Morning</i> (c. 1830) by day and{" "}
+            <i>Shower Below the Summit</i> (c. 1830) after dark, from <i>Thirty-six Views of Mount Fuji</i>. Public
+            domain, via Wikimedia Commons.
+          </p>
+        </footer>
+      </div>
     </main>
   );
 }
