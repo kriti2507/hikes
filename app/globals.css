@@ -929,3 +929,43 @@ code {
   text-align: center;
   margin: 8px 0 0;
 }
+
+.peak-outline {
+  fill: none;
+  stroke: var(--sumi);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+/* Vermilion, the same ink as the seal pressed in the table: a filled triangle
+   and a stamped checkbox mean the same thing. */
+.peak-ink {
+  fill: var(--beni);
+}
+
+.peak-target {
+  fill: transparent;
+}
+
+.peak,
+.cluster {
+  cursor: pointer;
+}
+
+.peak:focus-visible .peak-outline,
+.cluster:focus-visible .peak-outline {
+  stroke: var(--bero-ai);
+  stroke-width: 2.5;
+}
+
+.peak:focus,
+.cluster:focus {
+  outline: none; /* replaced by the stroke above, which follows the triangle */
+}
+
+.cluster-count {
+  font-family: var(--font-en);
+  font-size: 12px;
+  fill: var(--sumi);
+  dominant-baseline: alphabetic;
+}

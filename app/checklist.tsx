@@ -126,7 +126,12 @@ export function Checklist({
         {view === "table" ? (
           <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
         ) : (
-          <MapView mountains={mountains} people={people} entries={entries} onSave={save} />
+          <MapView
+            mountains={mountains}
+            people={people}
+            entries={entries}
+            selectedIds={people.map((p) => p.id)}
+          />
         )}
 
         <AddPerson onAdded={() => router.refresh()} />
