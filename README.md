@@ -89,13 +89,78 @@ values ('槍ヶ岳', 'やりがたけ', 'Mt. Yari', 'Nagano', '長野県',
 `prefecture_sort` is the geographic north-to-south rank; a new prefecture with no
 value defaults to 999 and lands at the bottom.
 
-## Coordinates
+## Coordinates and the map
 
 `latitude` / `longitude` are populated for all 100 peaks but are **approximate**
 — recorded from general knowledge, not a surveyed source, and good to roughly a
 kilometre. Fine for map pins; not for navigation. See `db/coordinates.json` for
-per-peak provenance, and verify against GSI or OpenStreetMap before building the
-interactive map.
+per-peak provenance.
+
+The 地図 tab draws them as triangles on a schematic outline of Japan, inked in
+proportion to how many of the selected people have climbed each peak. Because
+the coordinates are approximate, the map stops zooming at roughly one
+prefecture — far enough in to separate neighbouring peaks, not so far that the
+error becomes visible.
+
+### Replacing the coastline
+
+The outline is a placeholder: 88 lat/lon control points traced from named
+coastal landmarks, in `db/coastline.json`. It is stored as coordinates rather
+than SVG so that it goes through the same projection as the summits, which is
+what keeps the triangles registered to the coast.
+
+To swap in real geometry, convert Natural Earth or GSI data into the same shape
+— rings of `[lat, lon]` under `coastline` and `prefectures`, with `source` set
+to `"natural-earth"` (`scripts/build-map.mjs` checks for that exact string) —
+and re-run:
+
+```
+npm run map:build
+```
+
+That rewrites `lib/map/japan-geometry.ts` and nothing else. No peak moves,
+because both the outline and the summits are projected by
+`lib/map/projection.mjs`. Prefecture borders are empty in the placeholder and
+appear with the real geometry. Natural Earth coastlines run to hundreds or
+thousands of points per ring; the script does not simplify, so the raw data
+needs a simplification pass upstream of it, or the generated file becomes an
+unreviewable diff.
+
+### Why `lib/map/*.mjs` instead of `.ts`
+
+`projection.mjs` and `cluster.mjs` are plain JavaScript, each paired with a
+hand-written `.d.mts` for TypeScript's benefit. They have three runtimes to
+satisfy at once: the browser (which projects peaks out of the database),
+`scripts/build-map.mjs` (which projects the coastline, run directly with
+`node`), and `node --test` — and this repo's `tsconfig.json` sets
+`allowJs: false`, so Node (v20 here) cannot strip types from a `.ts` file
+itself. Splitting the maths into `.mjs` lets all three load it unmodified,
+instead of building a separate copy for the two non-bundled runtimes.
+
+The cost is on the TypeScript side: because the declaration file is
+`projection.d.mts` (not `.d.ts`), importing callers must write the `.mjs`
+extension explicitly — `import { project } from "@/lib/map/projection.mjs"` —
+or the module resolver won't find the types.
+
+## Tests
+
+```
+npm test
+```
+
+Covers the two pure modules — the Mercator projection and the marker
+clustering — with Node's built-in test runner: 16 cases, from the projection's
+extent corners and known summit positions to clustering's stability under
+reordering and its centroid-drift edge cases. Components are verified by
+running the app.
+
+## Building
+
+`npm run build` needs `DATABASE_URL` set to something, even a fake one:
+`lib/db.ts` builds its connection pool at module load, and Next's page-data
+collection imports that module while building `/` even though the route is
+`force-dynamic`. The build itself never queries the database — `pg` connects
+lazily — so any well-formed connection string satisfies it.
 
 ## Regenerating the data
 
