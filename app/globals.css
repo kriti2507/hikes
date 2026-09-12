@@ -1010,3 +1010,88 @@ code {
   background: var(--beni);
   color: var(--washi);
 }
+
+.map-frame {
+  position: relative;
+}
+
+.peak-card {
+  position: absolute;
+  z-index: 2;
+  width: 210px;
+  padding: 9px 12px 10px;
+  background: var(--washi);
+  border: 1px solid var(--sumi);
+  box-shadow: 3px 3px 0 rgb(27 23 19 / 0.12);
+  font-family: var(--font-en);
+  font-size: 13px;
+}
+
+.peak-card .kanji {
+  display: block;
+  font-family: var(--font-ja);
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.peak-card .kana {
+  display: block;
+  font-family: var(--font-ja);
+  font-size: 11px;
+  color: var(--sumi-faint);
+}
+
+.peak-card .en {
+  display: block;
+  font-style: italic;
+  color: var(--sumi-soft);
+}
+
+.peak-card-meta {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--sumi-faint);
+  border-top: 1px solid var(--rule);
+  padding-top: 5px;
+}
+
+.peak-card-notes {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--sumi-faint);
+}
+
+.peak-card-people {
+  list-style: none;
+  margin: 7px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+  padding-top: 6px;
+}
+
+.peak-card-people li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 1px 0;
+}
+
+.peak-card-people label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.peak-card-close {
+  position: absolute;
+  top: 2px;
+  right: 5px;
+  border: none;
+  background: none;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--sumi-faint);
+  cursor: pointer;
+}
