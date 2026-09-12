@@ -9,7 +9,7 @@ import { PeakCard } from "./peak-card";
 import { PeakMarker } from "./peak-marker";
 import { PersonFilter } from "./person-filter";
 import { useMapMarkers } from "./use-map-markers";
-import { usePanZoom } from "./use-pan-zoom";
+import { NAME_SCALE, usePanZoom } from "./use-pan-zoom";
 
 export function MapView({
   mountains,
@@ -27,7 +27,8 @@ export function MapView({
   onSave: (personId: number, mountainId: number, next: Entry) => void;
 }) {
   const [element, setElement] = useState<SVGSVGElement | null>(null);
-  const { viewBox, unitsPerPixel, measured, wasDragged, handlers } = usePanZoom(element);
+  const { scale, viewBox, unitsPerPixel, measured, wasDragged, zoomBy, fit, fitBounds, handlers } =
+    usePanZoom(element);
   const [openId, setOpenId] = useState<number | null>(null);
 
   const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
@@ -69,8 +70,15 @@ export function MapView({
           leftPercent > 62
             ? { right: `${100 - leftPercent}%`, marginRight: "14px" }
             : { left: `${leftPercent}%`, marginLeft: "14px" };
+        // The triangle only extends upward from its anchor, so an unflipped
+        // card (growing downward from `top`) naturally clears it and needs no
+        // gap. A flipped card grows upward from `bottom` into that same
+        // space, so it needs the same 14px clearance the horizontal branch
+        // already gives both of its directions.
         const vertical =
-          topPercent > 62 ? { bottom: `${100 - topPercent}%` } : { top: `${topPercent}%` };
+          topPercent > 62
+            ? { bottom: `${100 - topPercent}%`, marginBottom: "14px" }
+            : { top: `${topPercent}%` };
         return { ...horizontal, ...vertical };
       })()
     : null;
@@ -135,6 +143,8 @@ export function MapView({
                     <PeakMarker
                       fill={fill}
                       selected={openId === peak.mountain.id}
+                      number={peak.mountain.fukadaNumber}
+                      name={scale >= NAME_SCALE ? peak.mountain.nameEn : null}
                       label={`${nameOf(peak.mountain)}, ${peak.mountain.elevationM} metres`}
                       onActivate={() => setOpenId(peak.mountain.id)}
                     />
@@ -149,13 +159,32 @@ export function MapView({
                     count={c.members.length}
                     fill={done / c.members.length}
                     label={`${c.members.length} peaks, ${done} climbed by everyone selected. Zoom in.`}
-                    onActivate={() => {}}
+                    onActivate={() =>
+                      fitBounds(
+                        Math.min(...c.members.map((m) => m.x)),
+                        Math.min(...c.members.map((m) => m.y)),
+                        Math.max(...c.members.map((m) => m.x)),
+                        Math.max(...c.members.map((m) => m.y)),
+                      )
+                    }
                   />
                 </g>
               );
             })}
           </g>
         </svg>
+
+        <div className="map-zoom">
+          <button type="button" onClick={() => zoomBy(1.6)} aria-label="Zoom in">
+            +
+          </button>
+          <button type="button" onClick={() => zoomBy(1 / 1.6)} aria-label="Zoom out">
+            −
+          </button>
+          <button type="button" className="fit" onClick={fit} aria-label="Show the whole country">
+            全図
+          </button>
+        </div>
 
         {open && cardStyle ? (
           <PeakCard

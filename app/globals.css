@@ -1095,3 +1095,41 @@ code {
   color: var(--sumi-faint);
   cursor: pointer;
 }
+
+.peak-number {
+  font-family: var(--font-en);
+  font-size: 9px;
+  fill: var(--sumi-faint);
+}
+
+.peak-name {
+  font-family: var(--font-en);
+  font-size: 9px;
+  font-style: italic;
+  fill: var(--sumi-soft);
+}
+
+.map-zoom {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.map-zoom button {
+  width: 26px;
+  height: 26px;
+  font-family: var(--font-ja);
+  font-size: 15px;
+  line-height: 1;
+  color: var(--sumi);
+  background: var(--washi);
+  border: 1px solid var(--sumi);
+  cursor: pointer;
+}
+
+.map-zoom button.fit {
+  font-size: 10px;
+}

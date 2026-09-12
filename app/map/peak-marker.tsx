@@ -13,12 +13,18 @@ export const PEAK_PATH = `M0 ${-PEAK_HEIGHT}L${HALF_WIDTH} 0L${-HALF_WIDTH} 0Z`;
 export function PeakMarker({
   fill,
   label,
+  number,
+  name,
   onActivate,
   selected,
 }: {
   /** 0 to 1 — how many of the selected people have climbed it. */
   fill: number;
   label: string;
+  /** Fukada number, or null for an unnumbered addition. */
+  number: number | null;
+  /** English name, shown only when the map has room for it. */
+  name: string | null;
   onActivate: () => void;
   selected: boolean;
 }) {
@@ -64,6 +70,19 @@ export function PeakMarker({
       ) : null}
 
       <path className="peak-outline" d={PEAK_PATH} />
+
+      {/* Clustering guarantees at least 22px between markers, so labels placed
+          beside the triangle cannot collide with a neighbour's. */}
+      {number !== null ? (
+        <text className="peak-number" x={HALF_WIDTH + 2} y={0}>
+          {number}
+        </text>
+      ) : null}
+      {name ? (
+        <text className="peak-name" x={HALF_WIDTH + 2} y={9}>
+          {name}
+        </text>
+      ) : null}
     </g>
   );
 }
