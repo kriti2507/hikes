@@ -16,6 +16,10 @@
 
 **This is not the Next.js you may know.** Per `AGENTS.md`, read the relevant guide in `node_modules/next/dist/docs/` before writing framework code.
 
+**No backticks inside the SQL comments.** The query in `app/page.tsx` is a JavaScript template literal, so a backtick in a `--` comment terminates the string and produces a baffling `TS1005: ',' expected`. Write `numeric columns`, not `` `numeric` ``.
+
+**`npm run build` needs a `DATABASE_URL`.** `lib/db.ts` builds its pool at module load, so importing it throws `DATABASE_URL is not set` during Next's "collecting page data" phase. In a sandbox that cannot read `.env.local`, pass a dummy value — `DATABASE_URL=postgres://u:p@localhost:5432/db npm run build`. `pg` does not connect when the pool is constructed, and the page is `force-dynamic`, so no query runs at build time. This is the only way to verify that the bundler resolves the `.mjs` imports.
+
 **Four facts about this codebase that will bite you:**
 
 1. **`pg` returns `numeric` columns as JavaScript strings.** `latitude numeric(8,5)` arrives as `"35.36072"`. Every task that touches SQL must cast with `::float8`.
@@ -633,7 +637,7 @@ In `app/page.tsx`, inside the `query<Mountain>` call, add two lines after `also_
 
 ```sql
               also_in        as "alsoIn",
-              -- pg hands back `numeric` as a string, which would put every
+              -- pg hands back numeric columns as strings, which would put every
               -- triangle at NaN. The cast is not optional.
               latitude::float8  as latitude,
               longitude::float8 as longitude
