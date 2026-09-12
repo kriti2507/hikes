@@ -19,7 +19,11 @@
 **Four facts about this codebase that will bite you:**
 
 1. **`pg` returns `numeric` columns as JavaScript strings.** `latitude numeric(8,5)` arrives as `"35.36072"`. Every task that touches SQL must cast with `::float8`.
-2. **`tsconfig.json` sets `allowJs: false` and the project runs Node 20**, which has no TypeScript stripping. Modules that must run in the browser *and* in a build script *and* under `node --test` are therefore written as plain `.mjs` with a hand-written `.d.ts` beside them. TypeScript reads the `.d.ts` for types; the bundler and Node both load the `.mjs`. Do not duplicate the logic into a `.ts` copy.
+2. **`tsconfig.json` sets `allowJs: false` and the project runs Node 20**, which has no TypeScript stripping. Modules that must run in the browser *and* in a build script *and* under `node --test` are therefore written as plain `.mjs` with a hand-written `.d.mts` beside them. TypeScript reads the `.d.mts` for types; the bundler and Node both load the `.mjs`. Do not duplicate the logic into a `.ts` copy.
+
+   **Import these modules with the `.mjs` extension — always.** `import { project } from "@/lib/map/projection.mjs"`, never `from "@/lib/map/projection"`. This was verified empirically against this repo's `tsconfig.json` (`moduleResolution: "bundler"`, `strict: true`): a `.d.mts` declaration resolves for the extension-ful form and fails `TS2307` for the extensionless one, while a `.d.ts` does the exact opposite. There is no file name that satisfies both, so the project picks one convention: extension-ful. That also matches what Node ESM already forces on `scripts/build-map.mjs` and the test files, giving one rule across all three call sites.
+
+   This applies only to the `.mjs` pair. `lib/map/japan-geometry.ts` is a real TypeScript file and is imported extensionless as normal.
 3. **`app/map/` must never contain a `page.tsx` or `route.ts`.** It is a component directory. A `page.tsx` there would create a `/map` route, which this design deliberately does not have.
 4. **Commit messages in this repo are plain sentences**, not Conventional Commits. `git log --oneline` shows "switch to light mode default", not "feat: ...". Match that.
 
@@ -34,9 +38,9 @@
 | File | Responsibility |
 | --- | --- |
 | `lib/map/projection.mjs` | `project(lat, lon) → {x, y}`; extent constants; derived `HEIGHT` |
-| `lib/map/projection.d.ts` | Types for the above |
+| `lib/map/projection.d.mts` | Types for the above |
 | `lib/map/cluster.mjs` | `cluster(points, minSeparation) → Cluster[]`, deterministic |
-| `lib/map/cluster.d.ts` | Types for the above |
+| `lib/map/cluster.d.mts` | Types for the above |
 
 **New — generated data and its generator:**
 
@@ -81,7 +85,7 @@
 
 **Files:**
 - Create: `lib/map/projection.mjs`
-- Create: `lib/map/projection.d.ts`
+- Create: `lib/map/projection.d.mts`
 - Create: `test/projection.test.mjs`
 - Modify: `package.json`
 
@@ -214,7 +218,7 @@ export function project(lat, lon) {
 
 - [ ] **Step 5: Write the type declarations**
 
-Create `lib/map/projection.d.ts`:
+Create `lib/map/projection.d.mts`:
 
 ```ts
 export declare const LON_MIN: number;
@@ -235,7 +239,7 @@ Expected: PASS — 5 tests, 0 failures
 - [ ] **Step 7: Commit**
 
 ```bash
-git add package.json lib/map/projection.mjs lib/map/projection.d.ts test/projection.test.mjs
+git add package.json lib/map/projection.mjs lib/map/projection.d.mts test/projection.test.mjs
 git commit -m "$(cat <<'EOF'
 Add the map projection and a test runner
 
@@ -258,7 +262,7 @@ Determinism matters more than cluster quality here: a clustering that reshuffles
 
 **Files:**
 - Create: `lib/map/cluster.mjs`
-- Create: `lib/map/cluster.d.ts`
+- Create: `lib/map/cluster.d.mts`
 - Create: `test/cluster.test.mjs`
 
 - [ ] **Step 1: Write the failing test**
@@ -376,7 +380,7 @@ Expected: PASS — 13 tests total (5 projection + 8 cluster), 0 failures
 
 - [ ] **Step 5: Write the type declarations**
 
-Create `lib/map/cluster.d.ts`. The generic carries the caller's own point type
+Create `lib/map/cluster.d.mts`. The generic carries the caller's own point type
 through, so `map-view.tsx` gets `members` back as its own peak objects rather
 than as bare coordinates:
 
@@ -407,7 +411,7 @@ Expected: no errors.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add lib/map/cluster.mjs lib/map/cluster.d.ts test/cluster.test.mjs
+git add lib/map/cluster.mjs lib/map/cluster.d.mts test/cluster.test.mjs
 git commit -m "$(cat <<'EOF'
 Add deterministic screen-distance clustering for map markers
 
@@ -1222,7 +1226,7 @@ Create `app/map/use-pan-zoom.ts`:
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HEIGHT, WIDTH } from "@/lib/map/projection";
+import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
 
 export const MIN_SCALE = 1;
 
@@ -1402,7 +1406,7 @@ export function usePanZoom(element: SVGSVGElement | null) {
 - [ ] **Step 2: Verify it type-checks**
 
 Run: `npm run typecheck`
-Expected: no errors. If it cannot resolve `@/lib/map/projection`, confirm `lib/map/projection.d.ts` exists from Task 1.
+Expected: no errors. A `TS2307` here means the import dropped the `.mjs` extension — see the import rule in the background notes.
 
 - [ ] **Step 3: Commit**
 
@@ -1753,9 +1757,9 @@ Rewrite `app/map/map-view.tsx`:
 "use client";
 
 import { useMemo, useState } from "react";
-import { cluster } from "@/lib/map/cluster";
+import { cluster } from "@/lib/map/cluster.mjs";
 import { coastline, prefectures, source } from "@/lib/map/japan-geometry";
-import { project } from "@/lib/map/projection";
+import { project } from "@/lib/map/projection.mjs";
 import { type Entry, type Mountain, type Person, key } from "../checklist";
 import { ClusterMarker } from "./cluster-marker";
 import { PeakMarker } from "./peak-marker";
@@ -2322,7 +2326,7 @@ Replace the peak marker's `onActivate={() => {}}` with `onActivate={() => setOpe
 The card is an HTML overlay, so it needs the peak's position as a percentage of the container rather than in map units. The hook gives `viewBox` as a string; parse it once above the `return`. Extend the projection import to bring in the map's own dimensions — deriving the aspect ratio from them rather than retyping `1120.3` keeps this in step with the extent:
 
 ```tsx
-import { HEIGHT, WIDTH, project } from "@/lib/map/projection";
+import { HEIGHT, WIDTH, project } from "@/lib/map/projection.mjs";
 ```
 
 ```tsx
