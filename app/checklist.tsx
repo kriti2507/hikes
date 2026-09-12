@@ -23,6 +23,10 @@ export type Mountain = {
   bestSeason: string | null;
   notes: string | null;
   alsoIn: string | null;
+  // Approximate to roughly a kilometre; see db/coordinates.json. Nullable
+  // because the schema allows a mountain to be added without a position.
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type Person = { id: number; name: string };
