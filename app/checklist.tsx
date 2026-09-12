@@ -6,6 +6,7 @@ import { setAscent } from "./actions";
 import { AddPerson } from "./add-person";
 import { Banner } from "./banner";
 import { ChecklistTable } from "./checklist-table";
+import { MapView } from "./map/map-view";
 
 // Re-exported from here rather than a types file because app/page.tsx already
 // imports them from this path, and moving them would churn that import for no
@@ -125,7 +126,7 @@ export function Checklist({
         {view === "table" ? (
           <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
         ) : (
-          <p className="empty">Map coming in the next task.</p>
+          <MapView mountains={mountains} people={people} entries={entries} onSave={save} />
         )}
 
         <AddPerson onAdded={() => router.refresh()} />

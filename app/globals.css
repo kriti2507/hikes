@@ -878,3 +878,50 @@ code {
   background: var(--washi);
   border-color: var(--sumi);
 }
+
+.map {
+  padding-top: 14px;
+}
+
+/* The aspect ratio matches the projection's own, so the viewBox never gets
+   letterboxed and one CSS pixel is always the same number of map units. */
+.map-surface {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1000 / 1120.3;
+  max-height: 78vh;
+  margin: 0 auto;
+  background: var(--washi);
+  border: 1px solid var(--rule);
+  touch-action: none; /* we handle pinch and drag ourselves */
+  cursor: grab;
+}
+
+.map-surface:active {
+  cursor: grabbing;
+}
+
+.map-coastline path {
+  fill: none;
+  stroke: var(--sumi);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-prefectures path {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 0.8;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-note {
+  font-family: var(--font-en);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--sumi-faint);
+  text-align: center;
+  margin: 8px 0 0;
+}
