@@ -39,8 +39,10 @@ export function PeakMarker({
       }}
     >
       {/* A generous invisible target: the triangle itself is too small to hit
-          reliably on a phone. */}
-      <circle className="peak-target" cx={0} cy={-PEAK_HEIGHT / 2} r={HALF_WIDTH + 5} />
+          reliably on a phone. Radius is deliberately half the clustering
+          separation (22px), so two adjacent hit targets can touch but never
+          overlap. */}
+      <circle className="peak-target" cx={0} cy={-PEAK_HEIGHT / 2} r={HALF_WIDTH + 4} />
 
       {fill > 0 ? (
         <>

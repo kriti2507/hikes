@@ -67,3 +67,25 @@ test("a chain of points splits rather than snowballing into one cluster", () => 
   assert.equal(result.length, 2);
   assert.deepEqual(sizes(result), [2, 2]);
 });
+
+test("clusters that drift together while recentring are merged", () => {
+  // (9,0) is in reach of both, but joins the cluster created first, dragging
+  // its centroid to 4.5 — only 7.5 from the cluster at 12, closer than the
+  // separation that had kept them apart.
+  const result = cluster([point(1, 0, 0), point(2, 12, 0), point(3, 9, 0)], 10);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].members.length, 3);
+});
+
+test("no two clusters end up closer than the separation", () => {
+  const spread = Array.from({ length: 40 }, (_, i) =>
+    point(i + 1, (i % 8) * 9, Math.floor(i / 8) * 9),
+  );
+  const result = cluster(spread, 20);
+  for (let i = 0; i < result.length; i++) {
+    for (let j = i + 1; j < result.length; j++) {
+      const gap = Math.hypot(result[i].x - result[j].x, result[i].y - result[j].y);
+      assert.ok(gap > 20, `clusters ${i} and ${j} are only ${gap} apart`);
+    }
+  }
+});
