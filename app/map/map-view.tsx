@@ -46,8 +46,17 @@ export function MapView({
     const stillAlone = clusters.some(
       (c) => c.members.length === 1 && c.members[0].mountain.id === openId,
     );
-    if (!stillAlone) setOpenId(null);
-  }, [clusters, openId]);
+    if (stillAlone) return;
+
+    // This close was not asked for -- a ridge swallowed the open peak on
+    // zoom-out, not Escape, the close button, or an outside click -- so the
+    // card is about to unmount without ever running its own restore logic.
+    // Losing focus to <body> would be worse than not restoring it to the old
+    // target: rescue it onto the map surface instead, so the user keeps
+    // their place on the map they were just looking at.
+    if (document.activeElement?.closest(".peak-card")) element?.focus();
+    setOpenId(null);
+  }, [clusters, openId, element]);
 
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
@@ -103,6 +112,10 @@ export function MapView({
           style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
           {...handlers}
           aria-label="Map of Japan showing the hundred famous mountains"
+          // -1 rather than absent: this lets the housekeeping effect above
+          // rescue focus here when a ridge swallows the open card, without
+          // adding the whole surface as a stop in the normal tab order.
+          tabIndex={-1}
         >
           <g className="map-prefectures">
             {prefectures.map((d, i) => (
@@ -192,6 +205,11 @@ export function MapView({
 
         {open && cardStyle ? (
           <PeakCard
+            // A different peak is a different card: without this, switching
+            // straight from one open card to another lone peak reconciles
+            // the same component instance, so the mount-only effect that
+            // moves focus in and captures the restore target never re-runs.
+            key={open.mountain.id}
             mountain={open.mountain}
             people={people}
             entries={entries}

@@ -670,7 +670,7 @@ button:disabled {
   letter-spacing: 0.16em;
 }
 
-.login h1 span {
+.login h1 .subtitle {
   display: block;
   margin-top: 0.45rem;
   font-family: var(--font-en);
@@ -867,7 +867,7 @@ code {
   cursor: pointer;
 }
 
-.view-tabs button span {
+.view-tabs button .view-tab-en {
   font-family: var(--font-en);
   font-size: 12px;
   font-style: italic;

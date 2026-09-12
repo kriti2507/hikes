@@ -114,7 +114,7 @@ export function Checklist({
             className={view === "table" ? "on" : undefined}
             onClick={() => setView("table")}
           >
-            <span lang="ja">一覧</span> <span>Table</span>
+            <span lang="ja">一覧</span> <span className="view-tab-en">Table</span>
           </button>
           <button
             type="button"
@@ -125,7 +125,7 @@ export function Checklist({
             className={view === "map" ? "on" : undefined}
             onClick={() => setView("map")}
           >
-            <span lang="ja">地図</span> <span>Map</span>
+            <span lang="ja">地図</span> <span className="view-tab-en">Map</span>
           </button>
         </div>
 

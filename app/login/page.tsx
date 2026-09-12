@@ -11,8 +11,8 @@ export default async function LoginPage({
     <main className="login">
       <form action={signIn}>
         <h1>
-          日本百名山
-          <span>Nihon Hyakumeizan</span>
+          <span lang="ja">日本百名山</span>
+          <span className="subtitle">Nihon Hyakumeizan</span>
         </h1>
         <label htmlFor="password">Password</label>
         <input id="password" name="password" type="password" autoFocus autoComplete="current-password" />
