@@ -59,6 +59,7 @@ export function Checklist({
     ),
   );
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<"table" | "map">("table");
 
   const counts = useMemo(() => {
     const out = new Map<number, number>(people.map((p) => [p.id, 0]));
@@ -100,7 +101,32 @@ export function Checklist({
           <p className="empty">No people yet — add someone below to start a column.</p>
         ) : null}
 
-        <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
+        <div className="view-tabs" role="tablist" aria-label="Checklist view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "table"}
+            className={view === "table" ? "on" : undefined}
+            onClick={() => setView("table")}
+          >
+            一覧 <span>Table</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "map"}
+            className={view === "map" ? "on" : undefined}
+            onClick={() => setView("map")}
+          >
+            地図 <span>Map</span>
+          </button>
+        </div>
+
+        {view === "table" ? (
+          <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
+        ) : (
+          <p className="empty">Map coming in the next task.</p>
+        )}
 
         <AddPerson onAdded={() => router.refresh()} />
 

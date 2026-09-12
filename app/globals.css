@@ -841,3 +841,38 @@ code {
     transition: none;
   }
 }
+
+/* ---- Map ------------------------------------------------------------- */
+
+/* Tabs sit on the sheet like the paper tabs of an album, the active one
+   opening onto the page below it — hence the missing bottom border. */
+.view-tabs {
+  display: flex;
+  gap: 0;
+  margin: 0 0 -1px;
+  border-bottom: 1px solid var(--sumi);
+}
+
+.view-tabs button {
+  font-family: var(--font-ja);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  padding: 6px 18px;
+  color: var(--sumi-faint);
+  background: var(--washi-deep);
+  border: 1px solid var(--rule);
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.view-tabs button span {
+  font-family: var(--font-en);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.view-tabs button.on {
+  color: var(--sumi);
+  background: var(--washi);
+  border-color: var(--sumi);
+}
