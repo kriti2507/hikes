@@ -2,8 +2,18 @@
    See docs/superpowers/specs/2026-09-11-ukiyoe-redesign-design.md */
 
 :root {
-  --washi: #f1e7d2;
-  --washi-deep: #e7dcc3;
+  /* The page is a daylight print, always. Pinning the scheme keeps native
+     controls (date pickers, scrollbars) light too, which a bare palette
+     override would not. */
+  color-scheme: light;
+
+  /* Day and night are a matched pair from Hokusai's Thirty-six Views: the same
+     mountain in fair weather and in storm, so the toggle changes the weather
+     rather than the theme. Light is the default; night is opt-in via the
+     `data-theme` attribute the toggle sets, so the OS preference does not
+     silently decide the page. */
+  --washi: #f7eed9;
+  --washi-deep: #ecdfc2;
   --sumi: #1b1713;
   --sumi-soft: #5c5348;
   --sumi-faint: #6b6253;
@@ -11,9 +21,13 @@
   --bero-ai: #1d3f66;
   --beni: #b03327;
 
-  /* Day and night are a matched pair from Hokusai's Thirty-six Views: the same
-     mountain in fair weather and in storm, so dark mode changes the weather
-     rather than the theme. */
+  /* Four more pigments off the same block-printing tray, so the page has a
+     full palette instead of blue-and-red alone. */
+  --matcha: #4f7042;   /* seasons */
+  --yamabuki: #b3781a; /* heights */
+  --murasaki: #6a4a86; /* readings */
+  --mizu: #2f7d8c;     /* mist and rules */
+
   --print: url("/red-fuji.jpg");
   --print-x: 72%;
   --print-y: 40%;
@@ -25,23 +39,29 @@
   --font-en: Georgia, "Iowan Old Style", "Times New Roman", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --washi: #14120f;
-    --washi-deep: #1c1916;
-    --sumi: #ece2cc;
-    --sumi-soft: #a89c85;
-    --sumi-faint: #8a8070;
-    --rule: #3a332a;
-    --bero-ai: #7fa5cc;
-    --beni: #d9573f;
+:root[data-theme="dark"] {
+  color-scheme: dark;
 
-    --print: url("/black-fuji.jpg");
-    --print-x: 62%;
-    --print-y: 34%;
+  --washi: #14120f;
+  --washi-deep: #1c1916;
+  --sumi: #ece2cc;
+  --sumi-soft: #a89c85;
+  --sumi-faint: #8a8070;
+  --rule: #3a332a;
+  --bero-ai: #7fa5cc;
+  --beni: #d9573f;
 
-    --kasumi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 26' preserveAspectRatio='none'%3E%3Cpath d='M0,26L0,16Q15,6,34,13Q52,19,70,11Q88,4,108,12Q126,19,146,12Q168,5,188,14Q206,21,226,14Q248,6,268,15Q288,22,308,15Q330,7,350,16Q368,23,388,16Q410,8,430,17Q450,24,470,17Q492,9,512,18Q532,24,552,18Q574,11,600,17L600,26Z' fill='%231c1916'/%3E%3C/svg%3E");
-  }
+  /* The same four pigments, lifted to carry on a near-black ground. */
+  --matcha: #8fb87a;
+  --yamabuki: #d9a441;
+  --murasaki: #a98ac4;
+  --mizu: #67b6c4;
+
+  --print: url("/black-fuji.jpg");
+  --print-x: 62%;
+  --print-y: 34%;
+
+  --kasumi: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 26' preserveAspectRatio='none'%3E%3Cpath d='M0,26L0,16Q15,6,34,13Q52,19,70,11Q88,4,108,12Q126,19,146,12Q168,5,188,14Q206,21,226,14Q248,6,268,15Q288,22,308,15Q330,7,350,16Q368,23,388,16Q410,8,430,17Q450,24,470,17Q492,9,512,18Q532,24,552,18Q574,11,600,17L600,26Z' fill='%231c1916'/%3E%3C/svg%3E");
 }
 
 * {
@@ -78,11 +98,9 @@ body::before {
 
 /* `overlay` collapses toward multiply on a near-black ground, so the grain would
    vanish at night. `screen` lets it read as flecks in the paper instead. */
-@media (prefers-color-scheme: dark) {
-  body::before {
-    opacity: 0.07;
-    mix-blend-mode: screen;
-  }
+:root[data-theme="dark"] body::before {
+  opacity: 0.07;
+  mix-blend-mode: screen;
 }
 
 /* `main` runs the full width so the banner can bleed to the window edge; the
@@ -169,6 +187,42 @@ main {
   color: var(--bero-ai);
 }
 
+/* ---------- weather toggle ---------- */
+
+/* Sits where a publisher's seal would, in the top corner of the print. It
+   overlaps the image, so it carries its own paper ground to stay legible. */
+.theme-toggle {
+  position: absolute;
+  top: 1rem;
+  right: max(1.5rem, calc((100% - 1100px) / 2 + 1.5rem));
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--mizu);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--washi) 88%, transparent);
+  color: var(--bero-ai);
+  font-family: var(--font-en);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  backdrop-filter: blur(2px);
+}
+
+.theme-toggle:hover {
+  border-color: var(--beni);
+  color: var(--beni);
+}
+
+.theme-toggle .glyph {
+  font-family: var(--font-ja);
+  font-size: 0.9rem;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
 /* ---------- tally seals ---------- */
 
 .tally {
@@ -194,10 +248,19 @@ main {
   justify-content: center;
   width: 3.75rem;
   height: 3.75rem;
-  border: 2px solid var(--beni);
+  border: 2px solid var(--seal, var(--beni));
   border-radius: 5px;
-  color: var(--beni);
+  background: color-mix(in srgb, var(--seal, var(--beni)) 9%, transparent);
+  color: var(--seal, var(--beni));
 }
+
+/* Each person gets their own pigment, so the columns are telling apart at a
+   glance. Cycles after five — a checklist for a household, not a census. */
+.tally li:nth-child(5n + 1) .tally-seal { --seal: var(--beni); }
+.tally li:nth-child(5n + 2) .tally-seal { --seal: var(--bero-ai); }
+.tally li:nth-child(5n + 3) .tally-seal { --seal: var(--matcha); }
+.tally li:nth-child(5n + 4) .tally-seal { --seal: var(--murasaki); }
+.tally li:nth-child(5n + 5) .tally-seal { --seal: var(--yamabuki); }
 
 .tally-seal strong {
   font-size: 1.25rem;
@@ -261,7 +324,7 @@ thead th {
   font-weight: 400;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--sumi-soft);
+  color: var(--bero-ai);
   white-space: nowrap;
 }
 
@@ -272,7 +335,7 @@ tbody td {
 }
 
 tbody tr:hover td {
-  background: color-mix(in srgb, var(--bero-ai) 5%, transparent);
+  background: color-mix(in srgb, var(--yamabuki) 12%, transparent);
 }
 
 /* Prefecture headers rise out of a mist band. */
@@ -288,11 +351,12 @@ tr.group th {
   background-repeat: repeat-x;
   background-position: 0 0.7rem;
   background-size: 320px 1.5rem;
-  border-bottom: 1.5px solid var(--sumi);
+  border-bottom: 1.5px solid var(--mizu);
   text-align: left;
   font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.1em;
+  color: var(--bero-ai);
 }
 
 tr.group th span {
@@ -302,7 +366,7 @@ tr.group th span {
   font-weight: 400;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--sumi-faint);
+  color: var(--mizu);
 }
 
 td.num,
@@ -322,7 +386,7 @@ td.mountain .kanji {
 td.mountain .kana {
   display: block;
   font-size: 0.7rem;
-  color: var(--sumi-faint);
+  color: var(--murasaki);
 }
 
 td.mountain .en {
@@ -340,11 +404,19 @@ th.elev {
   white-space: nowrap;
 }
 
+td.elev {
+  color: var(--yamabuki);
+}
+
 td.season,
 th.season {
   width: 7rem;
   white-space: nowrap;
   color: var(--sumi-soft);
+}
+
+td.season {
+  color: var(--matcha);
 }
 
 td.notes {
@@ -387,9 +459,28 @@ td.person input[type="checkbox"]::after {
   content: "〇";
 }
 
+/* The same five-pigment cycle as the tally seals. Five leading columns come
+   before the people, so person N is the (N + 5)th cell of its row — hence the
+   +6 offset. `nth-of-type` counts DOM position, so the columns hidden on
+   mobile do not shift the colours. */
+td.person:nth-of-type(5n + 6),
+th.person:nth-of-type(5n + 6) { --seal: var(--beni); }
+td.person:nth-of-type(5n + 7),
+th.person:nth-of-type(5n + 7) { --seal: var(--bero-ai); }
+td.person:nth-of-type(5n + 8),
+th.person:nth-of-type(5n + 8) { --seal: var(--matcha); }
+td.person:nth-of-type(5n + 9),
+th.person:nth-of-type(5n + 9) { --seal: var(--murasaki); }
+td.person:nth-of-type(5n + 10),
+th.person:nth-of-type(5n + 10) { --seal: var(--yamabuki); }
+
+th.person {
+  color: var(--seal, var(--sumi-soft));
+}
+
 td.person input[type="checkbox"]:checked {
-  border-color: var(--beni);
-  background: var(--beni);
+  border-color: var(--seal, var(--beni));
+  background: var(--seal, var(--beni));
   color: var(--washi);
   opacity: 1;
   /* Tilt is seeded from the mountain id, not random, so a given seal always
@@ -658,6 +749,14 @@ code {
 
   .banner-text {
     max-width: none;
+  }
+
+  /* No room to float over the title at this width, so the toggle takes its
+     place in the flow above it instead. */
+  .theme-toggle {
+    position: static;
+    margin-bottom: 1rem;
+    width: fit-content;
   }
 
   .banner h1 {
