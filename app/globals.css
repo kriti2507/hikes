@@ -969,3 +969,44 @@ code {
   fill: var(--sumi);
   dominant-baseline: alphabetic;
 }
+
+.map-filter {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.map-filter-label {
+  font-family: var(--font-en);
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sumi-faint);
+}
+
+.map-filter-summary {
+  margin-left: auto;
+  font-family: var(--font-en);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--sumi-faint);
+}
+
+.chip {
+  font-family: var(--font-en);
+  font-size: 13px;
+  padding: 2px 12px;
+  border: 1px solid var(--beni);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--beni);
+  cursor: pointer;
+}
+
+.chip.on {
+  background: var(--beni);
+  color: var(--washi);
+}

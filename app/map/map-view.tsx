@@ -1,73 +1,54 @@
 "use client";
 
-import { type CSSProperties, useMemo, useState } from "react";
-import { cluster } from "@/lib/map/cluster.mjs";
+import { type CSSProperties, useState } from "react";
 import { coastline, prefectures, source } from "@/lib/map/japan-geometry";
-import { HEIGHT, WIDTH, project } from "@/lib/map/projection.mjs";
-import { type Entry, type Mountain, type Person, key } from "../checklist";
+import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
+import type { Entry, Mountain, Person } from "../checklist";
 import { ClusterMarker } from "./cluster-marker";
 import { PeakMarker } from "./peak-marker";
+import { PersonFilter } from "./person-filter";
+import { useMapMarkers } from "./use-map-markers";
 import { usePanZoom } from "./use-pan-zoom";
-
-// Screen pixels below which two peaks merge into a ridge. A triangle is 14px
-// wide, so this leaves a clear gap between neighbours.
-const MIN_SEPARATION_PX = 22;
-
-type PlacedPeak = {
-  order: number;
-  x: number;
-  y: number;
-  mountain: Mountain;
-};
 
 export function MapView({
   mountains,
   people,
   entries,
   selectedIds,
+  onTogglePerson,
 }: {
   mountains: Mountain[];
   people: Person[];
   entries: Record<string, Entry>;
   selectedIds: number[];
+  onTogglePerson: (personId: number) => void;
+  onSave: (personId: number, mountainId: number, next: Entry) => void;
 }) {
   const [element, setElement] = useState<SVGSVGElement | null>(null);
   const { viewBox, unitsPerPixel, measured, handlers } = usePanZoom(element);
 
-  const placed = useMemo<PlacedPeak[]>(
-    () =>
-      mountains
-        .filter((m) => m.latitude !== null && m.longitude !== null)
-        .map((m) => ({
-          // Fukada order, with unnumbered additions after all hundred, so the
-          // clustering tie-break is stable and matches the table.
-          order: m.fukadaNumber ?? 10_000 + m.id,
-          ...project(m.latitude as number, m.longitude as number),
-          mountain: m,
-        })),
-    [mountains],
-  );
+  const { clusters, fillFor, missing } = useMapMarkers({ mountains, entries, selectedIds, unitsPerPixel });
 
-  const missing = mountains.length - placed.length;
-
-  /** 0 to 1: how many of the selected people have climbed this peak. */
-  const fillFor = (mountain: Mountain) => {
-    if (selectedIds.length === 0) return 0;
-    const climbed = selectedIds.filter((id) => entries[key(id, mountain.id)]?.climbed).length;
-    return climbed / selectedIds.length;
-  };
-
-  // Memoised on unitsPerPixel alone: panning does not change which peaks
-  // collide, so it must not pay for a reclustering.
-  const clusters = useMemo(
-    () => cluster(placed, MIN_SEPARATION_PX * unitsPerPixel),
-    [placed, unitsPerPixel],
-  );
+  // Clustering only groups placed peaks, it never drops or duplicates one, so
+  // summing member counts recovers the same total the pre-extraction `placed`
+  // array gave without map-view.tsx needing to hold that array itself.
+  const total = clusters.reduce((sum, c) => sum + c.members.length, 0);
+  const fullyClimbed =
+    selectedIds.length === 0
+      ? 0
+      : clusters.reduce((sum, c) => sum + c.members.filter((m) => fillFor(m.mountain) === 1).length, 0);
 
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
   return (
     <div className="map">
+      <PersonFilter
+        people={people}
+        selectedIds={selectedIds}
+        onToggle={onTogglePerson}
+        fullyClimbed={fullyClimbed}
+        total={total}
+      />
       <svg
         ref={setElement}
         className="map-surface"

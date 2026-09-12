@@ -61,6 +61,8 @@ export function Checklist({
   );
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"table" | "map">("table");
+  // Everyone is shown by default, so a solid triangle means "all of us".
+  const [selectedIds, setSelectedIds] = useState<number[]>(() => people.map((p) => p.id));
 
   const counts = useMemo(() => {
     const out = new Map<number, number>(people.map((p) => [p.id, 0]));
@@ -130,7 +132,15 @@ export function Checklist({
             mountains={mountains}
             people={people}
             entries={entries}
-            selectedIds={people.map((p) => p.id)}
+            selectedIds={selectedIds}
+            onTogglePerson={(personId) =>
+              setSelectedIds((current) =>
+                current.includes(personId)
+                  ? current.filter((id) => id !== personId)
+                  : [...current, personId],
+              )
+            }
+            onSave={save}
           />
         )}
 
