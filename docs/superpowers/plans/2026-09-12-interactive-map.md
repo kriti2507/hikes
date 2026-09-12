@@ -1160,8 +1160,10 @@ Append to `app/globals.css`:
 ```css
 /* ---- Map ------------------------------------------------------------- */
 
-/* Tabs sit on the sheet like the paper tabs of an album, the active one
-   opening onto the page below it — hence the missing bottom border. */
+/* Tabs sit on the sheet like the paper tabs of an album. The hairline runs the
+   full width of the strip and the view below is pulled up onto it: the table's
+   opaque sticky header covers it, the map leaves it showing as the top rule of
+   the map area. Both read correctly, so neither is special-cased. */
 .view-tabs {
   display: flex;
   gap: 0;
