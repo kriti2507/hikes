@@ -57,5 +57,18 @@ export function useMapMarkers({
     [placed, unitsPerPixel],
   );
 
-  return { clusters, fillFor, missing };
+  const total = placed.length;
+
+  // Deliberately off `placed`, not `clusters`: these counts describe the
+  // whole map and must not move with zoom. A cluster's member count happens
+  // to sum to placed.length -- settle() only merges and splices, it never
+  // drops or duplicates a peak -- but relying on that would recluster on
+  // every zoom step just to recover a number already in hand, and would read
+  // it off a placeholder threshold before the first measurement.
+  const fullyClimbed = useMemo(() => {
+    if (selectedIds.length === 0) return 0;
+    return placed.filter((p) => fillFor(p.mountain) === 1).length;
+  }, [placed, entries, selectedIds]);
+
+  return { clusters, fillFor, missing, total, fullyClimbed };
 }

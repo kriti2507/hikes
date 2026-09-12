@@ -45,7 +45,11 @@ export function PersonFilter({
           </button>
         );
       })}
-      <span className="map-filter-summary">{summary(selected, fullyClimbed, total)}</span>
+      {/* The chips announce their own pressed state; this sentence is what
+          actually explains what the map now shows, so it announces itself. */}
+      <span className="map-filter-summary" aria-live="polite">
+        {summary(selected, fullyClimbed, total)}
+      </span>
     </div>
   );
 }

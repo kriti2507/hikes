@@ -27,16 +27,12 @@ export function MapView({
   const [element, setElement] = useState<SVGSVGElement | null>(null);
   const { viewBox, unitsPerPixel, measured, handlers } = usePanZoom(element);
 
-  const { clusters, fillFor, missing } = useMapMarkers({ mountains, entries, selectedIds, unitsPerPixel });
-
-  // Clustering only groups placed peaks, it never drops or duplicates one, so
-  // summing member counts recovers the same total the pre-extraction `placed`
-  // array gave without map-view.tsx needing to hold that array itself.
-  const total = clusters.reduce((sum, c) => sum + c.members.length, 0);
-  const fullyClimbed =
-    selectedIds.length === 0
-      ? 0
-      : clusters.reduce((sum, c) => sum + c.members.filter((m) => fillFor(m.mountain) === 1).length, 0);
+  const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
+    mountains,
+    entries,
+    selectedIds,
+    unitsPerPixel,
+  });
 
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
