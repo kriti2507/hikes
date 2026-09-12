@@ -3,6 +3,7 @@
 import { type CSSProperties, Fragment, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addPerson, deletePerson, setAscent, updatePerson } from "./actions";
+import { ThemeToggle } from "./theme-toggle";
 
 // Degrees of tilt a seal can land at, picked by mountain id.
 const TILTS = [-3, -1.5, 0, 1.5, 3];
@@ -95,6 +96,7 @@ export function Checklist({
       <header className="banner">
         {/* Decorative: the print carries no information the text does not. */}
         <div className="banner-print" aria-hidden="true" />
+        <ThemeToggle />
         <div className="banner-text">
           <h1>
             日本百名山
