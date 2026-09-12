@@ -61,8 +61,19 @@ export function Checklist({
   );
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"table" | "map">("table");
-  // Everyone is shown by default, so a solid triangle means "all of us".
-  const [selectedIds, setSelectedIds] = useState<number[]>(() => people.map((p) => p.id));
+  // Storing *exclusions* rather than the selection itself means "everyone is
+  // shown by default" holds for a person who did not exist yet the last time
+  // this component rendered — there is nothing to initialise them into. This
+  // state is never reconciled against `people`; `selectedIds` below is
+  // recomputed from the current roster on every render instead, so a person
+  // who is deleted just drops out of the filter, and a deliberate uncheck
+  // survives an unrelated router.refresh() because the refresh only ever
+  // replaces `people`, never this set.
+  const [excludedIds, setExcludedIds] = useState<Set<number>>(() => new Set());
+  const selectedIds = useMemo(
+    () => people.filter((p) => !excludedIds.has(p.id)).map((p) => p.id),
+    [people, excludedIds],
+  );
 
   const counts = useMemo(() => {
     const out = new Map<number, number>(people.map((p) => [p.id, 0]));
@@ -139,11 +150,12 @@ export function Checklist({
               entries={entries}
               selectedIds={selectedIds}
               onTogglePerson={(personId) =>
-                setSelectedIds((current) =>
-                  current.includes(personId)
-                    ? current.filter((id) => id !== personId)
-                    : [...current, personId],
-                )
+                setExcludedIds((current) => {
+                  const next = new Set(current);
+                  if (next.has(personId)) next.delete(personId);
+                  else next.add(personId);
+                  return next;
+                })
               }
               onSave={save}
             />

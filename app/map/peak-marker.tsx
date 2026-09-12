@@ -3,12 +3,14 @@
 import { useId } from "react";
 
 // Marker dimensions in screen pixels. The parent applies a counter-scale so
-// these stay constant however far you zoom.
-export const HALF_WIDTH = 7;
-export const PEAK_HEIGHT = 11;
+// these stay constant however far you zoom. Not exported: nothing outside
+// this module reads them, and the shape they describe is this component's
+// own business.
+const HALF_WIDTH = 7;
+const PEAK_HEIGHT = 11;
 
 /** The triangle, apex up, sitting on its base at y = 0. */
-export const PEAK_PATH = `M0 ${-PEAK_HEIGHT}L${HALF_WIDTH} 0L${-HALF_WIDTH} 0Z`;
+const PEAK_PATH = `M0 ${-PEAK_HEIGHT}L${HALF_WIDTH} 0L${-HALF_WIDTH} 0Z`;
 
 export function PeakMarker({
   fill,

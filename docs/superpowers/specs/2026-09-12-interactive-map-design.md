@@ -269,9 +269,12 @@ Components are not unit-tested. Verification of the map itself is by running it.
 
 - The **table view is the complete accessible equivalent**; nothing is reachable only
   through the map.
-- Peaks are keyboard-focusable in table order with descriptive labels
-  ("Mt. Fuji, 3,776 m, climbed by Kriti and Ami"). The tab strip precedes them, so
-  tabbing past 100 triangles is avoidable.
+- Peaks are keyboard-focusable in Fukada order (the same order clustering visits
+  them in, so the tie-break stays stable while tabbing), with descriptive labels
+  ("Mt. Fuji, 3,776 m, climbed by Kriti and Ami"). This is not the table's order —
+  the table groups by prefecture — but the table remains the complete accessible
+  equivalent regardless of ordering, so nothing is lost by the two disagreeing.
+  The tab strip precedes the peaks, so tabbing past 100 triangles is avoidable.
 - Colour is never the sole channel: fill level is a shape difference, the card names
   people in text, and the header restates the count in words.
 - `prefers-reduced-motion` disables zoom animation.
