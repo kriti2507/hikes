@@ -1489,8 +1489,9 @@ Create `app/map/map-view.tsx`:
 ```tsx
 "use client";
 
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { coastline, prefectures, source } from "@/lib/map/japan-geometry";
+import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
 import type { Entry, Mountain, Person } from "../checklist";
 import { usePanZoom } from "./use-pan-zoom";
 
@@ -1517,6 +1518,10 @@ export function MapView({
         ref={setElement}
         className="map-surface"
         viewBox={viewBox}
+        // The CSS needs the projection's dimensions for its aspect ratio and
+        // width cap; passing them in keeps projection.mjs the only place they
+        // are written down. Same pattern as --tilt in checklist-table.tsx.
+        style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
         {...handlers}
         aria-label="Map of Japan showing the hundred famous mountains"
       >
@@ -1567,13 +1572,19 @@ Append to `app/globals.css`, below the `.view-tabs` rules:
   padding-top: 14px;
 }
 
-/* The aspect ratio matches the projection's own, so the viewBox never gets
-   letterboxed and one CSS pixel is always the same number of map units. */
+/* The aspect ratio matches the projection's own, so one CSS pixel is always
+   the same number of map units — which is what the pan/zoom hook's
+   unitsPerPixel, and therefore clustering and marker sizing, assume.
+   The height is bounded by capping the *width*: clamping height instead would
+   leave the box wider than the ratio, and the SVG would letterbox inside it
+   while contentRect.width still reported the full box — on a 900x900 window
+   that read unitsPerPixel 44% low. The dimensions come in as custom
+   properties so projection.mjs stays the only place they are written down. */
 .map-surface {
   display: block;
   width: 100%;
-  aspect-ratio: 1000 / 1120.3;
-  max-height: 78vh;
+  max-width: calc(78vh * var(--map-w) / var(--map-h));
+  aspect-ratio: var(--map-w) / var(--map-h);
   margin: 0 auto;
   background: var(--washi);
   border: 1px solid var(--rule);
@@ -1878,6 +1889,10 @@ export function MapView({
         ref={setElement}
         className="map-surface"
         viewBox={viewBox}
+        // The CSS needs the projection's dimensions for its aspect ratio and
+        // width cap; passing them in keeps projection.mjs the only place they
+        // are written down. Same pattern as --tilt in checklist-table.tsx.
+        style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
         {...handlers}
         aria-label="Map of Japan showing the hundred famous mountains"
       >
