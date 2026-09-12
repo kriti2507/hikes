@@ -8,7 +8,7 @@ import { ClusterMarker } from "./cluster-marker";
 import { PeakCard } from "./peak-card";
 import { PeakMarker } from "./peak-marker";
 import { PersonFilter } from "./person-filter";
-import { useMapMarkers } from "./use-map-markers";
+import { NAME_ROOM_PX, useMapMarkers } from "./use-map-markers";
 import { NAME_SCALE, usePanZoom } from "./use-pan-zoom";
 
 export function MapView({
@@ -31,7 +31,7 @@ export function MapView({
     usePanZoom(element);
   const [openId, setOpenId] = useState<number | null>(null);
 
-  const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
+  const { clusters, nearestNeighborPx, fillFor, missing, total, fullyClimbed } = useMapMarkers({
     mountains,
     entries,
     selectedIds,
@@ -130,7 +130,7 @@ export function MapView({
               if (wasDragged()) event.stopPropagation();
             }}
           >
-            {measured && clusters.map((c) => {
+            {measured && clusters.map((c, i) => {
               // Markers are drawn in pixel units; the counter-scale keeps them
               // the same size on screen however far the map is zoomed.
               const transform = `translate(${c.x} ${c.y}) scale(${unitsPerPixel})`;
@@ -138,13 +138,17 @@ export function MapView({
               if (c.members.length === 1) {
                 const peak = c.members[0];
                 const fill = fillFor(peak.mountain);
+                // NAME_SCALE alone is not enough: a name reaches far past the
+                // 22px clustering guarantee (NAME_ROOM_PX), so it also needs
+                // this peak's own measured clearance to its nearest neighbour.
+                const hasRoom = scale >= NAME_SCALE && nearestNeighborPx[i] > NAME_ROOM_PX;
                 return (
                   <g key={`m${peak.mountain.id}`} transform={transform}>
                     <PeakMarker
                       fill={fill}
                       selected={openId === peak.mountain.id}
                       number={peak.mountain.fukadaNumber}
-                      name={scale >= NAME_SCALE ? peak.mountain.nameEn : null}
+                      name={hasRoom ? peak.mountain.nameEn : null}
                       label={`${nameOf(peak.mountain)}, ${peak.mountain.elevationM} metres`}
                       onActivate={() => setOpenId(peak.mountain.id)}
                     />

@@ -9,6 +9,12 @@ import { type Entry, type Mountain, key } from "../checklist";
 // wide, so this leaves a clear gap between neighbours.
 const MIN_SEPARATION_PX = 22;
 
+// The widest English name ("Mt. Echigo-Komagatake") reaches roughly 113px
+// past its anchor at the label's font size. Clustering only guarantees 22px
+// between markers, so a name needs its own, much larger clearance — without
+// this check a name runs straight across its neighbours' triangles.
+export const NAME_ROOM_PX = 120;
+
 type PlacedPeak = {
   order: number;
   x: number;
@@ -57,6 +63,26 @@ export function useMapMarkers({
     [placed, unitsPerPixel],
   );
 
+  // Screen-pixel distance from each cluster's centroid to its nearest other
+  // cluster, aligned index-for-index with `clusters`. A name label's reach
+  // (NAME_ROOM_PX) is far bigger than the clustering guarantee, so whether
+  // one fits is a separate question from whether the peak is clustered at
+  // all — this is what lets map-view answer it without recomputing distances
+  // itself. Same dependency as `clusters`: it is only ever stale together.
+  const nearestNeighborPx = useMemo(
+    () =>
+      clusters.map((c) => {
+        let best = Infinity;
+        for (const other of clusters) {
+          if (other === c) continue;
+          const dMapUnits = Math.hypot(c.x - other.x, c.y - other.y);
+          best = Math.min(best, dMapUnits / unitsPerPixel);
+        }
+        return best;
+      }),
+    [clusters, unitsPerPixel],
+  );
+
   const total = placed.length;
 
   // Deliberately off `placed`, not `clusters`: these counts describe the
@@ -70,5 +96,5 @@ export function useMapMarkers({
     return placed.filter((p) => fillFor(p.mountain) === 1).length;
   }, [placed, entries, selectedIds]);
 
-  return { clusters, fillFor, missing, total, fullyClimbed };
+  return { clusters, nearestNeighborPx, fillFor, missing, total, fullyClimbed };
 }
