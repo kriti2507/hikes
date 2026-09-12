@@ -1245,6 +1245,10 @@ export const MAX_SCALE = 16;
 // Above this the map has room to name peaks as well as number them.
 export const NAME_SCALE = 6;
 
+// A few pixels of travel is a shaky tap, not a drag. Above this the gesture
+// was a pan and any click it synthesises should be ignored.
+const DRAG_SLOP = 5;
+
 type Camera = { scale: number; cx: number; cy: number };
 
 const clamp = (value: number, low: number, high: number) =>
@@ -1268,15 +1272,25 @@ const FIT: Camera = { scale: MIN_SCALE, cx: WIDTH / 2, cy: HEIGHT / 2 };
 export function usePanZoom(element: SVGSVGElement | null) {
   const [camera, setCamera] = useState<Camera>(FIT);
   const [width, setWidth] = useState(0);
+  const [measured, setMeasured] = useState(false);
 
   // Pointers currently down, by pointerId, in client coordinates. A ref rather
   // than state: these change on every move and must not drive a render.
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const pinchStart = useRef<{ gap: number; scale: number } | null>(null);
 
+  // A drag that ends over a peak must not open it. The browser synthesises a
+  // click on whatever was pressed regardless of pointer capture, so markers
+  // ask this before acting.
+  const travelled = useRef(0);
+  const dragged = useRef(false);
+
   useEffect(() => {
     if (!element) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    const observer = new ResizeObserver(([entry]) => {
+      setWidth(entry.contentRect.width);
+      setMeasured(true);
+    });
     observer.observe(element);
     return () => observer.disconnect();
   }, [element]);
@@ -1287,7 +1301,9 @@ export function usePanZoom(element: SVGSVGElement | null) {
   const minY = camera.cy - viewHeight / 2;
 
   // How many map units one CSS pixel covers. Clustering and marker sizing both
-  // key off this, which is what makes them zoom-independent.
+  // key off this, which is what makes them zoom-independent. Before the first
+  // ResizeObserver callback this is a placeholder guess, not a measurement —
+  // no consumer should render markers against it. Check `measured` instead.
   const unitsPerPixel = width > 0 ? viewWidth / width : WIDTH / 600;
 
   const viewBox = `${minX} ${minY} ${viewWidth} ${viewHeight}`;
@@ -1318,6 +1334,22 @@ export function usePanZoom(element: SVGSVGElement | null) {
     });
   }, []);
 
+  /** Zoom to an absolute scale while holding one map point under the same
+      pixel. Pinch computes an absolute target from a fixed reference, so
+      converting it to a relative factor outside the updater would read a
+      possibly-stale scale — this keeps the whole calculation inside it. */
+  const zoomTo = useCallback((scale: number, anchor: { x: number; y: number }) => {
+    setCamera((current) => {
+      const next = clamp(scale, MIN_SCALE, MAX_SCALE);
+      const actual = next / current.scale;
+      return clampCamera({
+        scale: next,
+        cx: anchor.x + (current.cx - anchor.x) / actual,
+        cy: anchor.y + (current.cy - anchor.y) / actual,
+      });
+    });
+  }, []);
+
   /** Zoom by a factor about the centre — for the on-screen buttons. */
   const zoomBy = useCallback((factor: number) => {
     setCamera((current) => clampCamera({ ...current, scale: current.scale * factor }));
@@ -1339,6 +1371,8 @@ export function usePanZoom(element: SVGSVGElement | null) {
     event.currentTarget.setPointerCapture(event.pointerId);
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     pinchStart.current = null;
+    travelled.current = 0;
+    dragged.current = false;
   }
 
   function onPointerMove(event: React.PointerEvent<SVGSVGElement>) {
@@ -1362,12 +1396,13 @@ export function usePanZoom(element: SVGSVGElement | null) {
         MAX_SCALE,
       );
       const midpoint = toMap((a.x + b.x) / 2, (a.y + b.y) / 2);
-      zoomAround(target / camera.scale, midpoint);
+      zoomTo(target, midpoint);
       return;
     }
 
     // Single pointer: drag the paper. Moving the pointer right moves the map
     // right, so the camera goes left.
+    travelled.current += Math.hypot(next.x - previous.x, next.y - previous.y);
     const box = event.currentTarget.getBoundingClientRect();
     const dx = ((next.x - previous.x) / box.width) * viewWidth;
     const dy = ((next.y - previous.y) / box.height) * viewHeight;
@@ -1377,6 +1412,9 @@ export function usePanZoom(element: SVGSVGElement | null) {
   function onPointerUp(event: React.PointerEvent<SVGSVGElement>) {
     pointers.current.delete(event.pointerId);
     if (pointers.current.size < 2) pinchStart.current = null;
+    // pointerup fires before the browser's synthesised click, so by the time
+    // a marker's click handler runs, this is already settled.
+    if (travelled.current > DRAG_SLOP) dragged.current = true;
   }
 
   // Wheel is bound natively rather than through React's onWheel: React attaches
@@ -1396,6 +1434,8 @@ export function usePanZoom(element: SVGSVGElement | null) {
     scale: camera.scale,
     viewBox,
     unitsPerPixel,
+    measured,
+    wasDragged: () => dragged.current,
     zoomBy,
     fit,
     fitBounds,
