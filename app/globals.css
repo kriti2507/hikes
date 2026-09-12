@@ -175,7 +175,7 @@ main {
   letter-spacing: 0.18em;
 }
 
-.banner h1 span {
+.banner h1 .subtitle {
   display: block;
   margin-top: 0.6rem;
   font-family: var(--font-en);
@@ -359,7 +359,7 @@ tr.group th {
   color: var(--bero-ai);
 }
 
-tr.group th span {
+tr.group th .prefecture-en {
   margin-left: 0.7rem;
   font-family: var(--font-en);
   font-size: 0.62rem;
@@ -1015,6 +1015,11 @@ code {
   position: relative;
 }
 
+.peak-card:focus-visible {
+  outline: 2px solid var(--bero-ai);
+  outline-offset: 2px;
+}
+
 .peak-card {
   position: absolute;
   z-index: 2;
@@ -1132,4 +1137,18 @@ code {
 
 .map-zoom button.fit {
   font-size: 10px;
+}
+
+/* The map's own motion -- panning, zooming, the fitBounds tween -- is direct
+   manipulation or already gated behind window.matchMedia in use-pan-zoom.ts,
+   which reduced-motion does not ask us to suppress. This block covers the
+   chips and controls that share the page's hover treatments, should any of
+   them pick up a transition in the future; none currently declares one, so
+   today this rule has nothing to disable. */
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .map-zoom button,
+  .view-tabs button {
+    transition: none;
+  }
 }

@@ -51,8 +51,8 @@ export function ChecklistTable({
           <Fragment key={group.prefecture}>
             <tr className="group">
               <th colSpan={5 + people.length}>
-                {group.prefectureJa}
-                <span>
+                <span lang="ja">{group.prefectureJa}</span>
+                <span className="prefecture-en">
                   {group.prefecture} · {group.mountains.length}
                 </span>
               </th>
@@ -61,8 +61,8 @@ export function ChecklistTable({
               <tr key={m.id}>
                 <td className="num">{m.fukadaNumber ?? "—"}</td>
                 <td className="mountain">
-                  <span className="kanji">{m.nameKanji}</span>
-                  <span className="kana">{m.nameKana}</span>
+                  <span className="kanji" lang="ja">{m.nameKanji}</span>
+                  <span className="kana" lang="ja">{m.nameKana}</span>
                   <span className="en">{m.nameEn}</span>
                 </td>
                 <td className="elev">{m.elevationM.toLocaleString("en-US")} m</td>

@@ -38,10 +38,38 @@ function clampCamera({ scale, cx, cy }: Camera): Camera {
 
 const FIT: Camera = { scale: MIN_SCALE, cx: WIDTH / 2, cy: HEIGHT / 2 };
 
+// Only fitBounds (zoom-to-ridge) eases -- wheel, drag, pinch and the on-screen
+// buttons are direct manipulation, and easing those would just make them feel
+// laggy. 320ms is enough to read as a deliberate camera move rather than a
+// jump, without making the ridge feel slow to open.
+const FIT_DURATION_MS = 320;
+const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
+
 export function usePanZoom(element: SVGSVGElement | null) {
   const [camera, setCamera] = useState<Camera>(FIT);
   const [width, setWidth] = useState(0);
   const [measured, setMeasured] = useState(false);
+
+  // The tween reads its start point from here rather than from `camera`
+  // directly: fitBounds is a useCallback with a stable identity (so its
+  // prop reference does not change on every render), and closing over
+  // `camera` would either go stale or force it to be recreated each render.
+  const cameraRef = useRef(camera);
+  cameraRef.current = camera;
+
+  // The one rAF handle a fit animation can occupy. Any interrupting input --
+  // pointerdown, wheel, a zoom button, or a second fitBounds -- cancels it
+  // before doing anything else, so at most one tween is ever in flight.
+  const animationFrame = useRef<number | null>(null);
+  const cancelAnimation = useCallback(() => {
+    if (animationFrame.current === null) return;
+    cancelAnimationFrame(animationFrame.current);
+    animationFrame.current = null;
+  }, []);
+  // Belt and braces against a tween outliving the component: without this, a
+  // fitBounds triggered just before the map view unmounts would keep calling
+  // setCamera on a component no longer there.
+  useEffect(() => cancelAnimation, [cancelAnimation]);
 
   // Pointers currently down, by pointerId, in client coordinates. A ref rather
   // than state: these change on every move and must not drive a render.
@@ -120,23 +148,60 @@ export function usePanZoom(element: SVGSVGElement | null) {
   }, []);
 
   /** Zoom by a factor about the centre — for the on-screen buttons. */
-  const zoomBy = useCallback((factor: number) => {
-    setCamera((current) => clampCamera({ ...current, scale: current.scale * factor }));
-  }, []);
+  const zoomBy = useCallback(
+    (factor: number) => {
+      cancelAnimation(); // a button press is direct manipulation; it wins over any tween in flight
+      setCamera((current) => clampCamera({ ...current, scale: current.scale * factor }));
+    },
+    [cancelAnimation],
+  );
 
-  const fit = useCallback(() => setCamera(FIT), []);
+  const fit = useCallback(() => {
+    cancelAnimation();
+    setCamera(FIT);
+  }, [cancelAnimation]);
 
-  /** Frame a rectangle of map units with a margin — for zoom-to-cluster. */
-  const fitBounds = useCallback((x0: number, y0: number, x1: number, y1: number) => {
-    const padding = 1.6;
-    const scale = Math.min(
-      WIDTH / Math.max(x1 - x0, 1e-6) / padding,
-      HEIGHT / Math.max(y1 - y0, 1e-6) / padding,
-    );
-    setCamera(clampCamera({ scale, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }));
-  }, []);
+  /** Frame a rectangle of map units with a margin — for zoom-to-cluster. Eases
+      unless the OS asks for reduced motion, checked here rather than once at
+      mount so a setting changed mid-session is honoured without a reload. */
+  const fitBounds = useCallback(
+    (x0: number, y0: number, x1: number, y1: number) => {
+      const padding = 1.6;
+      const scale = Math.min(
+        WIDTH / Math.max(x1 - x0, 1e-6) / padding,
+        HEIGHT / Math.max(y1 - y0, 1e-6) / padding,
+      );
+      const target = clampCamera({ scale, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 });
+
+      cancelAnimation();
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setCamera(target);
+        return;
+      }
+
+      const start = cameraRef.current;
+      const startTime = performance.now();
+
+      const step = (now: number) => {
+        const t = Math.min((now - startTime) / FIT_DURATION_MS, 1);
+        const eased = easeOutCubic(t);
+        setCamera(
+          clampCamera({
+            scale: start.scale + (target.scale - start.scale) * eased,
+            cx: start.cx + (target.cx - start.cx) * eased,
+            cy: start.cy + (target.cy - start.cy) * eased,
+          }),
+        );
+        animationFrame.current = t < 1 ? requestAnimationFrame(step) : null;
+      };
+      animationFrame.current = requestAnimationFrame(step);
+    },
+    [cancelAnimation],
+  );
 
   function onPointerDown(event: React.PointerEvent<SVGSVGElement>) {
+    cancelAnimation(); // a drag or pinch beginning is direct manipulation; it wins over any tween in flight
     event.currentTarget.setPointerCapture(event.pointerId);
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     pinchStart.current = null;
@@ -197,11 +262,12 @@ export function usePanZoom(element: SVGSVGElement | null) {
     if (!element) return;
     const handler = (event: WheelEvent) => {
       event.preventDefault();
+      cancelAnimation(); // a wheel scroll is direct manipulation; it wins over any tween in flight
       zoomAround(Math.exp(-event.deltaY / 400), toMap(event.clientX, event.clientY));
     };
     element.addEventListener("wheel", handler, { passive: false });
     return () => element.removeEventListener("wheel", handler);
-  }, [element, zoomAround, toMap]);
+  }, [element, zoomAround, toMap, cancelAnimation]);
 
   return {
     scale: camera.scale,

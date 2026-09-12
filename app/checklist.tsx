@@ -108,41 +108,47 @@ export function Checklist({
           <button
             type="button"
             role="tab"
+            id="tab-table"
+            aria-controls="view-panel"
             aria-selected={view === "table"}
             className={view === "table" ? "on" : undefined}
             onClick={() => setView("table")}
           >
-            一覧 <span>Table</span>
+            <span lang="ja">一覧</span> <span>Table</span>
           </button>
           <button
             type="button"
             role="tab"
+            id="tab-map"
+            aria-controls="view-panel"
             aria-selected={view === "map"}
             className={view === "map" ? "on" : undefined}
             onClick={() => setView("map")}
           >
-            地図 <span>Map</span>
+            <span lang="ja">地図</span> <span>Map</span>
           </button>
         </div>
 
-        {view === "table" ? (
-          <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
-        ) : (
-          <MapView
-            mountains={mountains}
-            people={people}
-            entries={entries}
-            selectedIds={selectedIds}
-            onTogglePerson={(personId) =>
-              setSelectedIds((current) =>
-                current.includes(personId)
-                  ? current.filter((id) => id !== personId)
-                  : [...current, personId],
-              )
-            }
-            onSave={save}
-          />
-        )}
+        <div id="view-panel" role="tabpanel" aria-labelledby={view === "table" ? "tab-table" : "tab-map"}>
+          {view === "table" ? (
+            <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
+          ) : (
+            <MapView
+              mountains={mountains}
+              people={people}
+              entries={entries}
+              selectedIds={selectedIds}
+              onTogglePerson={(personId) =>
+                setSelectedIds((current) =>
+                  current.includes(personId)
+                    ? current.filter((id) => id !== personId)
+                    : [...current, personId],
+                )
+              }
+              onSave={save}
+            />
+          )}
+        </div>
 
         <AddPerson onAdded={() => router.refresh()} />
 

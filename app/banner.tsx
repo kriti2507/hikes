@@ -23,8 +23,8 @@ export function Banner({
       <ThemeToggle />
       <div className="banner-text">
         <h1>
-          日本百名山
-          <span>
+          <span lang="ja">日本百名山</span>
+          <span className="subtitle">
             The Hundred Famous Mountains
             <br />
             Fukada Kyūya, 1964
