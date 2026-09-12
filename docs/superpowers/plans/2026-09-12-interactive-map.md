@@ -1817,10 +1817,10 @@ Rewrite `app/map/map-view.tsx`:
 ```tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { type CSSProperties, useMemo, useState } from "react";
 import { cluster } from "@/lib/map/cluster.mjs";
 import { coastline, prefectures, source } from "@/lib/map/japan-geometry";
-import { project } from "@/lib/map/projection.mjs";
+import { HEIGHT, WIDTH, project } from "@/lib/map/projection.mjs";
 import { type Entry, type Mountain, type Person, key } from "../checklist";
 import { ClusterMarker } from "./cluster-marker";
 import { PeakMarker } from "./peak-marker";
@@ -2022,7 +2022,7 @@ Append to `app/globals.css`:
 - [ ] **Step 6: Verify**
 
 Run: `npm run typecheck && npm test`
-Expected: no errors; 13 tests pass.
+Expected: no errors; 14 tests pass.
 
 Then `npm run dev` and on the 地図 tab confirm: triangles appear over the outline in plausible places (Fuji south-west of Tokyo, a dense knot in the Japan Alps, a scatter across Hokkaido); climbed peaks are filled vermilion; zoomed out, the Alps show as ridges with counts; zooming in splits them into individual triangles; triangles stay the same size on screen as you zoom; the counts across all ridges plus the lone triangles add up to 100.
 
