@@ -128,9 +128,13 @@ LON_MIN 128.5   LON_MAX 146.5
 LAT_MIN  30.0   LAT_MAX  45.8
 ```
 
-which covers every peak with margin. `project(lat, lon) → {x, y}` maps into a viewBox
-1000 units wide; the height follows from the Mercator aspect (≈1217) and is computed,
-not hardcoded.
+The stored peaks span latitude 30.33 (Mt. Miyanoura) to 45.18 (Mt. Rishiri) and
+longitude 130.51 (Mt. Miyanoura) to 145.12 (Mt. Rausu), so this extent covers all 100
+with margin on every side.
+
+`project(lat, lon) → {x, y}` maps into a viewBox 1000 units wide. The height follows
+from the Mercator aspect — **1120.30** — and is computed from the constants rather
+than hardcoded, so changing the extent cannot silently distort the map.
 
 **Peaks are projected at runtime from the database. The outline is projected at build
 time from whatever source the script is pointed at. Both call the identical function
