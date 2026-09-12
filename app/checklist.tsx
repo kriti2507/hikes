@@ -1,15 +1,17 @@
 "use client";
 
-import { type CSSProperties, Fragment, useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { addPerson, deletePerson, setAscent, updatePerson } from "./actions";
-import { ThemeToggle } from "./theme-toggle";
+import { setAscent } from "./actions";
+import { AddPerson } from "./add-person";
+import { Banner } from "./banner";
+import { ChecklistTable } from "./checklist-table";
+import { MapView } from "./map/map-view";
 
-// Degrees of tilt a seal can land at, picked by mountain id.
-const TILTS = [-3, -1.5, 0, 1.5, 3];
-
-// Type aliases rather than interfaces: aliases get an implicit index signature,
-// which is what lib/db.ts's `query<T>` constraint wants.
+// Re-exported from here rather than a types file because app/page.tsx already
+// imports them from this path, and moving them would churn that import for no
+// gain. Type aliases rather than interfaces: aliases get an implicit index
+// signature, which is what lib/db.ts's `query<T>` constraint wants.
 export type Mountain = {
   id: number;
   fukadaNumber: number | null;
@@ -23,6 +25,10 @@ export type Mountain = {
   bestSeason: string | null;
   notes: string | null;
   alsoIn: string | null;
+  // Approximate to roughly a kilometre; see db/coordinates.json. Nullable
+  // because the schema allows a mountain to be added without a position.
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type Person = { id: number; name: string };
@@ -34,9 +40,9 @@ export type Ascent = {
   dateClimbed: string | null;
 };
 
-type Entry = { climbed: boolean; dateClimbed: string | null };
+export type Entry = { climbed: boolean; dateClimbed: string | null };
 
-const key = (personId: number, mountainId: number) => `${personId}:${mountainId}`;
+export const key = (personId: number, mountainId: number) => `${personId}:${mountainId}`;
 
 export function Checklist({
   mountains,
@@ -54,18 +60,20 @@ export function Checklist({
     ),
   );
   const [error, setError] = useState<string | null>(null);
-
-  // Mountains arrive pre-sorted, so grouping is a single pass that preserves
-  // the prefecture order the query chose.
-  const groups = useMemo(() => {
-    const out: { prefecture: string; prefectureJa: string; mountains: Mountain[] }[] = [];
-    for (const m of mountains) {
-      const last = out.at(-1);
-      if (last?.prefecture === m.prefecture) last.mountains.push(m);
-      else out.push({ prefecture: m.prefecture, prefectureJa: m.prefectureJa, mountains: [m] });
-    }
-    return out;
-  }, [mountains]);
+  const [view, setView] = useState<"table" | "map">("table");
+  // Storing *exclusions* rather than the selection itself means "everyone is
+  // shown by default" holds for a person who did not exist yet the last time
+  // this component rendered — there is nothing to initialise them into. This
+  // state is never reconciled against `people`; `selectedIds` below is
+  // recomputed from the current roster on every render instead, so a person
+  // who is deleted just drops out of the filter, and a deliberate uncheck
+  // survives an unrelated router.refresh() because the refresh only ever
+  // replaces `people`, never this set.
+  const [excludedIds, setExcludedIds] = useState<Set<number>>(() => new Set());
+  const selectedIds = useMemo(
+    () => people.filter((p) => !excludedIds.has(p.id)).map((p) => p.id),
+    [people, excludedIds],
+  );
 
   const counts = useMemo(() => {
     const out = new Map<number, number>(people.map((p) => [p.id, 0]));
@@ -93,37 +101,12 @@ export function Checklist({
 
   return (
     <main>
-      <header className="banner">
-        {/* Decorative: the print carries no information the text does not. */}
-        <div className="banner-print" aria-hidden="true" />
-        <ThemeToggle />
-        <div className="banner-text">
-          <h1>
-            日本百名山
-            <span>
-              The Hundred Famous Mountains
-              <br />
-              Fukada Kyūya, 1964
-            </span>
-          </h1>
-          <ul className="tally">
-            {people.map((person) => (
-              <li key={person.id}>
-                {/* The seal is a fixed square, so edit/delete sit below it rather
-                    than inside — the stamp keeps its proportions either way. */}
-                <div
-                  className="tally-seal"
-                  title={`${person.name}: ${counts.get(person.id) ?? 0} of ${mountains.length}`}
-                >
-                  <strong>{counts.get(person.id) ?? 0}</strong>
-                  <span>{person.name}</span>
-                </div>
-                <PersonActions person={person} onChanged={() => router.refresh()} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      </header>
+      <Banner
+        people={people}
+        counts={counts}
+        total={mountains.length}
+        onChanged={() => router.refresh()}
+      />
 
       <div className="sheet">
         {error ? <p className="error banner-error">{error}</p> : null}
@@ -132,87 +115,52 @@ export function Checklist({
           <p className="empty">No people yet — add someone below to start a column.</p>
         ) : null}
 
-        <table>
-          <thead>
-            <tr>
-              <th className="num">#</th>
-              <th className="mountain">Mountain</th>
-              <th className="elev">Height</th>
-              <th className="season">Best time</th>
-              <th className="notes">Notes</th>
-              {people.map((person) => (
-                <th key={person.id} className="person">
-                  {person.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {groups.map((group) => (
-              <Fragment key={group.prefecture}>
-                <tr className="group">
-                  <th colSpan={5 + people.length}>
-                    {group.prefectureJa}
-                    <span>
-                      {group.prefecture} · {group.mountains.length}
-                    </span>
-                  </th>
-                </tr>
-                {group.mountains.map((m) => (
-                  <tr key={m.id}>
-                    <td className="num">{m.fukadaNumber ?? "—"}</td>
-                    <td className="mountain">
-                      <span className="kanji">{m.nameKanji}</span>
-                      <span className="kana">{m.nameKana}</span>
-                      <span className="en">{m.nameEn}</span>
-                    </td>
-                    <td className="elev">{m.elevationM.toLocaleString("en-US")} m</td>
-                    <td className="season">{m.bestSeason ?? "—"}</td>
-                    <td className="notes">
-                      {[m.region, m.notes, m.alsoIn && `also ${m.alsoIn}`].filter(Boolean).join(" · ")}
-                    </td>
-                    {people.map((person) => {
-                      const entry = entries[key(person.id, m.id)];
-                      const climbed = entry?.climbed ?? false;
-                      return (
-                        <td key={person.id} className="person">
-                          <input
-                            type="checkbox"
-                            checked={climbed}
-                            aria-label={`${person.name} climbed ${m.nameEn}`}
-                            // A seal is pressed by hand, so no two sit quite square.
-                            // Seeding the tilt from the id keeps it stable across
-                            // renders — random would reshuffle on every keystroke.
-                            style={{ "--tilt": `${TILTS[m.id % TILTS.length]}deg` } as CSSProperties}
-                            onChange={(event) =>
-                              save(person.id, m.id, {
-                                climbed: event.target.checked,
-                                // Unchecking discards the date: the row means
-                                // "not climbed", so a date would contradict it.
-                                dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
-                              })
-                            }
-                          />
-                          {climbed ? (
-                            <input
-                              type="date"
-                              className="date"
-                              value={entry?.dateClimbed ?? ""}
-                              aria-label={`Date ${person.name} climbed ${m.nameEn}`}
-                              onChange={(event) =>
-                                save(person.id, m.id, { climbed: true, dateClimbed: event.target.value || null })
-                              }
-                            />
-                          ) : null}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
+        <div className="view-tabs" role="tablist" aria-label="Checklist view">
+          <button
+            type="button"
+            role="tab"
+            id="tab-table"
+            aria-controls="view-panel"
+            aria-selected={view === "table"}
+            className={view === "table" ? "on" : undefined}
+            onClick={() => setView("table")}
+          >
+            <span lang="ja">一覧</span> <span className="view-tab-en">Table</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="tab-map"
+            aria-controls="view-panel"
+            aria-selected={view === "map"}
+            className={view === "map" ? "on" : undefined}
+            onClick={() => setView("map")}
+          >
+            <span lang="ja">地図</span> <span className="view-tab-en">Map</span>
+          </button>
+        </div>
+
+        <div id="view-panel" role="tabpanel" aria-labelledby={view === "table" ? "tab-table" : "tab-map"}>
+          {view === "table" ? (
+            <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
+          ) : (
+            <MapView
+              mountains={mountains}
+              people={people}
+              entries={entries}
+              selectedIds={selectedIds}
+              onTogglePerson={(personId) =>
+                setExcludedIds((current) => {
+                  const next = new Set(current);
+                  if (next.has(personId)) next.delete(personId);
+                  else next.add(personId);
+                  return next;
+                })
+              }
+              onSave={save}
+            />
+          )}
+        </div>
 
         <AddPerson onAdded={() => router.refresh()} />
 
@@ -227,138 +175,5 @@ export function Checklist({
         </footer>
       </div>
     </main>
-  );
-}
-
-function AddPerson({ onAdded }: { onAdded: () => void }) {
-  const [name, setName] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [failed, setFailed] = useState(false);
-
-  return (
-    <form
-      className="add-person"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!name.trim()) return;
-        setFailed(false);
-        startTransition(async () => {
-          try {
-            await addPerson(name);
-            setName("");
-            onAdded();
-          } catch {
-            setFailed(true);
-          }
-        });
-      }}
-    >
-      <label htmlFor="new-person">Add a person</label>
-      <input
-        id="new-person"
-        value={name}
-        placeholder="Name"
-        onChange={(event) => setName(event.target.value)}
-        disabled={pending}
-      />
-      <button type="submit" disabled={pending || !name.trim()}>
-        {pending ? "Adding…" : "Add"}
-      </button>
-      {failed ? <span className="error">Could not add that person.</span> : null}
-    </form>
-  );
-}
-
-function PersonActions({ person, onChanged }: { person: Person; onChanged: () => void }) {
-  const [mode, setMode] = useState<"closed" | "edit" | "delete">("closed");
-  const [name, setName] = useState(person.name);
-  const [password, setPassword] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function open(nextMode: "edit" | "delete") {
-    setMode(nextMode);
-    setName(person.name);
-    setPassword("");
-    setError(null);
-  }
-
-  function close() {
-    if (pending) return;
-    setMode("closed");
-    setPassword("");
-    setError(null);
-  }
-
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-
-    startTransition(async () => {
-      try {
-        if (mode === "edit") await updatePerson(person.id, name, password);
-        else if (mode === "delete") await deletePerson(person.id, password);
-        setMode("closed");
-        setPassword("");
-        onChanged();
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "Could not save that change.");
-      }
-    });
-  }
-
-  if (mode === "closed") {
-    return (
-      <span className="person-actions">
-        <button type="button" className="text-button" onClick={() => open("edit")}>
-          Edit
-        </button>
-        <button type="button" className="text-button danger-text" onClick={() => open("delete")}>
-          Delete
-        </button>
-      </span>
-    );
-  }
-
-  return (
-    <form className="person-action-form" onSubmit={submit}>
-      {mode === "edit" ? (
-        <>
-          <label htmlFor={`edit-person-${person.id}`}>New name</label>
-          <input
-            id={`edit-person-${person.id}`}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            disabled={pending}
-            autoFocus
-          />
-        </>
-      ) : (
-        <p>Delete {person.name} and all of their ascents?</p>
-      )}
-      <label htmlFor={`confirm-password-${person.id}`}>Password</label>
-      <input
-        id={`confirm-password-${person.id}`}
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        disabled={pending}
-        autoComplete="current-password"
-        required
-      />
-      {error ? <span className="error">{error}</span> : null}
-      <span className="person-form-buttons">
-        <button
-          type="submit"
-          className={mode === "delete" ? "danger-button" : undefined}
-          disabled={pending || (mode === "edit" && !name.trim())}
-        >
-          {pending ? "Saving…" : mode === "edit" ? "Save" : "Delete"}
-        </button>
-        <button type="button" className="secondary-button" onClick={close} disabled={pending}>
-          Cancel
-        </button>
-      </span>
-    </form>
   );
 }

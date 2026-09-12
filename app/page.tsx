@@ -17,7 +17,11 @@ export default async function Page() {
               elevation_m    as "elevationM",
               best_season    as "bestSeason",
               notes,
-              also_in        as "alsoIn"
+              also_in        as "alsoIn",
+              -- pg hands back numeric columns as strings, which would put every
+              -- triangle at NaN. The cast is not optional.
+              latitude::float8  as latitude,
+              longitude::float8 as longitude
          from mountains
         -- Unnumbered additions sort to the end of their prefecture group.
         order by prefecture_sort, coalesce(fukada_number, 9999), name_en`,
