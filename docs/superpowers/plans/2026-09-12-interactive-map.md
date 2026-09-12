@@ -1381,6 +1381,11 @@ export function usePanZoom(element: SVGSVGElement | null) {
     const next = { x: event.clientX, y: event.clientY };
     pointers.current.set(event.pointerId, next);
 
+    // Any pointer movement counts toward the drag threshold, whether it turned
+    // out to be a one-finger pan or a two-finger pinch: either way the gesture
+    // was not a tap, and the click it synthesises should be ignored.
+    travelled.current += Math.hypot(next.x - previous.x, next.y - previous.y);
+
     const touches = [...pointers.current.values()];
 
     if (touches.length >= 2) {
@@ -1402,7 +1407,6 @@ export function usePanZoom(element: SVGSVGElement | null) {
 
     // Single pointer: drag the paper. Moving the pointer right moves the map
     // right, so the camera goes left.
-    travelled.current += Math.hypot(next.x - previous.x, next.y - previous.y);
     const box = event.currentTarget.getBoundingClientRect();
     const dx = ((next.x - previous.x) / box.width) * viewWidth;
     const dy = ((next.y - previous.y) / box.height) * viewHeight;
