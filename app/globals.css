@@ -883,13 +883,17 @@ code {
   padding-top: 14px;
 }
 
-/* The aspect ratio matches the projection's own, so the viewBox never gets
-   letterboxed and one CSS pixel is always the same number of map units. */
+/* The aspect ratio matches the projection's own, so one CSS pixel is always
+   the same number of map units — which is what the pan/zoom hook's
+   unitsPerPixel, and therefore clustering and marker sizing, assume.
+   The height is bounded by capping the *width*: clamping height instead
+   would leave the box wider than the ratio, and the SVG would letterbox
+   inside it while contentRect.width still reported the full box. */
 .map-surface {
   display: block;
   width: 100%;
-  aspect-ratio: 1000 / 1120.3;
-  max-height: 78vh;
+  max-width: calc(78vh * var(--map-w) / var(--map-h));
+  aspect-ratio: var(--map-w) / var(--map-h);
   margin: 0 auto;
   background: var(--washi);
   border: 1px solid var(--rule);

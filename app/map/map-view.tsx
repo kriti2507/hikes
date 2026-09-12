@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { coastline, prefectures, source } from "@/lib/map/japan-geometry";
+import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
 import type { Entry, Mountain, Person } from "../checklist";
 import { usePanZoom } from "./use-pan-zoom";
 
@@ -28,6 +29,10 @@ export function MapView({
         ref={setElement}
         className="map-surface"
         viewBox={viewBox}
+        // The CSS needs the projection's own dimensions to size the box
+        // without letterboxing it (see .map-surface); feeding them in here
+        // keeps projection.mjs the only place they are written down.
+        style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
         {...handlers}
         aria-label="Map of Japan showing the hundred famous mountains"
       >
