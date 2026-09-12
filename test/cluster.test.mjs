@@ -54,3 +54,16 @@ test("a cluster sits at the centroid of its members", () => {
 test("an empty input gives an empty result", () => {
   assert.deepEqual(cluster([], 20), []);
 });
+
+test("a chain of points splits rather than snowballing into one cluster", () => {
+  // Joining compares a new point against the cluster's running centroid, not
+  // its nearest member. If it compared against the nearest member instead, a
+  // line of evenly-spaced peaks would chain together one hop at a time and
+  // collapse into a single marker spanning far more than minSeparation. The
+  // centroid check catches that: once {0, 10} is centred at 5, the next point
+  // at 20 is 15 away -- over the threshold -- so it starts a new cluster.
+  const chain = [point(1, 0, 0), point(2, 10, 0), point(3, 20, 0), point(4, 30, 0)];
+  const result = cluster(chain, 12);
+  assert.equal(result.length, 2);
+  assert.deepEqual(sizes(result), [2, 2]);
+});
