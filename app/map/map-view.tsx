@@ -37,8 +37,9 @@ export function MapView({
     unitsPerPixel,
   });
 
-  // Close the card whenever the clustering changes, so a peak that has just
-  // been swallowed by a ridge does not leave a card pointing at nothing.
+  // Housekeeping only: `open` below already stops resolving to a peak the
+  // instant it is swallowed into a ridge, so the card never paints over the
+  // wrong marker. This just clears the now-stale id so state does not linger.
   useEffect(() => {
     if (openId === null) return;
     const stillAlone = clusters.some(
@@ -50,19 +51,27 @@ export function MapView({
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
   const [vbX, vbY, vbW] = viewBox.split(" ").map(Number);
-  const open = clusters
-    .flatMap((c) => c.members)
-    .find((p) => p.mountain.id === openId);
+  // Only a lone peak has a card. Deriving `open` this way rather than
+  // searching every cluster's members means a peak swallowed into a ridge
+  // loses its card in the same render as the merge — no frame where the card
+  // floats over a marker that is no longer its peak.
+  const open =
+    clusters.find((c) => c.members.length === 1 && c.members[0].mountain.id === openId)
+      ?.members[0] ?? null;
 
-  // A peak more than about three-fifths of the way across would push a
-  // right-hand card off the edge, so it flips to the left instead.
+  // Past roughly three-fifths across or down, a card anchored on the near
+  // side would hang off the frame, so it flips to the far side instead.
   const cardStyle: React.CSSProperties | null = open
     ? (() => {
         const leftPercent = ((open.x - vbX) / vbW) * 100;
         const topPercent = ((open.y - vbY) / (vbW * (HEIGHT / WIDTH))) * 100;
-        return leftPercent > 62
-          ? { right: `${100 - leftPercent}%`, top: `${topPercent}%`, marginRight: "14px" }
-          : { left: `${leftPercent}%`, top: `${topPercent}%`, marginLeft: "14px" };
+        const horizontal =
+          leftPercent > 62
+            ? { right: `${100 - leftPercent}%`, marginRight: "14px" }
+            : { left: `${leftPercent}%`, marginLeft: "14px" };
+        const vertical =
+          topPercent > 62 ? { bottom: `${100 - topPercent}%` } : { top: `${topPercent}%` };
+        return { ...horizontal, ...vertical };
       })()
     : null;
 

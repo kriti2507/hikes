@@ -42,7 +42,7 @@ export function PeakCard({
     .join(" · ");
 
   return (
-    <div className="peak-card" ref={card} style={style} role="dialog" aria-label={mountain.nameEn}>
+    <div className="peak-card" ref={card} style={style} role="group" aria-label={mountain.nameEn}>
       <button type="button" className="peak-card-close" onClick={onClose} aria-label="Close">
         ×
       </button>
