@@ -10,10 +10,13 @@ import { type Entry, type Mountain, key } from "../checklist";
 const MIN_SEPARATION_PX = 22;
 
 // The widest English name ("Mt. Echigo-Komagatake") reaches roughly 113px
-// past its anchor at the label's font size. Clustering only guarantees 22px
-// between markers, so a name needs its own, much larger clearance — without
-// this check a name runs straight across its neighbours' triangles.
-export const NAME_ROOM_PX = 120;
+// past its anchor, estimated from average Georgia character width at the
+// label's font size -- not a measurement, since this repo has no headless
+// canvas to render text with. A ~30% margin over that estimate absorbs the
+// error a real measurement might reveal; the cost is a few names that could
+// have safely shown but don't, which is the right side to err on, since a
+// missing name is invisible and a colliding one is not.
+export const NAME_ROOM_PX = 150;
 
 type PlacedPeak = {
   order: number;
@@ -57,31 +60,26 @@ export function useMapMarkers({
   };
 
   // Memoised on unitsPerPixel alone: panning does not change which peaks
-  // collide, so it must not pay for a reclustering.
-  const clusters = useMemo(
-    () => cluster(placed, MIN_SEPARATION_PX * unitsPerPixel),
-    [placed, unitsPerPixel],
-  );
-
-  // Screen-pixel distance from each cluster's centroid to its nearest other
-  // cluster, aligned index-for-index with `clusters`. A name label's reach
+  // collide, so it must not pay for a reclustering. Each cluster carries its
+  // own screen-pixel distance to its nearest other cluster rather than
+  // returning that alongside as a parallel array: a name label's reach
   // (NAME_ROOM_PX) is far bigger than the clustering guarantee, so whether
   // one fits is a separate question from whether the peak is clustered at
-  // all — this is what lets map-view answer it without recomputing distances
-  // itself. Same dependency as `clusters`: it is only ever stale together.
-  const nearestNeighborPx = useMemo(
-    () =>
-      clusters.map((c) => {
-        let best = Infinity;
-        for (const other of clusters) {
-          if (other === c) continue;
-          const dMapUnits = Math.hypot(c.x - other.x, c.y - other.y);
-          best = Math.min(best, dMapUnits / unitsPerPixel);
-        }
-        return best;
-      }),
-    [clusters, unitsPerPixel],
-  );
+  // all, but the two must never be able to drift out of index-alignment —
+  // attaching the distance to the cluster it describes makes that
+  // impossible rather than merely true today.
+  const clusters = useMemo(() => {
+    const raw = cluster(placed, MIN_SEPARATION_PX * unitsPerPixel);
+    return raw.map((c) => {
+      let nearestNeighborPx = Infinity;
+      for (const other of raw) {
+        if (other === c) continue;
+        const dMapUnits = Math.hypot(c.x - other.x, c.y - other.y);
+        nearestNeighborPx = Math.min(nearestNeighborPx, dMapUnits / unitsPerPixel);
+      }
+      return { ...c, nearestNeighborPx };
+    });
+  }, [placed, unitsPerPixel]);
 
   const total = placed.length;
 
@@ -96,5 +94,5 @@ export function useMapMarkers({
     return placed.filter((p) => fillFor(p.mountain) === 1).length;
   }, [placed, entries, selectedIds]);
 
-  return { clusters, nearestNeighborPx, fillFor, missing, total, fullyClimbed };
+  return { clusters, fillFor, missing, total, fullyClimbed };
 }

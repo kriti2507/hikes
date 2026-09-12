@@ -31,7 +31,7 @@ export function MapView({
     usePanZoom(element);
   const [openId, setOpenId] = useState<number | null>(null);
 
-  const { clusters, nearestNeighborPx, fillFor, missing, total, fullyClimbed } = useMapMarkers({
+  const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
     mountains,
     entries,
     selectedIds,
@@ -130,7 +130,7 @@ export function MapView({
               if (wasDragged()) event.stopPropagation();
             }}
           >
-            {measured && clusters.map((c, i) => {
+            {measured && clusters.map((c) => {
               // Markers are drawn in pixel units; the counter-scale keeps them
               // the same size on screen however far the map is zoomed.
               const transform = `translate(${c.x} ${c.y}) scale(${unitsPerPixel})`;
@@ -141,7 +141,7 @@ export function MapView({
                 // NAME_SCALE alone is not enough: a name reaches far past the
                 // 22px clustering guarantee (NAME_ROOM_PX), so it also needs
                 // this peak's own measured clearance to its nearest neighbour.
-                const hasRoom = scale >= NAME_SCALE && nearestNeighborPx[i] > NAME_ROOM_PX;
+                const hasRoom = scale >= NAME_SCALE && c.nearestNeighborPx > NAME_ROOM_PX;
                 return (
                   <g key={`m${peak.mountain.id}`} transform={transform}>
                     <PeakMarker
