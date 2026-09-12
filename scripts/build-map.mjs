@@ -7,6 +7,17 @@
 // the peak positions and the tests are all independent of which source ran,
 // because both go through lib/map/projection.mjs.
 //
+// Two things to know before doing that conversion:
+// - Natural Earth coastlines run to hundreds or thousands of points per ring.
+//   This script does not simplify, so feeding it raw Natural Earth data would
+//   balloon the committed generated file into an unreviewable diff -- the
+//   conversion needs a simplification step upstream of this script, not a
+//   change to it.
+// - The {name, points} contract renders each ring as exactly one filled M...Z
+//   subpath, so it cannot express holes or enclaves. That is fine for a
+//   coastline; if the swap ever needs them, the schema would need rings grouped
+//   per feature plus fill-rule: evenodd.
+//
 // Run with: npm run map:build
 import { readFileSync, writeFileSync } from "node:fs";
 import { project, WIDTH, HEIGHT, LAT_MIN, LAT_MAX, LON_MIN, LON_MAX } from "../lib/map/projection.mjs";
@@ -21,16 +32,24 @@ if (source.source !== "placeholder" && source.source !== "natural-earth") {
 // have drifted apart -- exactly the failure this pipeline exists to prevent, so
 // fail the build rather than draw a coastline that runs off the page.
 function checkInExtent(ring) {
+  // A ring with fewer than 3 points has no area. A for...of over an empty or
+  // near-empty points array would pass this check trivially and toPath would
+  // emit a degenerate "Z" or zero-area sliver instead of failing loudly -- the
+  // most likely shape for a bad clip or simplify pass to produce once real
+  // geometry is doing the converting instead of a human typing points by hand.
+  if (!Array.isArray(ring.points) || ring.points.length < 3) {
+    throw new Error(`${ring.name ?? "(unnamed ring)"}: a ring needs at least 3 points`);
+  }
   for (const [lat, lon] of ring.points) {
     if (lat < LAT_MIN || lat > LAT_MAX || lon < LON_MIN || lon > LON_MAX) {
-      throw new Error(`${ring.name}: [${lat}, ${lon}] is outside the map extent`);
+      throw new Error(`${ring.name ?? "(unnamed ring)"}: [${lat}, ${lon}] is outside the map extent`);
     }
   }
 }
 
-// Two decimal places on a 1000-unit map is a hundredth of a pixel at fit zoom
-// and about a sixth of a pixel at the 16x maximum: far below anything visible,
-// and it keeps the generated file readable.
+// Two decimal places on a 1000-unit map is well under a tenth of a pixel even
+// at the 16x maximum, at any width this map will realistically render at: far
+// below anything visible, and it keeps the generated file readable.
 const round = (n) => Math.round(n * 100) / 100;
 
 function toPath(ring) {
@@ -56,6 +75,8 @@ export const coastline: string[] = ${JSON.stringify(coastline, null, 2)};
 /** Prefecture boundaries. Empty until the real geometry lands. */
 export const prefectures: string[] = ${JSON.stringify(prefectures, null, 2)};
 
+/** The whole-country frame at fit zoom. Components derive their own animated
+    viewBox from the projection; this is the canonical untransformed frame. */
 export const viewBox = "0 0 ${round(WIDTH)} ${round(HEIGHT)}";
 
 /** Which geometry is in use, so the page can caption itself honestly. */

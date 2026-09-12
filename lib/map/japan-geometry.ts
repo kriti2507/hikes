@@ -16,6 +16,8 @@ export const coastline: string[] = [
 /** Prefecture boundaries. Empty until the real geometry lands. */
 export const prefectures: string[] = [];
 
+/** The whole-country frame at fit zoom. Components derive their own animated
+    viewBox from the projection; this is the canonical untransformed frame. */
 export const viewBox = "0 0 1000 1120.3";
 
 /** Which geometry is in use, so the page can caption itself honestly. */
