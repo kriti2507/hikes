@@ -1,7 +1,7 @@
 "use client";
 
 import { type CSSProperties, useEffect, useState } from "react";
-import { coastline, prefectures, source } from "@/lib/map/japan-geometry";
+import { coastline, type GeometrySource, prefectures, source } from "@/lib/map/japan-geometry";
 import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
 import type { Entry, Mountain, Person } from "../checklist";
 import { ClusterMarker } from "./cluster-marker";
@@ -10,6 +10,15 @@ import { PeakMarker } from "./peak-marker";
 import { PersonFilter } from "./person-filter";
 import { NAME_ROOM_PX, useMapMarkers } from "./use-map-markers";
 import { NAME_SCALE, usePanZoom } from "./use-pan-zoom";
+
+// Looked up rather than branched on: `source` is generated with one value, so
+// `source === "placeholder"` is a type error the moment real geometry is built.
+// A record over the union keeps both captions honest and forces a new source to
+// bring its own.
+const COASTLINE_NOTE: Record<GeometrySource, string> = {
+  placeholder: " The coastline is a schematic placeholder.",
+  "natural-earth": " The coastline is Natural Earth 1:10m, thinned for this scale.",
+};
 
 export function MapView({
   mountains,
@@ -222,7 +231,7 @@ export function MapView({
 
       <p className="map-note">
         Summit positions are approximate — good to about a kilometre.
-        {source === "placeholder" ? " The coastline is a schematic placeholder." : null}
+        {COASTLINE_NOTE[source]}
         {missing > 0 ? ` ${missing} of ${mountains.length} peaks have no coordinates yet.` : null}{" "}
         The <span lang="ja">一覧</span> table lists every peak in full.
       </p>

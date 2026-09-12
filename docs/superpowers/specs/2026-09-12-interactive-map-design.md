@@ -168,11 +168,16 @@ The placeholder is stored as lat/lon control points rather than SVG so that it t
 goes through `project()` — it is registered to the real world, not eyeballed against
 the triangles.
 
-**Prefecture borders arrive with the real geometry, not with the placeholder.**
 Hand-tracing 47 prefecture boundaries as lat/lon control points is not a reasonable
 use of effort for artwork that is about to be thrown away, so the placeholder ships
-`prefectures: []` and the map must render cleanly with it empty. The dotted internal
-borders of the reference sheet appear when the script is pointed at Natural Earth.
+`prefectures: []` and the map must render cleanly with it empty.
+
+**Correction, after the swap:** this section originally claimed prefecture borders
+would arrive with the real geometry. They did not. Natural Earth's admin-0 countries
+file — the one the coastline came from — has no sub-national lines at all; the dotted
+internal borders of the reference sheet need its separate admin-1 states and provinces
+layer. `prefectures: []` outlived the placeholder, and the map still has to render
+cleanly with it empty.
 
 ### Why `.mjs` for the pure modules
 
@@ -283,8 +288,16 @@ Components are not unit-tested. Verification of the map itself is by running it.
 
 ## Out of scope
 
-- Replacing the placeholder coastline with Natural Earth geometry — the pipeline is
-  built for it, the swap is a later task.
+- ~~Replacing the placeholder coastline with Natural Earth geometry — the pipeline is
+  built for it, the swap is a later task.~~ **Done.** `scripts/natural-earth.mjs`
+  converts Natural Earth 1:10m admin-0 (via `world-atlas@2.0.2`) into
+  `db/coastline.json`: 55 rings, 3,323 points, simplified to 0.3 map units. The
+  prediction above held — one generated file changed, no component and no peak
+  position — with two exceptions worth recording. The caption branching on `source`
+  had to become a lookup, because a `source === "placeholder"` comparison stops
+  type-checking once the generated value is the other one. And the raw data needed a
+  simplification step, which `build-map.mjs` deliberately does not do, so the swap
+  added a script rather than only changing a file.
 - Verifying the 100 coordinates against GSI or OpenStreetMap.
 - Routes, trails, or anything requiring precision the data does not have.
 - Sharing a map view by URL.
