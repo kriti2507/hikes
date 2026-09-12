@@ -1794,7 +1794,7 @@ export function MapView({
   selectedIds: number[];
 }) {
   const [element, setElement] = useState<SVGSVGElement | null>(null);
-  const { viewBox, unitsPerPixel, handlers } = usePanZoom(element);
+  const { viewBox, unitsPerPixel, measured, handlers } = usePanZoom(element);
 
   const placed = useMemo<PlacedPeak[]>(
     () =>
@@ -1848,8 +1848,11 @@ export function MapView({
           ))}
         </g>
 
+        {/* Markers wait for the first ResizeObserver measurement. Until then
+            unitsPerPixel is a placeholder, and clustering keyed off a wrong
+            value would paint the wrong groupings and then reflow. */}
         <g className="map-markers">
-          {clusters.map((c) => {
+          {measured && clusters.map((c) => {
             // Markers are drawn in pixel units; the counter-scale keeps them
             // the same size on screen however far the map is zoomed.
             const transform = `translate(${c.x} ${c.y}) scale(${unitsPerPixel})`;
@@ -2327,7 +2330,22 @@ Add `onSave` to the destructured props (the type already lists it), and add stat
   const [openId, setOpenId] = useState<number | null>(null);
 ```
 
-Replace the peak marker's `onActivate={() => {}}` with `onActivate={() => setOpenId(peak.mountain.id)}`, and its `selected={false}` with `selected={openId === peak.mountain.id}`.
+Take `wasDragged` from the hook as well, adding it to the destructure:
+
+```tsx
+  const { viewBox, unitsPerPixel, measured, wasDragged, handlers } = usePanZoom(element);
+```
+
+Replace the peak marker's `onActivate={() => {}}` with a handler that ignores the click synthesised at the end of a pan, and its `selected={false}` with `selected={openId === peak.mountain.id}`:
+
+```tsx
+                    onActivate={() => {
+                      // The browser synthesises a click on whatever was pressed
+                      // even if the gesture turned into a drag of the map.
+                      if (wasDragged()) return;
+                      setOpenId(peak.mountain.id);
+                    }}
+```
 
 The card is an HTML overlay, so it needs the peak's position as a percentage of the container rather than in map units. The hook gives `viewBox` as a string; parse it once above the `return`. Extend the projection import to bring in the map's own dimensions — deriving the aspect ratio from them rather than retyping `1120.3` keeps this in step with the extent:
 
@@ -2555,7 +2573,8 @@ and add after the `<path className="peak-outline" .../>`:
 In `app/map/map-view.tsx`, take the extra values from the hook:
 
 ```tsx
-  const { scale, viewBox, unitsPerPixel, zoomBy, fit, fitBounds, handlers } = usePanZoom(element);
+  const { scale, viewBox, unitsPerPixel, measured, wasDragged, zoomBy, fit, fitBounds, handlers } =
+    usePanZoom(element);
 ```
 
 Import the threshold:
