@@ -2370,21 +2370,29 @@ Add `onSave` to the destructured props (the type already lists it), and add stat
   const [openId, setOpenId] = useState<number | null>(null);
 ```
 
-Take `wasDragged` from the hook as well, adding it to the destructure:
+Replace the peak marker's `onActivate={() => {}}` with `onActivate={() => setOpenId(peak.mountain.id)}`, and its `selected={false}` with `selected={openId === peak.mountain.id}`.
+
+**Guard the click path against drags.** A pan that happens to end over a peak still makes the browser synthesise a click on it, which would open a card the user never asked for. Take `wasDragged` from the hook:
 
 ```tsx
   const { viewBox, unitsPerPixel, measured, wasDragged, handlers } = usePanZoom(element);
 ```
 
-Replace the peak marker's `onActivate={() => {}}` with a handler that ignores the click synthesised at the end of a pan, and its `selected={false}` with `selected={openId === peak.mountain.id}`:
+and put a single capture-phase guard on the marker group, rather than threading `wasDragged` into every marker:
 
 ```tsx
-                    onActivate={() => {
-                      // The browser synthesises a click on whatever was pressed
-                      // even if the gesture turned into a drag of the map.
-                      if (wasDragged()) return;
-                      setOpenId(peak.mountain.id);
-                    }}
+        <g
+          className="map-markers"
+          onClickCapture={(event) => {
+            // A pan that ends over a peak still synthesises a click on it.
+            // Capture phase runs before the marker's own handler, so stopping
+            // here suppresses it. Deliberately only on the click path: every
+            // real click is preceded by a pointerdown that resets the flag,
+            // whereas keyboard activation never touches it and must not be
+            // suppressed by a stale drag.
+            if (wasDragged()) event.stopPropagation();
+          }}
+        >
 ```
 
 The card is an HTML overlay, so it needs the peak's position as a percentage of the container rather than in map units. The hook gives `viewBox` as a string; parse it once above the `return`. Extend the projection import to bring in the map's own dimensions — deriving the aspect ratio from them rather than retyping `1120.3` keeps this in step with the extent:
