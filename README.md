@@ -6,6 +6,20 @@ Next.js + Postgres, deployed on Vercel. One page, one shared password.
 The mountain data was extracted from `hyakumeizan-checklist.pdf`: kanji, furigana,
 English name, prefecture, region, elevation, best season, and notes.
 
+## Artwork
+
+The header print is Katsushika Hokusai, from *Thirty-six Views of Mount Fuji*
+(c. 1830). Both are public domain and were taken from Wikimedia Commons:
+
+- `public/red-fuji.jpg` — *Fine Wind, Clear Morning* (凱風快晴), shown in light mode.
+  [Source](https://commons.wikimedia.org/wiki/File:Red_Fuji_southern_wind_clear_morning.jpg)
+- `public/black-fuji.jpg` — *Shower Below the Summit* (山下白雨), shown in dark mode.
+  [Source](https://commons.wikimedia.org/wiki/File:Sanka_hakuu_LCCN2008660629.jpg)
+
+They are a matched pair — the same mountain in fair weather and in storm — so
+dark mode changes the weather rather than the theme. Both are resized to 1200px
+wide and recompressed; replace them at that width to keep the header crop.
+
 ## Setup
 
 ### 1. Database (Neon)
