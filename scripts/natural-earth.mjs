@@ -280,7 +280,6 @@ const file = `{
     "are not here; no hyakumeizan is on any of them."
   ],
   "source": "natural-earth",
-  "prefectures": [],
   "coastline": [
 ${body}
   ]

@@ -913,11 +913,15 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+/* Ink rather than --rule: at the paper's own contrast the borders read as a
+   crease in the washi instead of a drawn line. --sumi-faint is a real grey in
+   both weathers, and the dashes plus the thinner stroke keep them a step below
+   the coastline, which is the only line on this map drawn at full --sumi. */
 .map-prefectures path {
   fill: none;
-  stroke: var(--rule);
-  stroke-width: 0.8;
-  stroke-dasharray: 3 3;
+  stroke: var(--sumi-faint);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
   vector-effect: non-scaling-stroke;
 }
 

@@ -1,41 +1,50 @@
-// Projects a geometry source into lib/map/japan-geometry.ts.
+// Projects two geometry sources into lib/map/japan-geometry.ts.
 //
-// The source is db/coastline.json: rings of [lat, lon] under "coastline" and
-// "prefectures", with "source" naming where they came from. It now holds real
-// Natural Earth geometry, written by scripts/natural-earth.mjs; before that it
-// was a hand-traced placeholder, and the swap moved no triangle, because both
-// sources go through lib/map/projection.mjs.
+// Both are {name, points} lists of [lat, lon], and both exist as coordinates
+// rather than as SVG so that this script pushes them through the same
+// lib/map/projection.mjs the summits go through:
 //
-// Two things to know before pointing it at another source:
+// - db/coastline.json holds closed rings, written by scripts/natural-earth.mjs.
+//   It once held a hand-traced placeholder, and the swap moved no triangle.
+// - db/prefectures.json holds open runs, written by scripts/prefectures.mjs.
+//   A different provider, because Natural Earth's admin-0 file has no
+//   sub-national lines; see that script for why the seam does not show.
+//
+// Two things to know before pointing either at another source:
 // - This script does not simplify. Raw Natural Earth runs to thousands of
 //   points for Japan, most of them finer than this map can show, so the
-//   thinning belongs upstream -- see scripts/natural-earth.mjs -- not here.
-// - The {name, points} contract renders each ring as exactly one filled M...Z
-//   subpath, so it cannot express holes or enclaves. That is fine for a
-//   coastline; if a future source needs them, the schema would need rings
-//   grouped per feature plus fill-rule: evenodd.
+//   thinning belongs upstream -- see the two scripts above -- not here.
+// - A ring renders as exactly one filled M...Z subpath, so it cannot express
+//   holes or enclaves. That is fine for a coastline; if a future source needs
+//   them, the schema would need rings grouped per feature plus
+//   fill-rule: evenodd.
 //
 // Run with: npm run map:build
 import { readFileSync, writeFileSync } from "node:fs";
 import { project, WIDTH, HEIGHT, LAT_MIN, LAT_MAX, LON_MIN, LON_MAX } from "../lib/map/projection.mjs";
 
 const source = JSON.parse(readFileSync(new URL("../db/coastline.json", import.meta.url)));
+const borders = JSON.parse(readFileSync(new URL("../db/prefectures.json", import.meta.url)));
 
 if (source.source !== "placeholder" && source.source !== "natural-earth") {
   throw new Error(`unknown geometry source: ${source.source}`);
+}
+if (borders.source !== "gsi-global-map") {
+  throw new Error(`unknown border source: ${borders.source}`);
 }
 
 // A point outside the extent means the projection constants and the geometry
 // have drifted apart -- exactly the failure this pipeline exists to prevent, so
 // fail the build rather than draw a coastline that runs off the page.
-function checkInExtent(ring) {
-  // A ring with fewer than 3 points has no area. A for...of over an empty or
-  // near-empty points array would pass this check trivially and toPath would
-  // emit a degenerate "Z" or zero-area sliver instead of failing loudly -- the
-  // most likely shape for a bad clip or simplify pass to produce once real
-  // geometry is doing the converting instead of a human typing points by hand.
-  if (!Array.isArray(ring.points) || ring.points.length < 3) {
-    throw new Error(`${ring.name ?? "(unnamed ring)"}: a ring needs at least 3 points`);
+function checkInExtent(ring, least) {
+  // A ring with fewer than 3 points has no area, and a run with fewer than 2 no
+  // length. A for...of over an empty or near-empty points array would pass this
+  // check trivially and toPath would emit a degenerate "Z" or zero-area sliver
+  // instead of failing loudly -- the most likely shape for a bad clip or
+  // simplify pass to produce once real geometry is doing the converting instead
+  // of a human typing points by hand.
+  if (!Array.isArray(ring.points) || ring.points.length < least) {
+    throw new Error(`${ring.name ?? "(unnamed)"}: needs at least ${least} points`);
   }
   for (const [lat, lon] of ring.points) {
     if (lat < LAT_MIN || lat > LAT_MAX || lon < LON_MIN || lon > LON_MAX) {
@@ -49,29 +58,33 @@ function checkInExtent(ring) {
 // below anything visible, and it keeps the generated file readable.
 const round = (n) => Math.round(n * 100) / 100;
 
-function toPath(ring) {
-  checkInExtent(ring);
+// `close` is what separates the two sources: a coastline ring ends in Z so it
+// fills, whereas a border run must not, because Z would draw a straight line
+// from where the border meets the sea back to where it started inland.
+function toPath(ring, close) {
+  checkInExtent(ring, close ? 3 : 2);
   const steps = ring.points.map(([lat, lon], i) => {
     const { x, y } = project(lat, lon);
     return `${i === 0 ? "M" : "L"}${round(x)} ${round(y)}`;
   });
-  return `${steps.join("")}Z`;
+  return `${steps.join("")}${close ? "Z" : ""}`;
 }
 
-const coastline = (source.coastline ?? []).map(toPath);
-const prefectures = (source.prefectures ?? []).map(toPath);
+const coastline = (source.coastline ?? []).map((ring) => toPath(ring, true));
+const prefectures = (borders.borders ?? []).map((run) => toPath(run, false));
 
 const file = `// Generated by scripts/build-map.mjs -- do not edit by hand.
-// Source: db/coastline.json (${source.source}).
+// Sources: db/coastline.json (${source.source}),
+//          db/prefectures.json (${borders.source}).
 //
 // Regenerate with: npm run map:build
 
 /** Closed SVG paths in map units, from lib/map/projection.mjs. */
 export const coastline: string[] = ${JSON.stringify(coastline, null, 2)};
 
-/** Prefecture boundaries. Still empty: Natural Earth's admin-0 countries file
-    has no sub-national lines, and filling this needs its admin-1 states and
-    provinces layer. The map renders whatever is here. */
+/** Prefectural borders, as open SVG paths in the same units. Open because they
+    are runs, not rings: each starts and ends where the border meets the coast
+    or a third prefecture, so .map-prefectures must keep its fill: none. */
 export const prefectures: string[] = ${JSON.stringify(prefectures, null, 2)};
 
 /** The whole-country frame at fit zoom. Components derive their own animated
@@ -88,4 +101,7 @@ export const source: GeometrySource = ${JSON.stringify(source.source)};
 `;
 
 writeFileSync(new URL("../lib/map/japan-geometry.ts", import.meta.url), file);
-console.log(`wrote lib/map/japan-geometry.ts: ${coastline.length} coastline rings, ${prefectures.length} prefecture rings`);
+console.log(
+  `wrote lib/map/japan-geometry.ts: ${coastline.length} coastline rings, ` +
+    `${prefectures.length} prefectural border runs`,
+);

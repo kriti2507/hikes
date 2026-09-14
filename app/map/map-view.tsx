@@ -232,6 +232,9 @@ export function MapView({
       <p className="map-note">
         Summit positions are approximate — good to about a kilometre.
         {COASTLINE_NOTE[source]}
+        {prefectures.length > 0
+          ? " Prefectural borders are the GSI Global Map, thinned to match."
+          : null}
         {missing > 0 ? ` ${missing} of ${mountains.length} peaks have no coordinates yet.` : null}{" "}
         The <span lang="ja">一覧</span> table lists every peak in full.
       </p>

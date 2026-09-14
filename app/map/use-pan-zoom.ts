@@ -14,8 +14,9 @@ export const MAX_SCALE = 16;
 // Above this the map has room to name peaks as well as number them.
 export const NAME_SCALE = 6;
 
-// A few pixels of travel is a shaky tap, not a drag. Above this the gesture
-// was a pan and any click it synthesises should be ignored.
+// How far a pointer may stray from where it was pressed and still count as a
+// shaky tap rather than a drag. Beyond this the gesture is a pan: it takes
+// the pointer capture, and any click it synthesises is ignored.
 const DRAG_SLOP = 5;
 
 type Camera = { scale: number; cx: number; cy: number };
@@ -71,14 +72,15 @@ export function usePanZoom(element: SVGSVGElement | null) {
   // setCamera on a component no longer there.
   useEffect(() => cancelAnimation, [cancelAnimation]);
 
-  // Pointers currently down, by pointerId, in client coordinates. A ref rather
-  // than state: these change on every move and must not drive a render.
-  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  // Pointers currently down, by pointerId, in client coordinates: where each
+  // one is now, and the `o`rigin it was pressed at. A ref rather than state:
+  // these change on every move and must not drive a render.
+  const pointers = useRef(new Map<number, { x: number; y: number; ox: number; oy: number }>());
   const pinchStart = useRef<{ gap: number; scale: number } | null>(null);
 
   // A drag that ends over a peak must not open it. The browser synthesises a
-  // click on whatever was pressed regardless of pointer capture, so markers
-  // ask this before acting.
+  // click from a gesture the map has already spent on panning, so markers ask
+  // this before acting.
   const travelled = useRef(0);
   const dragged = useRef(false);
 
@@ -202,8 +204,16 @@ export function usePanZoom(element: SVGSVGElement | null) {
 
   function onPointerDown(event: React.PointerEvent<SVGSVGElement>) {
     cancelAnimation(); // a drag or pinch beginning is direct manipulation; it wins over any tween in flight
-    event.currentTarget.setPointerCapture(event.pointerId);
-    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    // Capture is deliberately *not* taken here -- onPointerMove waits until
+    // the gesture is unmistakably a pan. Capturing every press retargets the
+    // pointerup, and the click the browser synthesises from it, to the <svg>,
+    // so a marker's own onClick never runs and tapping a peak does nothing.
+    pointers.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+      ox: event.clientX,
+      oy: event.clientY,
+    });
     pinchStart.current = null;
     travelled.current = 0;
     dragged.current = false;
@@ -212,13 +222,23 @@ export function usePanZoom(element: SVGSVGElement | null) {
   function onPointerMove(event: React.PointerEvent<SVGSVGElement>) {
     const previous = pointers.current.get(event.pointerId);
     if (!previous) return;
-    const next = { x: event.clientX, y: event.clientY };
+    const next = { x: event.clientX, y: event.clientY, ox: previous.ox, oy: previous.oy };
     pointers.current.set(event.pointerId, next);
 
-    // Any pointer movement counts toward the drag threshold, whether it turned
-    // out to be a one-finger pan or a two-finger pinch: either way the gesture
-    // was not a tap, and the click it synthesises should be ignored.
-    travelled.current += Math.hypot(next.x - previous.x, next.y - previous.y);
+    // Distance from where this pointer was pressed, and the furthest it has
+    // been rather than where it is now, so a pan that wanders away and comes
+    // back still counts as a pan. Summing each move's length instead would
+    // accumulate the jitter of an ordinary click until a tap crossed the
+    // threshold. Any pointer can trip it, whether the gesture turned out to be
+    // a one-finger pan or a two-finger pinch: neither is a tap.
+    travelled.current = Math.max(travelled.current, Math.hypot(next.x - next.ox, next.y - next.oy));
+
+    // Now that it is certainly a drag, take the pointer, so it can wander off
+    // the edge of the map and keep panning. Waiting until here is what leaves
+    // a tap's click on the marker it landed on.
+    if (travelled.current > DRAG_SLOP && !event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
 
     const touches = [...pointers.current.values()];
 
