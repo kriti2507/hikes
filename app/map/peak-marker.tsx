@@ -74,10 +74,10 @@ export function PeakMarker({
       <path className="peak-outline" d={PEAK_PATH} />
 
       {/* A number is at most three digits, short enough that clustering's
-          22px guarantee already keeps it clear of a neighbour's triangle.
-          A name is far wider and gets no such guarantee from clustering
-          alone -- the caller only passes one once it has separately measured
-          that this peak actually has the room (see NAME_ROOM_PX). */}
+          22px guarantee already keeps it clear of a neighbour's triangle. A
+          name is far wider and gets no such guarantee, so two close peaks can
+          overlap their names; the caller passes one for every peak it draws
+          anyway, so the map names peaks consistently rather than silently. */}
       {number !== null ? (
         <text className="peak-number" x={HALF_WIDTH + 2} y={0}>
           {number}

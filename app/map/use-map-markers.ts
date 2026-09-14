@@ -9,15 +9,6 @@ import { type Entry, type Mountain, key } from "../checklist";
 // wide, so this leaves a clear gap between neighbours.
 const MIN_SEPARATION_PX = 22;
 
-// The widest English name ("Mt. Echigo-Komagatake") reaches roughly 113px
-// past its anchor, estimated from average Georgia character width at the
-// label's font size -- not a measurement, since this repo has no headless
-// canvas to render text with. A ~30% margin over that estimate absorbs the
-// error a real measurement might reveal; the cost is a few names that could
-// have safely shown but don't, which is the right side to err on, since a
-// missing name is invisible and a colliding one is not.
-export const NAME_ROOM_PX = 150;
-
 type PlacedPeak = {
   order: number;
   x: number;
@@ -60,26 +51,11 @@ export function useMapMarkers({
   };
 
   // Memoised on unitsPerPixel alone: panning does not change which peaks
-  // collide, so it must not pay for a reclustering. Each cluster carries its
-  // own screen-pixel distance to its nearest other cluster rather than
-  // returning that alongside as a parallel array: a name label's reach
-  // (NAME_ROOM_PX) is far bigger than the clustering guarantee, so whether
-  // one fits is a separate question from whether the peak is clustered at
-  // all, but the two must never be able to drift out of index-alignment —
-  // attaching the distance to the cluster it describes makes that
-  // impossible rather than merely true today.
-  const clusters = useMemo(() => {
-    const raw = cluster(placed, MIN_SEPARATION_PX * unitsPerPixel);
-    return raw.map((c) => {
-      let nearestNeighborPx = Infinity;
-      for (const other of raw) {
-        if (other === c) continue;
-        const dMapUnits = Math.hypot(c.x - other.x, c.y - other.y);
-        nearestNeighborPx = Math.min(nearestNeighborPx, dMapUnits / unitsPerPixel);
-      }
-      return { ...c, nearestNeighborPx };
-    });
-  }, [placed, unitsPerPixel]);
+  // collide, so it must not pay for a reclustering.
+  const clusters = useMemo(
+    () => cluster(placed, MIN_SEPARATION_PX * unitsPerPixel),
+    [placed, unitsPerPixel],
+  );
 
   const total = placed.length;
 
