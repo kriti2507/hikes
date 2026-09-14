@@ -102,22 +102,25 @@ the coordinates are approximate, the map stops zooming at roughly one
 prefecture — far enough in to separate neighbouring peaks, not so far that the
 error becomes visible.
 
-### Where the coastline comes from
+### Where the outline comes from
 
-`db/coastline.json` holds 55 rings of `[lat, lon]` — Natural Earth's 1:10m
-admin-0 Japan, thinned for this scale. It is stored as coordinates rather than
-SVG so that it goes through the same projection as the summits, which is what
+`db/coastline.json` holds 55 closed rings of `[lat, lon]` — Natural Earth's
+1:10m admin-0 Japan, thinned for this scale. `db/prefectures.json` holds 92
+open runs, the prefectural borders. Both are stored as coordinates rather than
+SVG so that they go through the same projection as the summits, which is what
 keeps the triangles registered to the coast. `scripts/build-map.mjs` projects
-it into `lib/map/japan-geometry.ts`, which is committed:
+both into `lib/map/japan-geometry.ts`, which is committed:
 
 ```
 npm run map:build
 ```
 
-Prefecture borders are still empty. Natural Earth's admin-0 countries file has
-no sub-national lines; filling them needs its admin-1 states and provinces
-layer, converted into the same `prefectures` array. The map already renders
-whatever is there.
+The borders are open runs rather than prefecture polygons because only the
+inland lines are wanted: the coastal side of each prefecture is already drawn,
+from a different provider, and a second shoreline over it in dashes would show
+the two sources disagreeing as a doubled line. So a run starts and ends where
+the border reaches the sea or a third prefecture, and `build-map.mjs` emits it
+without a closing `Z` — which is why `.map-prefectures` sets `fill: none`.
 
 ### Re-running the conversion
 
@@ -140,12 +143,38 @@ thinning is the reason it exists: raw Natural Earth is 6,942 points for Japan,
 most of them detail this map cannot show, and `build-map.mjs` does not simplify.
 
 The script's header records the checksums of the exact input used. Swapping in
-GSI data, or Natural Earth at another scale, means writing a sibling script that
-produces the same `{name, points}` rings — nothing downstream changes, because
-both the outline and the summits are projected by `lib/map/projection.mjs`. The
-history of this file shows the swap: the placeholder it replaced was 88
-hand-traced control points, and moving to real geometry moved no triangle and
-changed no component.
+Natural Earth at another scale means writing a sibling script that produces the
+same `{name, points}` rings — nothing downstream changes, because both the
+outline and the summits are projected by `lib/map/projection.mjs`. The history
+of this file shows the swap: the placeholder it replaced was 88 hand-traced
+control points, and moving to real geometry moved no triangle and changed no
+component.
+
+`scripts/prefectures.mjs` is the same step for the borders, and the sibling
+script that paragraph describes. Natural Earth's admin-0 file has no
+sub-national lines at all, so these come from the Geospatial Information
+Authority of Japan's Global Map instead:
+
+```
+npm pack jpn-atlas@1.0.2
+tar xzf jpn-atlas-1.0.2.tgz
+node scripts/prefectures.mjs package/build/polbnda_jpn
+npm run map:build
+```
+
+That package is used only as a mirror for the GSI shapefile inside it; its own
+TopoJSON is pre-projected into an 850×680 viewport and so cannot go through
+`lib/map/projection.mjs`. The source is 2,914 municipalities, not 47
+prefectures, so the script recovers the borders by asking of every edge in the
+file which prefectures use it: one is the coast, two the same prefecture is a
+municipal line, two different ones is a border. Those edges are stitched into
+runs, broken at every point where three prefectures meet, and simplified to the
+same 0.3 map units as the coastline.
+
+Two providers meet where a border lands at the sea, and they put the shoreline
+in slightly different places — a few hundred metres usually, about 1.5km at
+worst along the Ariake mudflats that Natural Earth smooths hardest. That is
+inside the kilometre this map already claims, and `npm test` holds it there.
 
 ### Why `lib/map/*.mjs` instead of `.ts`
 
@@ -164,7 +193,7 @@ extension explicitly — `import { project } from "@/lib/map/projection.mjs"` �
 or the module resolver won't find the types.
 
 `rings.mjs` has no `.d.mts` beside it because nothing in the bundle imports it:
-it is shared only between `scripts/natural-earth.mjs` and the tests.
+it is shared only between the two conversion scripts and the tests.
 
 ## Tests
 
@@ -172,14 +201,16 @@ it is shared only between `scripts/natural-earth.mjs` and the tests.
 npm test
 ```
 
-Node's built-in test runner, 21 cases, no framework. They cover the two pure
+Node's built-in test runner, 25 cases, no framework. They cover the two pure
 modules — the Mercator projection and the marker clustering — from the
 projection's extent corners and known summit positions to clustering's
 stability under reordering and its centroid-drift edge cases, and then the
 registration invariant the map rests on: that all 100 summits in
 `db/coordinates.json` fall inside a coastline ring in `db/coastline.json` when
-both are projected. That last one is what would catch a coastline swap or a
-coordinate edit that pushed a peak into the sea. Components are verified by
+both are projected, and that every border run in `db/prefectures.json` lands on
+that same coastline rather than in the sea. Those are what would catch a
+geometry swap or a coordinate edit that pushed a peak offshore, or a second
+provider that had drifted away from the first. Components are verified by
 running the app.
 
 ## Building
