@@ -79,7 +79,7 @@ export function ChecklistTable({
                   aria-expanded={!isCollapsed}
                   onClick={() => onToggleGroup(group.prefecture)}
                 >
-                  <span className="group-arrow" aria-hidden="true">▸</span>
+                  <span className="group-arrow" aria-hidden="true" />
                   <span lang="ja">{group.prefectureJa}</span>
                   <span className="prefecture-en">
                     {group.prefecture} · {group.mountains.length}

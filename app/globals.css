@@ -372,12 +372,16 @@ tr.group th .prefecture-en {
 /* The heading is a button now, so it arrives carrying the global button rule's
    beni pill -- padding, 2px border, background, white text and its own
    letter-spacing -- on top of the mist band. All of it has to go. `font:
-   inherit` takes family, size, weight and style in one go; letter-spacing is
-   not part of that shorthand, so it is listed separately. */
+   inherit` rather than a font-family/font-size pair because it takes
+   line-height with it: the pair would leave the UA's `normal` in place and the
+   heading would lose a pixel or two of height. letter-spacing is not part of
+   that shorthand, so it is listed separately.
+
+   No `gap`: it would apply between the two labels as well, compounding with
+   the 0.7rem that .prefecture-en already owns. */
 .group-toggle {
   display: flex;
   align-items: baseline;
-  gap: 0.45rem;
   width: 100%;
   padding: 0;
   appearance: none;
@@ -392,18 +396,38 @@ tr.group th .prefecture-en {
   cursor: pointer;
 }
 
-/* One glyph rotated, not two glyphs swapped: ▸ and ▾ have different advance
-   widths, so swapping them would shift the prefecture name sideways on every
-   fold. inline-block because transform does not apply to inline boxes. */
+/* Drawn, not typed. U+25B8 is in none of the fonts this page declares -- not
+   Hiragino Mincho ProN, not Yu Mincho, not Georgia -- so a glyph here would be
+   rendered by whatever the system fell back to, at whatever advance width and
+   optical size that font chose. A clip-path triangle is the same shape in
+   every browser, and a box with an explicit width and height gives the
+   rotation an exact centre to turn about. Rotated rather than swapped for a
+   second shape, so the label beside it never shifts sideways as it folds. */
 .group-arrow {
-  display: inline-block;
-  font-size: 0.7em;
-  color: var(--mizu);
+  display: block;
+  width: 0.42em;
+  height: 0.42em;
+  margin-right: 0.45rem;
+  /* A drawn shape has no text baseline, so the flex line aligns it on its
+     bottom margin edge. A hair of margin lifts it to sit optically inside the
+     label instead of hanging off it. */
+  margin-bottom: 0.08em;
+  background: var(--mizu);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
   transition: transform 120ms ease;
 }
 
+/* The polygon already points right, so collapsed needs no transform and
+   `transform` is left free to carry nothing but the turn. */
 .group-toggle[aria-expanded="true"] .group-arrow {
   transform: rotate(90deg);
+}
+
+/* The heading is a full-width control with no border or background of its own,
+   so the arrow is the only thing that can acknowledge the pointer. Matches the
+   hover treatment the fold-all button gets in the tab row. */
+.group-toggle:hover .group-arrow {
+  background: var(--beni);
 }
 
 td.num,
