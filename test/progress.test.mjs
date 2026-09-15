@@ -30,3 +30,13 @@ test("an empty roster counts nothing rather than everything", () => {
 test("an empty mountain list counts nothing", () => {
   assert.equal(countFullyClimbed([], [1], () => true), 0);
 });
+
+test("a person outside the roster cannot hold a peak back", () => {
+  const isClimbed = from({ 1: [10, 11], 2: [10, 11], 3: [] });
+  assert.equal(countFullyClimbed([10, 11], [1, 2], isClimbed), 2);
+});
+
+test("counts partial progress for a single-person roster", () => {
+  const isClimbed = from({ 1: [10] });
+  assert.equal(countFullyClimbed([10, 11], [1], isClimbed), 1);
+});
