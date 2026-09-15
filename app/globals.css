@@ -343,7 +343,11 @@ tr.group th {
   position: sticky;
   top: 2rem;
   z-index: 1;
-  padding: 2.25rem 0.6rem 0.45rem;
+  /* Only the horizontal padding stays here. The vertical padding moved onto
+     .group-toggle so the button's box fills the whole mist band -- the cell's
+     total height is unchanged, but the clickable area is no longer a single
+     line box sitting in the middle of it. */
+  padding: 0 0.6rem;
   background-color: var(--washi);
   background-image: var(--kasumi);
   /* Tiling at a fixed width keeps the cloud lobes their own shape. Stretching
@@ -383,7 +387,7 @@ tr.group th .prefecture-en {
   display: flex;
   align-items: baseline;
   width: 100%;
-  padding: 0;
+  padding: 2.25rem 0 0.45rem;
   appearance: none;
   -webkit-appearance: none;
   border: 0;
@@ -1050,11 +1054,12 @@ code {
 /* Tabs sit on the sheet like the paper tabs of an album. The hairline runs the
    full width of the strip and the view below is pulled up onto it: the table's
    opaque sticky header covers it, the map leaves it showing as the top rule of
-   the map area. Both read correctly, so neither is special-cased. */
-/* The rule under the tabs, and the -1px that tucks it beneath the panel, live
-   here rather than on .view-tabs: as a flex item that element now shrinks to
-   its two tabs, and the line would shrink with it instead of spanning the
-   sheet. flex-end keeps the button sitting on the line with the tabs. */
+   the map area. Both read correctly, so neither is special-cased.
+
+   The hairline and that -1px live on this wrapper rather than on .view-tabs,
+   which is where they used to be: as a flex item .view-tabs shrinks to its two
+   tabs, and the line would shrink with it. flex-end keeps the fold-all button
+   sitting on the line alongside them. */
 .table-controls {
   display: flex;
   align-items: flex-end;
@@ -1064,7 +1069,6 @@ code {
 
 .view-tabs {
   display: flex;
-  gap: 0;
 }
 
 .view-tabs button {

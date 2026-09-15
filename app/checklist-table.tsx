@@ -103,7 +103,18 @@ export function ChecklistTable({
                     type="button"
                     className="group-toggle"
                     aria-expanded={!isCollapsed}
-                    onClick={() => onToggleGroup(group.prefecture)}
+                    onClick={(event) => {
+                      // Keep focus on the control that was activated. Safari and
+                      // Firefox on macOS do not focus a button on click, so
+                      // without this a fold that unmounts the focused checkbox
+                      // drops focus to <body> and the next Tab restarts at the
+                      // top of the document. Programmatic focus after a pointer
+                      // event does not match :focus-visible, so mouse users get
+                      // no stray ring. The map's fan controls manage focus
+                      // deliberately for the same reason.
+                      event.currentTarget.focus();
+                      onToggleGroup(group.prefecture);
+                    }}
                   >
                     <span className="group-arrow" aria-hidden="true" />
                     <span lang="ja">{group.prefectureJa}</span>

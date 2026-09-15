@@ -175,7 +175,10 @@ export function Checklist({
             <button
               type="button"
               className="fold-all"
-              onClick={() =>
+              onClick={(event) => {
+                // Same reason as the per-group toggles: fold-all can unmount
+                // whatever had focus, and this button survives to hold it.
+                event.currentTarget.focus();
                 setCollapsed((current) =>
                   // Built here rather than memoised above: it is read only on a
                   // press, so there is nothing to cache between them. It does
@@ -183,8 +186,8 @@ export function Checklist({
                   // that a group is one distinct `prefecture` string -- and the
                   // two have to keep agreeing, because `collapsed` keys on it.
                   current.size === 0 ? new Set(mountains.map((m) => m.prefecture)) : new Set(),
-                )
-              }
+                );
+              }}
             >
               <span lang="ja">{collapsed.size === 0 ? "全閉" : "全開"}</span>{" "}
               <span className="view-tab-en">{collapsed.size === 0 ? "Fold all" : "Show all"}</span>
