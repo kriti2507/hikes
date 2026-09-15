@@ -1002,8 +1002,9 @@ Expected: PASS, with no output. This is the first clean typecheck since Task 1.
 
 Run: `npm test`
 
-Expected: PASS, 25 tests. Nothing in this plan touches the map maths; a failure
-here is unrelated.
+Expected: PASS, 40 tests. (The README says 25; it is out of date, and correcting
+it is not this plan's job.) Nothing here touches the map maths, so a failure is
+unrelated.
 
 - [ ] **Step 4: Commit**
 
