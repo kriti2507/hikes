@@ -90,12 +90,19 @@ export function MapView({
   // ClusterMarker branch, and a stale fannedId is left pointing at nothing.
   useEffect(() => {
     if (fannedId === null) return;
-    if (scale < MAX_SCALE) {
-      setFannedId(null);
-      return;
-    }
-    if (!clusters.some((c) => c.members.length > 1 && keyOf(c) === fannedId)) setFannedId(null);
-  }, [scale, clusters, fannedId]);
+    const orphaned = !clusters.some((c) => c.members.length > 1 && keyOf(c) === fannedId);
+    if (scale >= MAX_SCALE && !orphaned) return;
+
+    // Neither collapse was asked for -- the user zoomed, or resized until the
+    // grouping shifted -- and the markers holding focus are about to be
+    // removed. Losing focus to <body> would be worse than not restoring it
+    // precisely: rescue it onto the map surface, the same way the card's
+    // unasked-for close does above. The test is for the fan group rather than
+    // for `.peak`, so that a collapse while an ordinary marker elsewhere has
+    // focus does not steal it for no reason.
+    if (document.activeElement?.closest(".fan")) element?.focus();
+    setFannedId(null);
+  }, [scale, clusters, fannedId, element]);
 
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
@@ -167,6 +174,15 @@ export function MapView({
           // are written down. Same pattern as --tilt in checklist-table.tsx.
           style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
           {...handlers}
+          onKeyDown={(event) => {
+            // Only when no card is open. PeakCard listens for Escape on the
+            // document for as long as it is mounted, so without this guard one
+            // press would close the card and collapse the fan underneath it.
+            // Escape should undo one thing at a time: the card, then the fan.
+            if (event.key === "Escape" && fannedId !== null && open === null) {
+              setFannedId(null);
+            }
+          }}
           aria-label="Map of Japan showing the hundred famous mountains"
           // -1 rather than absent: this lets the housekeeping effect above
           // rescue focus here when a ridge swallows the open card, without
