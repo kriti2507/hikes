@@ -851,32 +851,54 @@ code {
 
   /* A declared width now the table can be wider than the screen: with nothing
      to absorb, an auto column would collapse to the widest word it cannot
-     break. Enough for the kanji, the kana and the English on one line each. */
+     break. Enough for the kanji, the kana and the English on one line each.
+     Declared once and reused as the height column's pin offset below -- the two
+     have to agree exactly or the pair pins with a seam between them, and
+     writing 9.5rem twice is how that drifts. */
+  table {
+    --name-w: 9.5rem;
+  }
+
+  /* Name and height both ride along while the people scroll past. `left: 0` for
+     the name rather than the number column's width: that offset would have to
+     track whatever # came out as once any surplus was shared around, and # is
+     decorative enough to just slide underneath. Height then pins flush against
+     the name column's right edge. Both need an opaque background, or the person
+     cells show through as they pass behind. */
   td.mountain,
-  th.mountain {
-    width: 9.5rem;
-    /* Pinned so the row keeps its name while the people scroll past. `left: 0`
-       rather than the number column's width: the offset would have to track
-       whatever that column's used width came out as after the surplus was
-       shared around, and # is decorative enough to just slide underneath. An
-       opaque background is what makes passing under look deliberate. */
+  th.mountain,
+  td.elev,
+  th.elev {
     position: sticky;
-    left: 0;
     background: var(--washi);
   }
 
-  /* Above the cells it shadows; the header above thead's own 2. */
-  td.mountain {
+  td.mountain,
+  th.mountain {
+    width: var(--name-w);
+    left: 0;
+  }
+
+  td.elev,
+  th.elev {
+    left: var(--name-w);
+  }
+
+  /* Above the cells they shadow; the headers above thead's own 2. */
+  td.mountain,
+  td.elev {
     z-index: 1;
   }
 
-  th.mountain {
+  th.mountain,
+  th.elev {
     z-index: 3;
   }
 
-  /* The row tint is painted per cell, so the pinned one has to mix its own or
-     it stays a blank washi gap across the hovered row. */
-  tbody tr:hover td.mountain {
+  /* The row tint is painted per cell, so the pinned ones have to mix their own
+     or they stay blank washi gaps across the hovered row. */
+  tbody tr:hover td.mountain,
+  tbody tr:hover td.elev {
     background: color-mix(in srgb, var(--yamabuki) 12%, var(--washi));
   }
 
