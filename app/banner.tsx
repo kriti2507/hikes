@@ -54,21 +54,18 @@ export function Banner({
 function PersonActions({ person, onChanged }: { person: Person; onChanged: () => void }) {
   const [mode, setMode] = useState<"closed" | "edit" | "delete">("closed");
   const [name, setName] = useState(person.name);
-  const [password, setPassword] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function open(nextMode: "edit" | "delete") {
     setMode(nextMode);
     setName(person.name);
-    setPassword("");
     setError(null);
   }
 
   function close() {
     if (pending) return;
     setMode("closed");
-    setPassword("");
     setError(null);
   }
 
@@ -78,10 +75,9 @@ function PersonActions({ person, onChanged }: { person: Person; onChanged: () =>
 
     startTransition(async () => {
       try {
-        if (mode === "edit") await updatePerson(person.id, name, password);
-        else if (mode === "delete") await deletePerson(person.id, password);
+        if (mode === "edit") await updatePerson(person.id, name);
+        else if (mode === "delete") await deletePerson(person.id);
         setMode("closed");
-        setPassword("");
         onChanged();
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Could not save that change.");
@@ -118,16 +114,6 @@ function PersonActions({ person, onChanged }: { person: Person; onChanged: () =>
       ) : (
         <p>Delete {person.name} and all of their ascents?</p>
       )}
-      <label htmlFor={`confirm-password-${person.id}`}>Password</label>
-      <input
-        id={`confirm-password-${person.id}`}
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        disabled={pending}
-        autoComplete="current-password"
-        required
-      />
       {error ? <span className="error">{error}</span> : null}
       <span className="person-form-buttons">
         <button
