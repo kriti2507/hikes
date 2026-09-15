@@ -3,11 +3,11 @@
 import { useId } from "react";
 
 // Marker dimensions in screen pixels. The parent applies a counter-scale so
-// these stay constant however far you zoom. Not exported: nothing outside
-// this module reads them, and the shape they describe is this component's
-// own business.
+// these stay constant however far you zoom. PEAK_HEIGHT is exported because a
+// fan's leader line has to stop short of the triangle it points at, and it
+// must be this triangle's height rather than a second copy of the number.
 const HALF_WIDTH = 7;
-const PEAK_HEIGHT = 11;
+export const PEAK_HEIGHT = 11;
 
 /** The triangle, apex up, sitting on its base at y = 0. */
 const PEAK_PATH = `M0 ${-PEAK_HEIGHT}L${HALF_WIDTH} 0L${-HALF_WIDTH} 0Z`;
@@ -74,10 +74,10 @@ export function PeakMarker({
       <path className="peak-outline" d={PEAK_PATH} />
 
       {/* A number is at most three digits, short enough that clustering's
-          22px guarantee already keeps it clear of a neighbour's triangle.
-          A name is far wider and gets no such guarantee from clustering
-          alone -- the caller only passes one once it has separately measured
-          that this peak actually has the room (see NAME_ROOM_PX). */}
+          22px guarantee already keeps it clear of a neighbour's triangle. A
+          name is far wider and gets no such guarantee, so two close peaks can
+          overlap their names; the caller passes one for every peak it draws
+          anyway, so the map names peaks consistently rather than silently. */}
       {number !== null ? (
         <text className="peak-number" x={HALF_WIDTH + 2} y={0}>
           {number}

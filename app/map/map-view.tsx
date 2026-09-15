@@ -1,15 +1,16 @@
 "use client";
 
-import { type CSSProperties, useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useLayoutEffect, useState } from "react";
 import { coastline, type GeometrySource, prefectures, source } from "@/lib/map/japan-geometry";
+import { fanOffsets } from "@/lib/map/fan.mjs";
 import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
 import type { Entry, Mountain, Person } from "../checklist";
 import { ClusterMarker } from "./cluster-marker";
 import { PeakCard } from "./peak-card";
-import { PeakMarker } from "./peak-marker";
+import { PEAK_HEIGHT, PeakMarker } from "./peak-marker";
 import { PersonFilter } from "./person-filter";
-import { NAME_ROOM_PX, useMapMarkers } from "./use-map-markers";
-import { NAME_SCALE, usePanZoom } from "./use-pan-zoom";
+import { useMapMarkers } from "./use-map-markers";
+import { MAX_SCALE, NAME_SCALE, usePanZoom } from "./use-pan-zoom";
 
 // Looked up rather than branched on: `source` is generated with one value, so
 // `source === "placeholder"` is a type error the moment real geometry is built.
@@ -19,6 +20,13 @@ const COASTLINE_NOTE: Record<GeometrySource, string> = {
   placeholder: " The coastline is a schematic placeholder.",
   "natural-earth": " The coastline is Natural Earth 1:10m, thinned for this scale.",
 };
+
+// One name for a cluster, used both as its React key and as the identity the
+// fan remembers. cluster.mjs sorts members by `order` and keeps them sorted
+// through every merge, so members[0] is stable across renders -- that is what
+// makes this usable as a key at all.
+const keyOf = (c: { members: { mountain: Mountain }[] }) =>
+  c.members.length === 1 ? `m${c.members[0].mountain.id}` : `c${c.members[0].mountain.id}`;
 
 export function MapView({
   mountains,
@@ -39,6 +47,19 @@ export function MapView({
   const { scale, viewBox, unitsPerPixel, measured, wasDragged, zoomBy, fit, fitBounds, handlers } =
     usePanZoom(element);
   const [openId, setOpenId] = useState<number | null>(null);
+  // The key of the ridge currently drawn fanned out, or null. A fan only
+  // exists at maximum zoom: it is the answer to "zooming cannot separate
+  // these", so below the cap zooming is still the better answer.
+  const [fannedId, setFannedId] = useState<string | null>(null);
+  // The key of the cluster whose successor control should take focus once it
+  // exists. Opening or collapsing a fan is a deliberate action that unmounts
+  // whatever control the user just activated -- the ClusterMarker, the
+  // anchor -- before its replacement -- the anchor, the ClusterMarker -- has
+  // been drawn. There is nothing to focus at the moment the handler runs, so
+  // this remembers the cluster's key across the render that draws the
+  // replacement, and the layout effect below resolves it into an actual
+  // element once one exists.
+  const [focusCluster, setFocusCluster] = useState<string | null>(null);
 
   const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
     mountains,
@@ -52,10 +73,12 @@ export function MapView({
   // wrong marker. This just clears the now-stale id so state does not linger.
   useEffect(() => {
     if (openId === null) return;
-    const stillAlone = clusters.some(
-      (c) => c.members.length === 1 && c.members[0].mountain.id === openId,
+    const stillDrawn = clusters.some((c) =>
+      c.members.length === 1
+        ? c.members[0].mountain.id === openId
+        : keyOf(c) === fannedId && c.members.some((m) => m.mountain.id === openId),
     );
-    if (stillAlone) return;
+    if (stillDrawn) return;
 
     // This close was not asked for -- a ridge swallowed the open peak on
     // zoom-out, not Escape, the close button, or an outside click -- so the
@@ -65,18 +88,98 @@ export function MapView({
     // their place on the map they were just looking at.
     if (document.activeElement?.closest(".peak-card")) element?.focus();
     setOpenId(null);
-  }, [clusters, openId, element]);
+  }, [clusters, openId, element, fannedId]);
+
+  // A zoom-out collapses the fan outright -- it is no longer the cap, so
+  // zooming is the better answer again. But scale is not the only thing that
+  // can move the ridges: useMapMarkers reclusters on unitsPerPixel, which a
+  // window resize changes without touching scale at all, and that can shift
+  // which peak is members[0] of the fanned cluster. When that happens
+  // keyOf(c) stops matching fannedId, the ridge falls through to the plain
+  // ClusterMarker branch, and a stale fannedId is left pointing at nothing.
+  useEffect(() => {
+    if (fannedId === null) return;
+    const orphaned = !clusters.some((c) => c.members.length > 1 && keyOf(c) === fannedId);
+    if (scale >= MAX_SCALE && !orphaned) return;
+
+    // Neither collapse was asked for -- the user zoomed, or resized until the
+    // grouping shifted -- and the markers holding focus are about to be
+    // removed. Losing focus to <body> would be worse than not restoring it
+    // precisely: rescue it onto the map surface, the same way the card's
+    // unasked-for close does above. The test is for the fan group rather than
+    // for `.peak`, so that a collapse while an ordinary marker elsewhere has
+    // focus does not steal it for no reason.
+    if (document.activeElement?.closest(".fan")) element?.focus();
+    setFannedId(null);
+  }, [scale, clusters, fannedId, element]);
+
+  // Opening a fan, and collapsing one via Escape or the anchor, are the three
+  // deliberate transitions: the user asked for exactly this change, so unlike
+  // the involuntary rescue above there is a real successor control to hand
+  // focus to, and it should get it rather than the map surface. The
+  // successor cannot be focused from inside the handler that requests it --
+  // it is drawn by the render this same state change causes, so it does not
+  // exist yet -- which is why this is a separate effect keyed on
+  // `focusCluster` rather than a `.focus()` call inline in each handler.
+  // `data-cluster` tags both the fanned and the plain-ridge branches with the
+  // same key `fannedId` itself uses, so one query serves both directions:
+  // right after opening only `.fan-anchor` exists under that key, and right
+  // after collapsing only `.cluster` does. useLayoutEffect rather than
+  // useEffect so the move lands before paint -- the user should never see a
+  // frame with focus sitting on <body>.
+  useLayoutEffect(() => {
+    if (focusCluster === null) return;
+    const control = element?.querySelector(
+      `[data-cluster="${focusCluster}"] .fan-anchor, [data-cluster="${focusCluster}"] .cluster`,
+    );
+    if (control instanceof SVGElement) control.focus();
+    setFocusCluster(null);
+  }, [focusCluster, fannedId, element]);
 
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
+  // Every PeakMarker on the map -- lone or fanned -- takes the same six
+  // props computed the same way from its own mountain; only the marker's
+  // position (a plain transform on its wrapping <g>) differs between the two
+  // call sites. Centralising them here means a future prop cannot drift
+  // between the branches by only being updated in one.
+  const peakMarkerProps = (peak: { mountain: Mountain }) => ({
+    fill: fillFor(peak.mountain),
+    selected: openId === peak.mountain.id,
+    number: peak.mountain.fukadaNumber,
+    // Every peak the map draws on its own gets its name. Above NAME_SCALE two
+    // names can still overlap where peaks sit close; the map prefers naming
+    // every peak consistently over hiding some to keep others clean.
+    name: scale >= NAME_SCALE ? peak.mountain.nameEn : null,
+    label: `${nameOf(peak.mountain)}, ${peak.mountain.elevationM} metres`,
+    onActivate: () => setOpenId(peak.mountain.id),
+  });
+
   const [vbX, vbY, vbW] = viewBox.split(" ").map(Number);
-  // Only a lone peak has a card. Deriving `open` this way rather than
-  // searching every cluster's members means a peak swallowed into a ridge
-  // loses its card in the same render as the merge — no frame where the card
-  // floats over a marker that is no longer its peak.
-  const open =
-    clusters.find((c) => c.members.length === 1 && c.members[0].mountain.id === openId)
-      ?.members[0] ?? null;
+  // Only a peak the map draws on its own has a card: a lone cluster, or a
+  // member of the ridge currently fanned out. The card anchors to where that
+  // peak is *drawn*, which for a fanned member is the ridge's position plus
+  // its offset — not the centroid the ridge itself occupies. Deriving this
+  // from the clusters rather than searching every member means a peak
+  // swallowed into a ridge, or one whose fan just collapsed, loses its card
+  // in the same render — no frame where the card floats over a marker that is
+  // no longer its peak.
+  const open: { mountain: Mountain; x: number; y: number } | null = (() => {
+    if (openId === null) return null;
+    for (const c of clusters) {
+      const index = c.members.findIndex((m) => m.mountain.id === openId);
+      if (index < 0) continue;
+      if (c.members.length === 1) return c.members[0];
+      if (keyOf(c) !== fannedId) return null;
+      const { dx, dy } = fanOffsets(c.members.length)[index];
+      return {
+        mountain: c.members[index].mountain,
+        x: c.x + dx * unitsPerPixel,
+        y: c.y + dy * unitsPerPixel,
+      };
+    }
+    return null;
+  })();
 
   // Past roughly three-fifths across or down, a card anchored on the near
   // side would hang off the frame, so it flips to the far side instead.
@@ -120,6 +223,16 @@ export function MapView({
           // are written down. Same pattern as --tilt in checklist-table.tsx.
           style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
           {...handlers}
+          onKeyDown={(event) => {
+            // Only when no card is open. PeakCard listens for Escape on the
+            // document for as long as it is mounted, so without this guard one
+            // press would close the card and collapse the fan underneath it.
+            // Escape should undo one thing at a time: the card, then the fan.
+            if (event.key === "Escape" && fannedId !== null && open === null) {
+              setFocusCluster(fannedId);
+              setFannedId(null);
+            }
+          }}
           aria-label="Map of Japan showing the hundred famous mountains"
           // -1 rather than absent: this lets the housekeeping effect above
           // rescue focus here when a ridge swallows the open card, without
@@ -159,40 +272,116 @@ export function MapView({
 
               if (c.members.length === 1) {
                 const peak = c.members[0];
-                const fill = fillFor(peak.mountain);
-                // NAME_SCALE alone is not enough: a name reaches far past the
-                // 22px clustering guarantee (NAME_ROOM_PX), so it also needs
-                // this peak's own measured clearance to its nearest neighbour.
-                const hasRoom = scale >= NAME_SCALE && c.nearestNeighborPx > NAME_ROOM_PX;
                 return (
-                  <g key={`m${peak.mountain.id}`} transform={transform}>
-                    <PeakMarker
-                      fill={fill}
-                      selected={openId === peak.mountain.id}
-                      number={peak.mountain.fukadaNumber}
-                      name={hasRoom ? peak.mountain.nameEn : null}
-                      label={`${nameOf(peak.mountain)}, ${peak.mountain.elevationM} metres`}
-                      onActivate={() => setOpenId(peak.mountain.id)}
-                    />
+                  <g key={keyOf(c)} transform={transform}>
+                    <PeakMarker {...peakMarkerProps(peak)} />
+                  </g>
+                );
+              }
+
+              if (keyOf(c) === fannedId) {
+                const offsets = fanOffsets(c.members.length);
+                // `fan` carries no styles of its own -- it exists so a
+                // later focus-rescue check can ask whether the element
+                // holding focus sits inside the fan that is about to vanish.
+                // `data-cluster` is the other consumer: it is how the
+                // focus-successor effect finds this group's `.fan-anchor`
+                // right after the ClusterMarker that opened it is gone.
+                return (
+                  <g className="fan" data-cluster={keyOf(c)} key={keyOf(c)} transform={transform}>
+                    {c.members.map((peak, i) => {
+                      // A spoke stops PEAK_HEIGHT short of the member it
+                      // points at, measured along its own ray. A triangle
+                      // rises from its anchor point back toward the circle,
+                      // so a spoke drawn the whole way would be painted
+                      // through the inside of the triangle it points at.
+                      // Shortening along the ray is right in every direction;
+                      // stopping at the base or the apex would only be right
+                      // straight above or below. The ring is never tighter
+                      // than FAN_RADIUS_PX, so a spoke is never shorter than
+                      // FAN_RADIUS_PX - PEAK_HEIGHT and never turns around.
+                      const { dx, dy } = offsets[i];
+                      const length = Math.hypot(dx, dy);
+                      const k = (length - PEAK_HEIGHT) / length;
+                      return (
+                        <line
+                          key={`s${peak.mountain.id}`}
+                          className="fan-spoke"
+                          x1={0}
+                          y1={0}
+                          x2={dx * k}
+                          y2={dy * k}
+                        />
+                      );
+                    })}
+
+                    <g
+                      className="fan-anchor"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Draw these ${c.members.length} peaks back together`}
+                      onClick={() => {
+                        setFocusCluster(fannedId);
+                        setFannedId(null);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setFocusCluster(fannedId);
+                          setFannedId(null);
+                        }
+                      }}
+                    >
+                      {/* Same generous invisible target PeakMarker uses,
+                          reusing its class rather than a second transparent-
+                          fill rule. 11px is safe here too: the nearest
+                          fanned peak sits FAN_RADIUS_PX (28px) away. */}
+                      <circle className="peak-target" r={11} />
+                      <circle className="fan-anchor-dot" r={3} />
+                    </g>
+
+                    {/* Ordinary peak markers at the offsets: fill, number,
+                        name, hit target, focus ring, keyboard activation and
+                        card all come from the component that already exists.
+                        A fan is a placement, not a new kind of marker. */}
+                    {c.members.map((peak, i) => (
+                      <g
+                        key={`m${peak.mountain.id}`}
+                        transform={`translate(${offsets[i].dx} ${offsets[i].dy})`}
+                      >
+                        <PeakMarker {...peakMarkerProps(peak)} />
+                      </g>
+                    ))}
                   </g>
                 );
               }
 
               const done = c.members.filter((m) => fillFor(m.mountain) === 1).length;
               return (
-                <g key={`c${c.members[0].mountain.id}`} transform={transform}>
+                <g key={keyOf(c)} data-cluster={keyOf(c)} transform={transform}>
                   <ClusterMarker
                     count={c.members.length}
                     fill={done / c.members.length}
-                    label={`${c.members.length} peaks, ${done} climbed by everyone selected. Zoom in.`}
-                    onActivate={() =>
+                    label={`${c.members.length} peaks, ${done} climbed by everyone selected. ${
+                      scale >= MAX_SCALE ? "Show them separately." : "Zoom in."
+                    }`}
+                    onActivate={() => {
+                      // Zoom until you can't, then fan. At the cap fitBounds
+                      // would clamp to the scale already in force and tween
+                      // to the camera it started from, which is exactly the
+                      // click that used to do nothing.
+                      if (scale >= MAX_SCALE) {
+                        setFocusCluster(keyOf(c));
+                        setFannedId(keyOf(c));
+                        return;
+                      }
                       fitBounds(
                         Math.min(...c.members.map((m) => m.x)),
                         Math.min(...c.members.map((m) => m.y)),
                         Math.max(...c.members.map((m) => m.x)),
                         Math.max(...c.members.map((m) => m.y)),
-                      )
-                    }
+                      );
+                    }}
                   />
                 </g>
               );
