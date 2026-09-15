@@ -99,10 +99,17 @@ export async function requireAdmin() {
 
 Run: `npm run typecheck`
 
-Expected: FAIL, with errors in `proxy.ts` and `app/login/actions.ts` — both
-pass `sitePassword()` where a `string` is required and it is now
-`string | null`. That is the expected intermediate state; Tasks 3 and 7 fix
-both. Do not "fix" them by adding a non-null assertion.
+Expected: FAIL, with exactly one error — `proxy.ts(9,47)`, passing
+`sitePassword()` where a `string` is required now that it is `string | null`.
+That is the expected intermediate state; Task 7 deletes the file. Do not "fix"
+it with a non-null assertion.
+
+`app/login/actions.ts` and `app/actions.ts` also call `sitePassword()`, but both
+only compare it with `!==`, which TypeScript allows against `string | null`. So
+they typecheck clean while being wrong at runtime: in dev mode `sitePassword()`
+is `null`, so `submitted !== null` is always true and `signIn` would bounce
+every password. Tasks 2 and 3 replace both call sites, and nothing exercises
+dev mode until then.
 
 - [ ] **Step 3: Commit**
 
@@ -298,9 +305,8 @@ guards against a misclick, which is a different concern from authorization.
 
 Run: `npm run typecheck`
 
-Expected: the errors in `app/actions.ts` and `app/banner.tsx` are gone. Two
-remain, in `proxy.ts` and `app/login/actions.ts`, both still the `string | null`
-error from Task 1.
+Expected: FAIL with exactly one error, still `proxy.ts(9,47)` from Task 1. If
+`app/banner.tsx` or `app/actions.ts` appears, a call site was missed.
 
 - [ ] **Step 6: Commit**
 
