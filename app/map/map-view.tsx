@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useLayoutEffect, useState } from "react";
 import { coastline, type GeometrySource, prefectures, source } from "@/lib/map/japan-geometry";
 import { fanOffsets } from "@/lib/map/fan.mjs";
 import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
@@ -51,6 +51,15 @@ export function MapView({
   // exists at maximum zoom: it is the answer to "zooming cannot separate
   // these", so below the cap zooming is still the better answer.
   const [fannedId, setFannedId] = useState<string | null>(null);
+  // The key of the cluster whose successor control should take focus once it
+  // exists. Opening or collapsing a fan is a deliberate action that unmounts
+  // whatever control the user just activated -- the ClusterMarker, the
+  // anchor -- before its replacement -- the anchor, the ClusterMarker -- has
+  // been drawn. There is nothing to focus at the moment the handler runs, so
+  // this remembers the cluster's key across the render that draws the
+  // replacement, and the layout effect below resolves it into an actual
+  // element once one exists.
+  const [focusCluster, setFocusCluster] = useState<string | null>(null);
 
   const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
     mountains,
@@ -104,7 +113,47 @@ export function MapView({
     setFannedId(null);
   }, [scale, clusters, fannedId, element]);
 
+  // Opening a fan, and collapsing one via Escape or the anchor, are the three
+  // deliberate transitions: the user asked for exactly this change, so unlike
+  // the involuntary rescue above there is a real successor control to hand
+  // focus to, and it should get it rather than the map surface. The
+  // successor cannot be focused from inside the handler that requests it --
+  // it is drawn by the render this same state change causes, so it does not
+  // exist yet -- which is why this is a separate effect keyed on
+  // `focusCluster` rather than a `.focus()` call inline in each handler.
+  // `data-cluster` tags both the fanned and the plain-ridge branches with the
+  // same key `fannedId` itself uses, so one query serves both directions:
+  // right after opening only `.fan-anchor` exists under that key, and right
+  // after collapsing only `.cluster` does. useLayoutEffect rather than
+  // useEffect so the move lands before paint -- the user should never see a
+  // frame with focus sitting on <body>.
+  useLayoutEffect(() => {
+    if (focusCluster === null) return;
+    const control = element?.querySelector(
+      `[data-cluster="${focusCluster}"] .fan-anchor, [data-cluster="${focusCluster}"] .cluster`,
+    );
+    if (control instanceof SVGElement) control.focus();
+    setFocusCluster(null);
+  }, [focusCluster, fannedId, element]);
+
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
+
+  // Every PeakMarker on the map -- lone or fanned -- takes the same six
+  // props computed the same way from its own mountain; only the marker's
+  // position (a plain transform on its wrapping <g>) differs between the two
+  // call sites. Centralising them here means a future prop cannot drift
+  // between the branches by only being updated in one.
+  const peakMarkerProps = (peak: { mountain: Mountain }) => ({
+    fill: fillFor(peak.mountain),
+    selected: openId === peak.mountain.id,
+    number: peak.mountain.fukadaNumber,
+    // Every peak the map draws on its own gets its name. Above NAME_SCALE two
+    // names can still overlap where peaks sit close; the map prefers naming
+    // every peak consistently over hiding some to keep others clean.
+    name: scale >= NAME_SCALE ? peak.mountain.nameEn : null,
+    label: `${nameOf(peak.mountain)}, ${peak.mountain.elevationM} metres`,
+    onActivate: () => setOpenId(peak.mountain.id),
+  });
 
   const [vbX, vbY, vbW] = viewBox.split(" ").map(Number);
   // Only a peak the map draws on its own has a card: a lone cluster, or a
@@ -180,6 +229,7 @@ export function MapView({
             // press would close the card and collapse the fan underneath it.
             // Escape should undo one thing at a time: the card, then the fan.
             if (event.key === "Escape" && fannedId !== null && open === null) {
+              setFocusCluster(fannedId);
               setFannedId(null);
             }
           }}
@@ -222,21 +272,9 @@ export function MapView({
 
               if (c.members.length === 1) {
                 const peak = c.members[0];
-                const fill = fillFor(peak.mountain);
                 return (
                   <g key={keyOf(c)} transform={transform}>
-                    <PeakMarker
-                      fill={fill}
-                      selected={openId === peak.mountain.id}
-                      number={peak.mountain.fukadaNumber}
-                      // Every peak the map draws on its own gets its name.
-                      // Above NAME_SCALE two names can still overlap where
-                      // peaks sit close; the map prefers naming every peak
-                      // consistently over hiding some to keep others clean.
-                      name={scale >= NAME_SCALE ? peak.mountain.nameEn : null}
-                      label={`${nameOf(peak.mountain)}, ${peak.mountain.elevationM} metres`}
-                      onActivate={() => setOpenId(peak.mountain.id)}
-                    />
+                    <PeakMarker {...peakMarkerProps(peak)} />
                   </g>
                 );
               }
@@ -246,8 +284,11 @@ export function MapView({
                 // `fan` carries no styles of its own -- it exists so a
                 // later focus-rescue check can ask whether the element
                 // holding focus sits inside the fan that is about to vanish.
+                // `data-cluster` is the other consumer: it is how the
+                // focus-successor effect finds this group's `.fan-anchor`
+                // right after the ClusterMarker that opened it is gone.
                 return (
-                  <g className="fan" key={keyOf(c)} transform={transform}>
+                  <g className="fan" data-cluster={keyOf(c)} key={keyOf(c)} transform={transform}>
                     {c.members.map((peak, i) => {
                       // A spoke stops PEAK_HEIGHT short of the member it
                       // points at, measured along its own ray. A triangle
@@ -279,10 +320,14 @@ export function MapView({
                       role="button"
                       tabIndex={0}
                       aria-label={`Draw these ${c.members.length} peaks back together`}
-                      onClick={() => setFannedId(null)}
+                      onClick={() => {
+                        setFocusCluster(fannedId);
+                        setFannedId(null);
+                      }}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
+                          setFocusCluster(fannedId);
                           setFannedId(null);
                         }
                       }}
@@ -304,14 +349,7 @@ export function MapView({
                         key={`m${peak.mountain.id}`}
                         transform={`translate(${offsets[i].dx} ${offsets[i].dy})`}
                       >
-                        <PeakMarker
-                          fill={fillFor(peak.mountain)}
-                          selected={openId === peak.mountain.id}
-                          number={peak.mountain.fukadaNumber}
-                          name={scale >= NAME_SCALE ? peak.mountain.nameEn : null}
-                          label={`${nameOf(peak.mountain)}, ${peak.mountain.elevationM} metres`}
-                          onActivate={() => setOpenId(peak.mountain.id)}
-                        />
+                        <PeakMarker {...peakMarkerProps(peak)} />
                       </g>
                     ))}
                   </g>
@@ -320,7 +358,7 @@ export function MapView({
 
               const done = c.members.filter((m) => fillFor(m.mountain) === 1).length;
               return (
-                <g key={keyOf(c)} transform={transform}>
+                <g key={keyOf(c)} data-cluster={keyOf(c)} transform={transform}>
                   <ClusterMarker
                     count={c.members.length}
                     fill={done / c.members.length}
@@ -333,6 +371,7 @@ export function MapView({
                       // to the camera it started from, which is exactly the
                       // click that used to do nothing.
                       if (scale >= MAX_SCALE) {
+                        setFocusCluster(keyOf(c));
                         setFannedId(keyOf(c));
                         return;
                       }
