@@ -64,10 +64,12 @@ export function MapView({
   // wrong marker. This just clears the now-stale id so state does not linger.
   useEffect(() => {
     if (openId === null) return;
-    const stillAlone = clusters.some(
-      (c) => c.members.length === 1 && c.members[0].mountain.id === openId,
+    const stillDrawn = clusters.some((c) =>
+      c.members.length === 1
+        ? c.members[0].mountain.id === openId
+        : keyOf(c) === fannedId && c.members.some((m) => m.mountain.id === openId),
     );
-    if (stillAlone) return;
+    if (stillDrawn) return;
 
     // This close was not asked for -- a ridge swallowed the open peak on
     // zoom-out, not Escape, the close button, or an outside click -- so the
@@ -77,7 +79,7 @@ export function MapView({
     // their place on the map they were just looking at.
     if (document.activeElement?.closest(".peak-card")) element?.focus();
     setOpenId(null);
-  }, [clusters, openId, element]);
+  }, [clusters, openId, element, fannedId]);
 
   // A zoom-out collapses the fan outright -- it is no longer the cap, so
   // zooming is the better answer again. But scale is not the only thing that
@@ -98,16 +100,30 @@ export function MapView({
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
   const [vbX, vbY, vbW] = viewBox.split(" ").map(Number);
-  // Only a peak the map draws on its own has a card, and the card anchors to
-  // where that peak is *drawn*. Deriving this from the clusters rather than
-  // searching every member means a peak swallowed into a ridge loses its card
-  // in the same render as the merge — no frame where the card floats over a
-  // marker that is no longer its peak.
-  const open: { mountain: Mountain; x: number; y: number } | null =
-    openId === null
-      ? null
-      : (clusters.find((c) => c.members.length === 1 && c.members[0].mountain.id === openId)
-          ?.members[0] ?? null);
+  // Only a peak the map draws on its own has a card: a lone cluster, or a
+  // member of the ridge currently fanned out. The card anchors to where that
+  // peak is *drawn*, which for a fanned member is the ridge's position plus
+  // its offset — not the centroid the ridge itself occupies. Deriving this
+  // from the clusters rather than searching every member means a peak
+  // swallowed into a ridge, or one whose fan just collapsed, loses its card
+  // in the same render — no frame where the card floats over a marker that is
+  // no longer its peak.
+  const open: { mountain: Mountain; x: number; y: number } | null = (() => {
+    if (openId === null) return null;
+    for (const c of clusters) {
+      const index = c.members.findIndex((m) => m.mountain.id === openId);
+      if (index < 0) continue;
+      if (c.members.length === 1) return c.members[0];
+      if (keyOf(c) !== fannedId) return null;
+      const { dx, dy } = fanOffsets(c.members.length)[index];
+      return {
+        mountain: c.members[index].mountain,
+        x: c.x + dx * unitsPerPixel,
+        y: c.y + dy * unitsPerPixel,
+      };
+    }
+    return null;
+  })();
 
   // Past roughly three-fifths across or down, a card anchored on the near
   // side would hang off the frame, so it flips to the far side instead.
