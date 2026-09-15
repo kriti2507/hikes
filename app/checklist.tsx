@@ -48,7 +48,7 @@ export const key = (personId: number, mountainId: number) => `${personId}:${moun
 // people, folded prefectures -- so both need the same copy-then-flip. A fresh
 // Set because React compares by reference, and an in-place mutation would not
 // re-render.
-const toggled = <T,>(current: Set<T>, value: T) => {
+const toggled = <T,>(current: ReadonlySet<T>, value: T) => {
   const next = new Set(current);
   if (next.has(value)) next.delete(value);
   else next.add(value);
@@ -94,6 +94,16 @@ export function Checklist({
   // silently fold whatever arrived after it.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
 
+  // Only the fold-all button needs this, and it is derived rather than stored so
+  // it cannot fall out of step with the roster. It duplicates one fact that
+  // ChecklistTable's `groups` also knows -- that a group is one distinct
+  // `prefecture` string -- and the two have to keep agreeing, because `collapsed`
+  // keys on exactly that.
+  const allPrefectures = useMemo(
+    () => new Set(mountains.map((m) => m.prefecture)),
+    [mountains],
+  );
+
   const counts = useMemo(() => {
     const out = new Map<number, number>(people.map((p) => [p.id, 0]));
     for (const person of people) {
@@ -134,29 +144,48 @@ export function Checklist({
           <p className="empty">No people yet — add someone below to start a column.</p>
         ) : null}
 
-        <div className="view-tabs" role="tablist" aria-label="Checklist view">
-          <button
-            type="button"
-            role="tab"
-            id="tab-table"
-            aria-controls="view-panel"
-            aria-selected={view === "table"}
-            className={view === "table" ? "on" : undefined}
-            onClick={() => setView("table")}
-          >
-            <span lang="ja">一覧</span> <span className="view-tab-en">Table</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="tab-map"
-            aria-controls="view-panel"
-            aria-selected={view === "map"}
-            className={view === "map" ? "on" : undefined}
-            onClick={() => setView("map")}
-          >
-            <span lang="ja">地図</span> <span className="view-tab-en">Map</span>
-          </button>
+        <div className="table-controls">
+          <div className="view-tabs" role="tablist" aria-label="Checklist view">
+            <button
+              type="button"
+              role="tab"
+              id="tab-table"
+              aria-controls="view-panel"
+              aria-selected={view === "table"}
+              className={view === "table" ? "on" : undefined}
+              onClick={() => setView("table")}
+            >
+              <span lang="ja">一覧</span> <span className="view-tab-en">Table</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="tab-map"
+              aria-controls="view-panel"
+              aria-selected={view === "map"}
+              className={view === "map" ? "on" : undefined}
+              onClick={() => setView("map")}
+            >
+              <span lang="ja">地図</span> <span className="view-tab-en">Map</span>
+            </button>
+          </div>
+
+          {/* Deliberately a sibling of the tablist, not a child: a tablist
+              should contain only tabs, and a plain button inside one reads to
+              assistive technology as a third, broken tab. Table view only,
+              because folding means nothing on the map. */}
+          {view === "table" && mountains.length > 0 ? (
+            <button
+              type="button"
+              className="fold-all"
+              onClick={() =>
+                setCollapsed((current) => (current.size === 0 ? new Set(allPrefectures) : new Set()))
+              }
+            >
+              <span lang="ja">{collapsed.size === 0 ? "全閉" : "全開"}</span>{" "}
+              <span className="view-tab-en">{collapsed.size === 0 ? "Fold all" : "Show all"}</span>
+            </button>
+          ) : null}
         </div>
 
         <div id="view-panel" role="tabpanel" aria-labelledby={view === "table" ? "tab-table" : "tab-map"}>

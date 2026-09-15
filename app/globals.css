@@ -1036,11 +1036,20 @@ code {
    full width of the strip and the view below is pulled up onto it: the table's
    opaque sticky header covers it, the map leaves it showing as the top rule of
    the map area. Both read correctly, so neither is special-cased. */
+/* The rule under the tabs, and the -1px that tucks it beneath the panel, live
+   here rather than on .view-tabs: as a flex item that element now shrinks to
+   its two tabs, and the line would shrink with it instead of spanning the
+   sheet. flex-end keeps the button sitting on the line with the tabs. */
+.table-controls {
+  display: flex;
+  align-items: flex-end;
+  margin: 0 0 -1px;
+  border-bottom: 1px solid var(--sumi);
+}
+
 .view-tabs {
   display: flex;
   gap: 0;
-  margin: 0 0 -1px;
-  border-bottom: 1px solid var(--sumi);
 }
 
 .view-tabs button {
@@ -1055,7 +1064,9 @@ code {
   cursor: pointer;
 }
 
-.view-tabs button .view-tab-en {
+/* Unscoped from .view-tabs button so the fold-all button shares one treatment
+   rather than duplicating it. */
+.view-tab-en {
   font-family: var(--font-en);
   font-size: 12px;
   font-style: italic;
@@ -1065,6 +1076,30 @@ code {
   color: var(--sumi);
   background: var(--washi);
   border-color: var(--sumi);
+}
+
+/* Exhaustively reset against the global button rule, the same way .group-toggle
+   is: every property that rule sets is named here. The tabs above get away with
+   a partial reset only because their own border and background happen to cover
+   what they leave behind, which is luck rather than design. */
+.fold-all {
+  margin-left: auto;
+  padding: 6px 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--rule);
+  border-bottom: none;
+  border-radius: 0;
+  background: var(--washi-deep);
+  color: var(--sumi-faint);
+  font-family: var(--font-ja);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.fold-all:hover {
+  color: var(--sumi);
 }
 
 .map {
