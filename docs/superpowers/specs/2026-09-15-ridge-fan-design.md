@@ -84,7 +84,7 @@ Members go on a ring, evenly spaced, the first one straight up and the rest
 clockwise: `θᵢ = -π/2 + 2πi/n`. The radius is
 
 ```js
-const radius = Math.max(FAN_RADIUS_PX, 14 / Math.sin(Math.PI / n));
+const radius = n < 2 ? FAN_RADIUS_PX : Math.max(FAN_RADIUS_PX, 14 / Math.sin(Math.PI / n));
 ```
 
 The second term is what makes the guarantee: adjacent members on a ring of
@@ -100,7 +100,10 @@ each triangle, and 56px of vertical separation is far more than the 9px name
 row needs.
 
 `fanOffsets(1)` returns a single offset rather than throwing; a one-member
-ridge cannot occur, but the caller should not have to know that.
+ridge cannot occur, but the caller should not have to know that. The `n < 2`
+branch is load-bearing, not defensive: `sin(π/1)` is 1.2e-16 rather than
+zero, so the spacing formula alone would put a lone member 10^17 pixels from
+the anchor.
 
 ### 3. When a click fans instead of zooming
 
@@ -138,11 +141,20 @@ Fanned peaks are ordinary `PeakMarker`s with ordinary props. They get fill,
 number, name, hit target, focus ring, keyboard activation and card for free,
 and `peak-marker.tsx` needs no changes at all.
 
-A spoke stops at the edge of the triangle it points to rather than at its
-anchor point: the base (`dy`) for a member above the anchor, the apex
-(`dy - PEAK_HEIGHT`) for one below. Without this the spoke to a member drawn
-below the anchor runs straight through the inside of its own triangle,
-because the triangle rises from its anchor point back toward the circle.
+A spoke stops `PEAK_HEIGHT` short of the member it points to, measured along
+its own ray — `k = (r - PEAK_HEIGHT) / r` applied to the offset. A triangle
+rises from its anchor point back toward the circle, so a spoke drawn all the
+way to that point passes through the inside of the triangle it is pointing
+at. Shortening along the ray handles every direction uniformly; stopping at
+the base or the apex would be right only for a member directly above or
+below one. The ring radius is never under `FAN_RADIUS_PX` (28) and
+`PEAK_HEIGHT` is 11, so a spoke is always at least 17px long and always
+points outward.
+
+`PEAK_HEIGHT` therefore has to be exported from `app/map/peak-marker.tsx:9`,
+where the comment currently says nothing outside the module reads it. That
+comment gets updated: the fan does now, and it is the same triangle either
+way.
 
 Two CSS rules in `app/globals.css`, beside the existing marker block around
 line 937:
