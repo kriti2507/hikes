@@ -408,13 +408,15 @@ tr.group th .prefecture-en {
   width: 0.42em;
   height: 0.42em;
   margin-right: 0.45rem;
-  /* A drawn shape has no text baseline, so the flex line aligns it on its
-     bottom margin edge. A hair of margin lifts it to sit optically inside the
-     label instead of hanging off it. */
-  margin-bottom: 0.08em;
+  /* A shape with no line boxes of its own has its baseline synthesized from
+     its border box, so its bottom edge lands exactly on the text baseline and
+     no margin can lift it off -- margin-bottom only grows the flex line. Shift
+     it in paint instead, to sit optically inside the label. */
+  position: relative;
+  top: -0.08em;
   background: var(--mizu);
   clip-path: polygon(0 0, 100% 50%, 0 100%);
-  transition: transform 120ms ease;
+  transition: transform 120ms ease, background-color 120ms ease;
 }
 
 /* The polygon already points right, so collapsed needs no transform and
@@ -424,8 +426,8 @@ tr.group th .prefecture-en {
 }
 
 /* The heading is a full-width control with no border or background of its own,
-   so the arrow is the only thing that can acknowledge the pointer. Matches the
-   hover treatment the fold-all button gets in the tab row. */
+   so the arrow is the only thing that can acknowledge the pointer. --beni on
+   hover is the same move .theme-toggle makes. */
 .group-toggle:hover .group-arrow {
   background: var(--beni);
 }
