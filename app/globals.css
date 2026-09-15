@@ -951,20 +951,40 @@ code {
   fill: transparent;
 }
 
+/* A hairline at the weight the prefectural borders use, but solid: dashes
+   here would read as one more border instead of as a tether. */
+.fan-spoke {
+  stroke: var(--sumi-faint);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Paper-filled rather than hollow, so a spoke cannot be seen through it, and
+   never inked, so it cannot be mistaken for a peak that has been climbed. */
+.fan-anchor {
+  fill: var(--washi);
+  stroke: var(--sumi-faint);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+}
+
 .peak,
 .cluster {
   cursor: pointer;
 }
 
 .peak:focus-visible .peak-outline,
-.cluster:focus-visible .peak-outline {
+.cluster:focus-visible .peak-outline,
+.fan-anchor:focus-visible {
   stroke: var(--bero-ai);
   stroke-width: 2.5;
 }
 
 .peak:focus,
-.cluster:focus {
-  outline: none; /* replaced by the stroke above, which follows the triangle */
+.cluster:focus,
+.fan-anchor:focus {
+  outline: none; /* replaced by the stroke above, which follows the shape */
 }
 
 .cluster-count {
