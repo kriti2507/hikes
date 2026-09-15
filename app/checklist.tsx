@@ -60,7 +60,7 @@ export function Checklist({
     ),
   );
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<"table" | "map">("table");
+  const [view, setView] = useState<"table" | "map">("map");
   // Storing *exclusions* rather than the selection itself means "everyone is
   // shown by default" holds for a person who did not exist yet the last time
   // this component rendered — there is nothing to initialise them into. This
@@ -163,16 +163,6 @@ export function Checklist({
         </div>
 
         <AddPerson onAdded={() => router.refresh()} />
-
-        <footer>
-          Coordinates in the database are approximate (see <code>db/coordinates.json</code>). Add mountains with SQL
-          against the <code>mountains</code> table.
-          <p className="credit">
-            Header print: Katsushika Hokusai, <i>Fine Wind, Clear Morning</i> (c. 1830) by day and{" "}
-            <i>Shower Below the Summit</i> (c. 1830) after dark, from <i>Thirty-six Views of Mount Fuji</i>. Public
-            domain, via Wikimedia Commons.
-          </p>
-        </footer>
       </div>
     </main>
   );

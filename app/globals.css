@@ -709,22 +709,6 @@ button:disabled {
   font-size: 0.875rem;
 }
 
-footer {
-  margin-top: 2.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--rule);
-  font-size: 0.72rem;
-  line-height: 1.7;
-  color: var(--sumi-faint);
-}
-
-footer .credit {
-  margin: 0.6rem 0 0;
-  font-family: var(--font-en);
-  font-size: 0.68rem;
-  font-style: italic;
-}
-
 code {
   font-size: 0.95em;
 }
@@ -811,17 +795,74 @@ code {
 
   td.person,
   th.person {
-    width: 2.9rem;
+    width: 3.2rem;
+    /* `fixed` makes the width above binding on the column but does nothing to
+       stop content from spilling out of the cell and dragging the page into
+       horizontal scroll. Two things here do that: a person's name in the
+       header, and the date field below. Clip what is left over rather than let
+       the table decide the page is wider than the phone. */
+    overflow: hidden;
+  }
+
+  th.person {
+    overflow-wrap: anywhere;
   }
 
   td.mountain .kanji {
     font-size: 0.95rem;
   }
 
+  /* Names like Kita-hotakadake have no space to break at, and a fixed column
+     will not widen to hold them -- without this they run out over the person
+     columns. */
+  td.mountain {
+    overflow-wrap: anywhere;
+  }
+
   td.person input[type="checkbox"] {
     width: 1.35rem;
     height: 1.35rem;
     font-size: 0.7rem;
+  }
+
+  /* A native date field's intrinsic width is its widest placeholder -- around
+     110px for mm/dd/yyyy -- which is far past this column and is what pushes
+     the table off the screen as soon as one box is ticked. `width: 100%` alone
+     does not beat an intrinsic minimum; min-width: 0 is what lets it lose. */
+  td.person .date {
+    min-width: 0;
+    padding: 0.1rem;
+    font-size: 0.6rem;
+  }
+}
+
+/* Phones proper. The 720px tier above is shared with small tablets, where the
+   leading columns can afford desktop-ish widths; at 375px they cannot. Budget
+   at 375px: 349.5px of sheet, less 22.5 for the number and 52.5 for the height,
+   less 96 for two people, leaves ~178px of measure for the name -- enough for
+   the kanji, the kana and the English on their own lines. */
+@media (max-width: 430px) {
+  .sheet {
+    padding: 0 0.85rem;
+  }
+
+  td.num,
+  th.num {
+    width: 1.5rem;
+  }
+
+  td.elev,
+  th.elev {
+    width: 3.5rem;
+  }
+
+  td.elev {
+    font-size: 0.7rem;
+  }
+
+  tbody td,
+  thead th {
+    padding: 0.4rem 0.2rem;
   }
 }
 
@@ -885,16 +926,12 @@ code {
 
 /* The aspect ratio matches the projection's own, so one CSS pixel is always
    the same number of map units — which is what the pan/zoom hook's
-   unitsPerPixel, and therefore clustering and marker sizing, assume.
-   The height is bounded by capping the *width*: clamping height instead
-   would leave the box wider than the ratio, and the SVG would letterbox
-   inside it while contentRect.width still reported the full box. */
+   unitsPerPixel, and therefore clustering and marker sizing, assume. The width
+   cap that bounds the height lives on .map-frame above. */
 .map-surface {
   display: block;
   width: 100%;
-  max-width: calc(78vh * var(--map-w) / var(--map-h));
   aspect-ratio: var(--map-w) / var(--map-h);
-  margin: 0 auto;
   background: var(--washi);
   border: 1px solid var(--rule);
   touch-action: none; /* we handle pinch and drag ourselves */
@@ -923,15 +960,6 @@ code {
   stroke-width: 1;
   stroke-dasharray: 4 3;
   vector-effect: non-scaling-stroke;
-}
-
-.map-note {
-  font-family: var(--font-en);
-  font-size: 12px;
-  font-style: italic;
-  color: var(--sumi-faint);
-  text-align: center;
-  margin: 8px 0 0;
 }
 
 .peak-outline {
@@ -1041,8 +1069,22 @@ code {
   color: var(--washi);
 }
 
+/* The frame is the containing block for the zoom controls and for every peak
+   card, and a card's offsets are percentages of the surface's own viewBox. So
+   the frame has to be exactly as wide as the surface: the cap and the centring
+   live here, and .map-surface just fills it. Capped on the *width* rather than
+   the height for the reason above — a height clamp would leave this box wider
+   than the ratio, letterboxing the SVG inside it while contentRect.width still
+   reported the full box. */
 .map-frame {
   position: relative;
+  /* Two declarations, not a mistake: on mobile `vh` measures the viewport as
+     if the browser chrome were retracted, so a cap in vh can reach past the
+     screen you can actually see. `svh` is the honest one; browsers that do not
+     know it drop the second line and keep the first. */
+  max-width: calc(78vh * var(--map-w) / var(--map-h));
+  max-width: calc(78svh * var(--map-w) / var(--map-h));
+  margin: 0 auto;
 }
 
 .peak-card:focus-visible {
@@ -1153,12 +1195,24 @@ code {
   gap: 3px;
 }
 
+/* padding: 0 is load-bearing, not tidying. The base button rule sets
+   0.42rem 1.2rem, and with border-box that leaves this 26px box no content
+   width at all — enough to break 全図 one glyph per line and to shove + and −
+   off centre. Grid centring then places the glyph against the box itself
+   rather than a line box the font's own metrics decide. */
 .map-zoom button {
+  display: grid;
+  place-items: center;
   width: 26px;
   height: 26px;
+  padding: 0;
   font-family: var(--font-ja);
   font-size: 15px;
   line-height: 1;
+  /* The base rule's 0.08em rides along after the last glyph and counts toward
+     the centred content's width, nudging every label left of true centre. */
+  letter-spacing: 0;
+  white-space: nowrap;
   color: var(--sumi);
   background: var(--washi);
   border: 1px solid var(--sumi);
@@ -1166,7 +1220,26 @@ code {
 }
 
 .map-zoom button.fit {
+  /* Two kanji side by side inside 24px of content width. */
   font-size: 10px;
+}
+
+@media (max-width: 430px) {
+  /* The card is clamped in map-view.tsx so it can never leave the frame, but a
+     clamp that bites shows up as a card narrower than its content wants. A
+     phone frame is about 340px, so asking for less up front means the clamp
+     only has to act on peaks genuinely close to the middle. */
+  .peak-card {
+    width: 180px;
+    padding: 8px 10px 9px;
+  }
+
+  /* The filter summary is pushed right by margin-left: auto. Once the chips
+     wrap it lands alone on the last line, which reads as a stray -- left-align
+     it with them instead. */
+  .map-filter-summary {
+    margin-left: 0;
+  }
 }
 
 /* The map's own motion -- panning, zooming, the fitBounds tween -- is direct

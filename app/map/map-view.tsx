@@ -1,7 +1,7 @@
 "use client";
 
 import { type CSSProperties, useEffect, useLayoutEffect, useState } from "react";
-import { coastline, type GeometrySource, prefectures, source } from "@/lib/map/japan-geometry";
+import { coastline, prefectures } from "@/lib/map/japan-geometry";
 import { fanOffsets } from "@/lib/map/fan.mjs";
 import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
 import type { Entry, Mountain, Person } from "../checklist";
@@ -11,15 +11,6 @@ import { PEAK_HEIGHT, PeakMarker } from "./peak-marker";
 import { PersonFilter } from "./person-filter";
 import { useMapMarkers } from "./use-map-markers";
 import { MAX_SCALE, NAME_SCALE, usePanZoom } from "./use-pan-zoom";
-
-// Looked up rather than branched on: `source` is generated with one value, so
-// `source === "placeholder"` is a type error the moment real geometry is built.
-// A record over the union keeps both captions honest and forces a new source to
-// bring its own.
-const COASTLINE_NOTE: Record<GeometrySource, string> = {
-  placeholder: " The coastline is a schematic placeholder.",
-  "natural-earth": " The coastline is Natural Earth 1:10m, thinned for this scale.",
-};
 
 // One name for a cluster, used both as its React key and as the identity the
 // fan remembers. cluster.mjs sorts members by `order` and keeps them sorted
@@ -61,7 +52,7 @@ export function MapView({
   // element once one exists.
   const [focusCluster, setFocusCluster] = useState<string | null>(null);
 
-  const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
+  const { clusters, fillFor, total, fullyClimbed } = useMapMarkers({
     mountains,
     entries,
     selectedIds,
@@ -187,10 +178,27 @@ export function MapView({
     ? (() => {
         const leftPercent = ((open.x - vbX) / vbW) * 100;
         const topPercent = ((open.y - vbY) / (vbW * (HEIGHT / WIDTH))) * 100;
+        // Flipping alone only clears the frame while the frame is wide. The
+        // card's own width is a fixed 210px, so on a phone -- a frame of about
+        // 340px -- a peak anywhere between roughly a third and two thirds
+        // across leaves less than that on either side, and the card hangs off
+        // the edge whichever way it faces, taking the page into horizontal
+        // scroll with it. `maxWidth` is the room actually left between the
+        // anchor and the near edge, so the card gives up width rather than
+        // leaving the frame. On a desktop frame it exceeds 210px and nothing
+        // changes.
         const horizontal =
           leftPercent > 62
-            ? { right: `${100 - leftPercent}%`, marginRight: "14px" }
-            : { left: `${leftPercent}%`, marginLeft: "14px" };
+            ? {
+                right: `${100 - leftPercent}%`,
+                marginRight: "14px",
+                maxWidth: `calc(${leftPercent}% - 14px)`,
+              }
+            : {
+                left: `${leftPercent}%`,
+                marginLeft: "14px",
+                maxWidth: `calc(${100 - leftPercent}% - 14px)`,
+              };
         // The triangle only extends upward from its anchor, so an unflipped
         // card (growing downward from `top`) naturally clears it and needs no
         // gap. A flipped card grows upward from `bottom` into that same
@@ -213,15 +221,20 @@ export function MapView({
         fullyClimbed={fullyClimbed}
         total={total}
       />
-      <div className="map-frame">
+      <div
+        className="map-frame"
+        // The CSS needs the projection's dimensions for its aspect ratio and
+        // width cap; passing them in keeps projection.mjs the only place they
+        // are written down. Same pattern as --tilt in checklist-table.tsx.
+        // Set on the frame rather than the surface because the frame is what
+        // the cap now applies to, and custom properties inherit downward, so
+        // the surface still reads them for its aspect ratio.
+        style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
+      >
         <svg
           ref={setElement}
           className="map-surface"
           viewBox={viewBox}
-          // The CSS needs the projection's dimensions for its aspect ratio and
-          // width cap; passing them in keeps projection.mjs the only place they
-          // are written down. Same pattern as --tilt in checklist-table.tsx.
-          style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
           {...handlers}
           onKeyDown={(event) => {
             // Only when no card is open. PeakCard listens for Escape on the
@@ -418,15 +431,6 @@ export function MapView({
         ) : null}
       </div>
 
-      <p className="map-note">
-        Summit positions are approximate — good to about a kilometre.
-        {COASTLINE_NOTE[source]}
-        {prefectures.length > 0
-          ? " Prefectural borders are the GSI Global Map, thinned to match."
-          : null}
-        {missing > 0 ? ` ${missing} of ${mountains.length} peaks have no coordinates yet.` : null}{" "}
-        The <span lang="ja">一覧</span> table lists every peak in full.
-      </p>
     </div>
   );
 }
