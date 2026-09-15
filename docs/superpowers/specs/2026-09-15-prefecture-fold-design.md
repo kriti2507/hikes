@@ -176,8 +176,22 @@ when there are mountains to fold. `.table-controls` is
 
 A folded heading shows `${done}/${n}`; an open one shows `${n}`, exactly as
 today. A peak counts toward `done` once **every** person on the roster has it
-ticked. That is the rule the map already states out loud as "N of 100 climbed by
-both", so the two views cannot report different things about the same data.
+ticked. That is the same rule the map applies when it says "N of 100 climbed by
+both".
+
+The two are not guaranteed to agree, though, and an earlier draft of this
+section wrongly claimed they were. The map applies that rule to the people
+currently ticked in its person filter, not to the roster: `use-map-markers.ts`
+divides by `selectedIds.length`, and `person-filter.tsx` picks "by both" or "by
+all N" from the selected count. So with three people, untick one chip on the map
+and it reads "12 of 100 climbed by all 2" while a folded Nagano in the table
+still reads `0/19`. Same data, different denominators.
+
+That is accepted rather than fixed. The filter is a map control — the table
+shows a column per person instead — so the whole roster is the only roster the
+table has. What would be wrong is threading `selectedIds` into the table to make
+the numbers match, because the table's columns would then disagree with its own
+headings.
 
 With an empty roster, "climbed by everyone" is vacuously true of every peak,
 which would render a triumphant `9/9` for a checklist nobody has touched. So the
@@ -239,9 +253,12 @@ because it says the same thing again in a way a screen reader should not repeat.
 
 No `aria-controls`. The mountain rows are siblings of the heading row, not
 children of a single container, so there is no honest element to point at.
-Giving each group its own `<tbody>` would manufacture one, at two extra elements
-per group, for an attribute whose support across screen readers is patchy.
-`aria-expanded` alone on a disclosure button is the well-supported pattern.
+Giving each group its own `<tbody>` would manufacture one — and to be fair to
+that option, it costs one element per group rather than two, since the `<tbody>`
+would replace the `<Fragment>`, and a row group with a heading is arguably what
+`tbody` is for. The reason to skip it is support: `aria-controls` is patchily
+implemented across screen readers, and `aria-expanded` alone on a disclosure
+button is the well-supported pattern.
 
 The button inherits the page's existing `button:focus-visible` outline, so the
 focus ring needs nothing new.
