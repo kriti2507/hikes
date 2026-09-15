@@ -204,15 +204,20 @@ export function MapView({
         fullyClimbed={fullyClimbed}
         total={total}
       />
-      <div className="map-frame">
+      <div
+        className="map-frame"
+        // The CSS needs the projection's dimensions for its aspect ratio and
+        // width cap; passing them in keeps projection.mjs the only place they
+        // are written down. Same pattern as --tilt in checklist-table.tsx.
+        // Set on the frame rather than the surface because the frame is what
+        // the cap now applies to, and custom properties inherit downward, so
+        // the surface still reads them for its aspect ratio.
+        style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
+      >
         <svg
           ref={setElement}
           className="map-surface"
           viewBox={viewBox}
-          // The CSS needs the projection's dimensions for its aspect ratio and
-          // width cap; passing them in keeps projection.mjs the only place they
-          // are written down. Same pattern as --tilt in checklist-table.tsx.
-          style={{ "--map-w": WIDTH, "--map-h": HEIGHT } as CSSProperties}
           {...handlers}
           onKeyDown={(event) => {
             // Only when no card is open. PeakCard listens for Escape on the

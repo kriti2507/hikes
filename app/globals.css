@@ -869,16 +869,12 @@ code {
 
 /* The aspect ratio matches the projection's own, so one CSS pixel is always
    the same number of map units — which is what the pan/zoom hook's
-   unitsPerPixel, and therefore clustering and marker sizing, assume.
-   The height is bounded by capping the *width*: clamping height instead
-   would leave the box wider than the ratio, and the SVG would letterbox
-   inside it while contentRect.width still reported the full box. */
+   unitsPerPixel, and therefore clustering and marker sizing, assume. The width
+   cap that bounds the height lives on .map-frame above. */
 .map-surface {
   display: block;
   width: 100%;
-  max-width: calc(78vh * var(--map-w) / var(--map-h));
   aspect-ratio: var(--map-w) / var(--map-h);
-  margin: 0 auto;
   background: var(--washi);
   border: 1px solid var(--rule);
   touch-action: none; /* we handle pinch and drag ourselves */
@@ -1016,8 +1012,17 @@ code {
   color: var(--washi);
 }
 
+/* The frame is the containing block for the zoom controls and for every peak
+   card, and a card's offsets are percentages of the surface's own viewBox. So
+   the frame has to be exactly as wide as the surface: the cap and the centring
+   live here, and .map-surface just fills it. Capped on the *width* rather than
+   the height for the reason above — a height clamp would leave this box wider
+   than the ratio, letterboxing the SVG inside it while contentRect.width still
+   reported the full box. */
 .map-frame {
   position: relative;
+  max-width: calc(78vh * var(--map-w) / var(--map-h));
+  margin: 0 auto;
 }
 
 .peak-card:focus-visible {
@@ -1128,12 +1133,24 @@ code {
   gap: 3px;
 }
 
+/* padding: 0 is load-bearing, not tidying. The base button rule sets
+   0.42rem 1.2rem, and with border-box that leaves this 26px box no content
+   width at all — enough to break 全図 one glyph per line and to shove + and −
+   off centre. Grid centring then places the glyph against the box itself
+   rather than a line box the font's own metrics decide. */
 .map-zoom button {
+  display: grid;
+  place-items: center;
   width: 26px;
   height: 26px;
+  padding: 0;
   font-family: var(--font-ja);
   font-size: 15px;
   line-height: 1;
+  /* The base rule's 0.08em rides along after the last glyph and counts toward
+     the centred content's width, nudging every label left of true centre. */
+  letter-spacing: 0;
+  white-space: nowrap;
   color: var(--sumi);
   background: var(--washi);
   border: 1px solid var(--sumi);
@@ -1141,6 +1158,7 @@ code {
 }
 
 .map-zoom button.fit {
+  /* Two kanji side by side inside 24px of content width. */
   font-size: 10px;
 }
 
