@@ -142,7 +142,13 @@ export function Checklist({
 
         <div id="view-panel" role="tabpanel" aria-labelledby={view === "table" ? "tab-table" : "tab-map"}>
           {view === "table" ? (
-            <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
+            // The scroller only engages under 720px — see .table-scroll. An
+            // overflow container is also a containing block for sticky, so
+            // switching it on at desktop widths would cost the sticky header
+            // for a table that already fits.
+            <div className="table-scroll">
+              <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
+            </div>
           ) : (
             <MapView
               mountains={mountains}
