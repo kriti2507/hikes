@@ -369,6 +369,43 @@ tr.group th .prefecture-en {
   color: var(--mizu);
 }
 
+/* The heading is a button now, so it arrives carrying the global button rule's
+   beni pill -- padding, 2px border, background, white text and its own
+   letter-spacing -- on top of the mist band. All of it has to go. `font:
+   inherit` takes family, size, weight and style in one go; letter-spacing is
+   not part of that shorthand, so it is listed separately. */
+.group-toggle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* One glyph rotated, not two glyphs swapped: ▸ and ▾ have different advance
+   widths, so swapping them would shift the prefecture name sideways on every
+   fold. inline-block because transform does not apply to inline boxes. */
+.group-arrow {
+  display: inline-block;
+  font-size: 0.7em;
+  color: var(--mizu);
+  transition: transform 120ms ease;
+}
+
+.group-toggle[aria-expanded="true"] .group-arrow {
+  transform: rotate(90deg);
+}
+
 td.num,
 th.num {
   width: 2.5rem;
@@ -961,7 +998,8 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  td.person input[type="checkbox"] {
+  td.person input[type="checkbox"],
+  .group-arrow {
     transition: none;
   }
 }
