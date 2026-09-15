@@ -900,6 +900,21 @@ code {
     overflow-wrap: break-word;
   }
 
+  /* The heading cell is as wide as the table, so scrolled right the arrow and
+     the name would be off-screen with no way back to them. Pinned at the left
+     edge, like the name and height columns already are. max-content rather
+     than 100%: a full-width sticky element has nothing to slide against and
+     would never appear to move. The tap target shrinks to the label, which is
+     the price of the arrow always being there -- and it now breathes a little
+     as you fold, since "· 4/19" is wider than "· 19". This overrides the base
+     rule's `width: 100%` on equal specificity, so it relies on coming later in
+     the file; keep it below that rule if these ever get reorganised. */
+  .group-toggle {
+    position: sticky;
+    left: 0;
+    width: max-content;
+  }
+
   td.mountain .kanji {
     font-size: 0.95rem;
   }
