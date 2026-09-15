@@ -1,7 +1,7 @@
 "use client";
 
 import { type CSSProperties, useEffect, useLayoutEffect, useState } from "react";
-import { coastline, type GeometrySource, prefectures, source } from "@/lib/map/japan-geometry";
+import { coastline, prefectures } from "@/lib/map/japan-geometry";
 import { fanOffsets } from "@/lib/map/fan.mjs";
 import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
 import type { Entry, Mountain, Person } from "../checklist";
@@ -11,15 +11,6 @@ import { PEAK_HEIGHT, PeakMarker } from "./peak-marker";
 import { PersonFilter } from "./person-filter";
 import { useMapMarkers } from "./use-map-markers";
 import { MAX_SCALE, NAME_SCALE, usePanZoom } from "./use-pan-zoom";
-
-// Looked up rather than branched on: `source` is generated with one value, so
-// `source === "placeholder"` is a type error the moment real geometry is built.
-// A record over the union keeps both captions honest and forces a new source to
-// bring its own.
-const COASTLINE_NOTE: Record<GeometrySource, string> = {
-  placeholder: " The coastline is a schematic placeholder.",
-  "natural-earth": " The coastline is Natural Earth 1:10m, thinned for this scale.",
-};
 
 // One name for a cluster, used both as its React key and as the identity the
 // fan remembers. cluster.mjs sorts members by `order` and keeps them sorted
@@ -61,7 +52,7 @@ export function MapView({
   // element once one exists.
   const [focusCluster, setFocusCluster] = useState<string | null>(null);
 
-  const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
+  const { clusters, fillFor, total, fullyClimbed } = useMapMarkers({
     mountains,
     entries,
     selectedIds,
@@ -418,15 +409,6 @@ export function MapView({
         ) : null}
       </div>
 
-      <p className="map-note">
-        Summit positions are approximate — good to about a kilometre.
-        {COASTLINE_NOTE[source]}
-        {prefectures.length > 0
-          ? " Prefectural borders are the GSI Global Map, thinned to match."
-          : null}
-        {missing > 0 ? ` ${missing} of ${mountains.length} peaks have no coordinates yet.` : null}{" "}
-        The <span lang="ja">一覧</span> table lists every peak in full.
-      </p>
     </div>
   );
 }

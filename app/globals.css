@@ -709,22 +709,6 @@ button:disabled {
   font-size: 0.875rem;
 }
 
-footer {
-  margin-top: 2.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--rule);
-  font-size: 0.72rem;
-  line-height: 1.7;
-  color: var(--sumi-faint);
-}
-
-footer .credit {
-  margin: 0.6rem 0 0;
-  font-family: var(--font-en);
-  font-size: 0.68rem;
-  font-style: italic;
-}
-
 code {
   font-size: 0.95em;
 }
@@ -923,15 +907,6 @@ code {
   stroke-width: 1;
   stroke-dasharray: 4 3;
   vector-effect: non-scaling-stroke;
-}
-
-.map-note {
-  font-family: var(--font-en);
-  font-size: 12px;
-  font-style: italic;
-  color: var(--sumi-faint);
-  text-align: center;
-  margin: 8px 0 0;
 }
 
 .peak-outline {
