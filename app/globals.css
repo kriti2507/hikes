@@ -1078,19 +1078,21 @@ code {
   border-color: var(--sumi);
 }
 
-/* Exhaustively reset against the global button rule, the same way .group-toggle
-   is: every property that rule sets is named here. The tabs above get away with
-   a partial reset only because their own border and background happen to cover
-   what they leave behind, which is luck rather than design. */
+/* Not styled as a tab, deliberately. The tabs' own box would undo in pixels
+   what the sibling-of-the-tablist markup buys in semantics -- a third bordered
+   box on the same hairline reads as a third view, and 全閉 parses as a view
+   name before it parses as a verb. Bare text at the right end of the strip is
+   on the tab row without pretending to be of it. Still an exhaustive reset
+   against the global button rule: every property that rule sets is named here,
+   which is why `border` and `background` appear only to be turned off. */
 .fold-all {
   margin-left: auto;
-  padding: 6px 14px;
+  padding: 6px 2px 7px;
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid var(--rule);
-  border-bottom: none;
+  border: 0;
   border-radius: 0;
-  background: var(--washi-deep);
+  background: none;
   color: var(--sumi-faint);
   font-family: var(--font-ja);
   font-size: 15px;
@@ -1432,6 +1434,7 @@ code {
    today this rule has nothing to disable. */
 @media (prefers-reduced-motion: reduce) {
   .chip,
+  .fold-all,
   .map-zoom button,
   .view-tabs button {
     transition: none;

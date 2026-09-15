@@ -92,17 +92,14 @@ export function Checklist({
   // database later shows up open without having to be initialised into
   // anything. An expanded set would need seeding with all 28 keys and would
   // silently fold whatever arrived after it.
+  //
+  // One consequence worth naming now the fold-all button reads collapsed.size:
+  // a prefecture deleted from the database while folded leaves its key behind,
+  // so the button would offer "Show all" with nothing visibly folded. Only
+  // reachable by editing the database directly -- app/actions.ts only ever
+  // touches people and ascents -- so it is left as a known edge rather than
+  // reconciled on every render.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
-
-  // Only the fold-all button needs this, and it is derived rather than stored so
-  // it cannot fall out of step with the roster. It duplicates one fact that
-  // ChecklistTable's `groups` also knows -- that a group is one distinct
-  // `prefecture` string -- and the two have to keep agreeing, because `collapsed`
-  // keys on exactly that.
-  const allPrefectures = useMemo(
-    () => new Set(mountains.map((m) => m.prefecture)),
-    [mountains],
-  );
 
   const counts = useMemo(() => {
     const out = new Map<number, number>(people.map((p) => [p.id, 0]));
@@ -179,7 +176,14 @@ export function Checklist({
               type="button"
               className="fold-all"
               onClick={() =>
-                setCollapsed((current) => (current.size === 0 ? new Set(allPrefectures) : new Set()))
+                setCollapsed((current) =>
+                  // Built here rather than memoised above: it is read only on a
+                  // press, so there is nothing to cache between them. It does
+                  // duplicate one fact ChecklistTable's `groups` also knows --
+                  // that a group is one distinct `prefecture` string -- and the
+                  // two have to keep agreeing, because `collapsed` keys on it.
+                  current.size === 0 ? new Set(mountains.map((m) => m.prefecture)) : new Set(),
+                )
               }
             >
               <span lang="ja">{collapsed.size === 0 ? "全閉" : "全開"}</span>{" "}
