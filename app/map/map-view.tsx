@@ -178,10 +178,27 @@ export function MapView({
     ? (() => {
         const leftPercent = ((open.x - vbX) / vbW) * 100;
         const topPercent = ((open.y - vbY) / (vbW * (HEIGHT / WIDTH))) * 100;
+        // Flipping alone only clears the frame while the frame is wide. The
+        // card's own width is a fixed 210px, so on a phone -- a frame of about
+        // 340px -- a peak anywhere between roughly a third and two thirds
+        // across leaves less than that on either side, and the card hangs off
+        // the edge whichever way it faces, taking the page into horizontal
+        // scroll with it. `maxWidth` is the room actually left between the
+        // anchor and the near edge, so the card gives up width rather than
+        // leaving the frame. On a desktop frame it exceeds 210px and nothing
+        // changes.
         const horizontal =
           leftPercent > 62
-            ? { right: `${100 - leftPercent}%`, marginRight: "14px" }
-            : { left: `${leftPercent}%`, marginLeft: "14px" };
+            ? {
+                right: `${100 - leftPercent}%`,
+                marginRight: "14px",
+                maxWidth: `calc(${leftPercent}% - 14px)`,
+              }
+            : {
+                left: `${leftPercent}%`,
+                marginLeft: "14px",
+                maxWidth: `calc(${100 - leftPercent}% - 14px)`,
+              };
         // The triangle only extends upward from its anchor, so an unflipped
         // card (growing downward from `top`) naturally clears it and needs no
         // gap. A flipped card grows upward from `bottom` into that same
