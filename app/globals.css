@@ -771,14 +771,27 @@ code {
     white-space: nowrap;
   }
 
-  /* Dropping two columns is not enough on a 375px screen — three people at the
-     desktop width still push the last column off the edge. A horizontal scroll
-     wrapper would trap the sticky header inside it, so the columns tighten
-     instead.
+  /* Tightening columns carried this to about four people and no further: past
+     that the declared widths alone exceed the screen, and squeezing the name
+     column to buy room for one more checkbox costs more than it gains. So the
+     table keeps honest widths and scrolls sideways instead.
+
+     The cost is the one the old note here predicted: an overflow container is a
+     containing block for sticky, so `thead th`'s top stickiness stops working
+     inside it. The mountain column is pinned to the left below to compensate --
+     losing the person's name off the top of a long scroll is survivable, losing
+     which mountain a row is would not be.
 
      `fixed` matters: with the default `auto`, the declared widths below are only
-     suggestions and the table still overflows to fit its content. Fixed makes
-     them binding and lets the mountain column absorb what is left. */
+     suggestions, and the date field's ~110px intrinsic width would drag every
+     person column out to match. Fixed makes them binding. Column widths that
+     sum to less than the table get the surplus shared out proportionally; ones
+     that sum to more overflow, which is exactly the scroll we want. */
+  .table-scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
   table {
     table-layout: fixed;
   }
@@ -836,10 +849,35 @@ code {
     overflow-wrap: break-word;
   }
 
-  /* "1,721 m" has a space in it, and this column is sized to the number, not
-     to the number plus a stranded unit on a second line. */
-  td.elev {
-    white-space: nowrap;
+  /* A declared width now the table can be wider than the screen: with nothing
+     to absorb, an auto column would collapse to the widest word it cannot
+     break. Enough for the kanji, the kana and the English on one line each. */
+  td.mountain,
+  th.mountain {
+    width: 9.5rem;
+    /* Pinned so the row keeps its name while the people scroll past. `left: 0`
+       rather than the number column's width: the offset would have to track
+       whatever that column's used width came out as after the surplus was
+       shared around, and # is decorative enough to just slide underneath. An
+       opaque background is what makes passing under look deliberate. */
+    position: sticky;
+    left: 0;
+    background: var(--washi);
+  }
+
+  /* Above the cells it shadows; the header above thead's own 2. */
+  td.mountain {
+    z-index: 1;
+  }
+
+  th.mountain {
+    z-index: 3;
+  }
+
+  /* The row tint is painted per cell, so the pinned one has to mix its own or
+     it stays a blank washi gap across the hovered row. */
+  tbody tr:hover td.mountain {
+    background: color-mix(in srgb, var(--yamabuki) 12%, var(--washi));
   }
 
   td.person input[type="checkbox"] {
