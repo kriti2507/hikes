@@ -12,11 +12,15 @@ export function ChecklistTable({
   people,
   entries,
   onSave,
+  collapsed,
+  onToggleGroup,
 }: {
   mountains: Mountain[];
   people: Person[];
   entries: Record<string, Entry>;
   onSave: (personId: number, mountainId: number, next: Entry) => void;
+  collapsed: Set<string>;
+  onToggleGroup: (prefecture: string) => void;
 }) {
   // Mountains arrive pre-sorted, so grouping is a single pass that preserves
   // the prefecture order the query chose.
@@ -47,17 +51,34 @@ export function ChecklistTable({
         </tr>
       </thead>
       <tbody>
-        {groups.map((group) => (
+        {groups.map((group) => {
+          const isCollapsed = collapsed.has(group.prefecture);
+
+          return (
           <Fragment key={group.prefecture}>
             <tr className="group">
               <th colSpan={5 + people.length}>
-                <span lang="ja">{group.prefectureJa}</span>
-                <span className="prefecture-en">
-                  {group.prefecture} · {group.mountains.length}
-                </span>
+                {/* A real button, so focus, Enter, Space and the disclosure
+                    role all come for free. aria-expanded carries the state and
+                    the arrow is aria-hidden, because it says the same thing
+                    again in a way a screen reader should not repeat. */}
+                <button
+                  type="button"
+                  className="group-toggle"
+                  aria-expanded={!isCollapsed}
+                  onClick={() => onToggleGroup(group.prefecture)}
+                >
+                  <span className="group-arrow" aria-hidden="true">▸</span>
+                  <span lang="ja">{group.prefectureJa}</span>
+                  <span className="prefecture-en">
+                    {group.prefecture} · {group.mountains.length}
+                  </span>
+                </button>
               </th>
             </tr>
-            {group.mountains.map((m) => (
+            {/* Unmounted rather than hidden: a display:none row still costs
+                layout and still sits in the accessibility tree. */}
+            {isCollapsed ? null : group.mountains.map((m) => (
               <tr key={m.id}>
                 <td className="num">{m.fukadaNumber ?? "—"}</td>
                 <td className="mountain">
@@ -109,7 +130,8 @@ export function ChecklistTable({
               </tr>
             ))}
           </Fragment>
-        ))}
+          );
+        })}
       </tbody>
     </table>
   );

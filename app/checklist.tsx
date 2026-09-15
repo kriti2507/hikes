@@ -75,6 +75,14 @@ export function Checklist({
     [people, excludedIds],
   );
 
+  // Which prefectures are folded shut. Collapsed rather than expanded, for the
+  // same reason excludedIds above stores exclusions: an empty set already means
+  // "everything open", which is the default, and a prefecture added to the
+  // database later shows up open without having to be initialised into
+  // anything. An expanded set would need seeding with all 28 keys and would
+  // silently fold whatever arrived after it.
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+
   const counts = useMemo(() => {
     const out = new Map<number, number>(people.map((p) => [p.id, 0]));
     for (const person of people) {
@@ -147,7 +155,21 @@ export function Checklist({
             // switching it on at desktop widths would cost the sticky header
             // for a table that already fits.
             <div className="table-scroll">
-              <ChecklistTable mountains={mountains} people={people} entries={entries} onSave={save} />
+              <ChecklistTable
+                mountains={mountains}
+                people={people}
+                entries={entries}
+                onSave={save}
+                collapsed={collapsed}
+                onToggleGroup={(prefecture) =>
+                  setCollapsed((current) => {
+                    const next = new Set(current);
+                    if (next.has(prefecture)) next.delete(prefecture);
+                    else next.add(prefecture);
+                    return next;
+                  })
+                }
+              />
             </div>
           ) : (
             <MapView
