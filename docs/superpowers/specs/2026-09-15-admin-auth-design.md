@@ -174,15 +174,26 @@ New in `app/globals.css`, drawn from the existing ukiyo-e palette rather than
 copied from `small_wins`:
 
 - `.admin-locked` — `display: inline-block`, `cursor: not-allowed`.
-- `.admin-locked-content` — `pointer-events: none`, and `opacity: 0.6` on the
-  wrapper rather than the content, so it composes with the seal's own
-  `opacity: 0.3` for an unchecked box instead of being overridden by it.
+- `.admin-locked-content` — `pointer-events: none`.
 - `.admin-tooltip` — washi ground (`--washi-deep`), one `--rule` hairline, the
   same lettering as `.login label`. `position: fixed`, `pointer-events: none`,
   above the map.
 
-Two call sites need a `className` to keep their layout, which is what the prop
-is for:
+**Only affordances are dimmed, not data.** `small_wins` dims everything it
+gates, because everything it gates is a button. Here a locked control is
+sometimes a seal, and the seal already carries its own opacity — `0.3`
+unchecked, `1` checked. Dimming on top of that would take an unchecked cell to
+`0.18` and all but erase it, for exactly the audience the page is now public
+for. So the dimming lives on a `.locked-control` modifier used by the
+add-person form and the Edit/Delete buttons; the table cell and the peak-card
+row take `cursor: not-allowed` and the tooltip alone.
+
+The wrapper is a `div` rather than a `span`: one call site wraps a `<form>`,
+which cannot legally sit inside a span. `display: inline-block` recovers the
+inline behaviour where it is wanted.
+
+Three call sites need a `className`, which is what the prop is for — two for
+layout, one for the dimming above:
 
 - **Table cell** (`td.person`). `td.person .date` is `display: block; width:
   100%`, and a percentage width inside a shrink-to-fit `inline-block` collapses
@@ -197,9 +208,10 @@ is for:
   wrapper takes `display: flex; flex: 1; justify-content: space-between` and
   stands in for the li's own row.
 
-The add-person form and the per-person Edit/Delete buttons need nothing: both
-sit in flex containers that treat an inline-block child the same as what it
-replaced.
+- **The add-person form and the per-person Edit/Delete buttons** take
+  `.locked-control`, the dimming modifier. Both sit in flex containers that
+  treat an inline-block child the same as what it replaced, so neither needs a
+  layout fix.
 
 ## Error handling
 
