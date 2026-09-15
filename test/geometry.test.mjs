@@ -144,11 +144,16 @@ test("the four main islands are present and in size order", () => {
 });
 
 // MAX_SCALE lives in app/map/use-pan-zoom.ts, a "use client" module this
-// runner cannot import, so 16 is repeated here the way the fixed expectations
-// above are. A narrow map is the hard case: MIN_SEPARATION_PX is a screen
-// distance, so converting it to map units divides by a units-per-pixel that
-// shrinks as the map gets wider. On a wide enough map every pair separates
-// before the zoom limit and the fan never triggers.
+// runner cannot import, so its value is duplicated here as a literal rather
+// than an import. That duplication would normally be a hazard -- someone
+// raises the real constant and this file goes on checking a zoom limit that
+// no longer exists -- but the test below named "the zoom cap this file
+// assumes is the one the map enforces" reads that file as text and fails the
+// moment the two disagree, so the duplication cannot drift silently. A narrow
+// map is the hard case: MIN_SEPARATION_PX is a screen distance, so converting
+// it to map units divides by a units-per-pixel that shrinks as the map gets
+// wider. On a wide enough map every pair separates before the zoom limit and
+// the fan never triggers.
 const MAX_SCALE = 16;
 const NARROW_MAP_PX = 600;
 
@@ -159,8 +164,23 @@ test("some peaks cannot be prised apart by zooming alone", () => {
     MIN_SEPARATION_PX * unitsPerPixel,
   ).filter((c) => c.members.length > 1);
 
-  assert.ok(
-    merged.length > 0,
-    "every ridge now splits at maximum zoom -- the fan has nothing left to do",
+  // Named rather than counted, so a future failure shows which peaks are
+  // involved -- the house habit this file otherwise follows (see "every peak
+  // is on land" above). If coordinates or the extent ever change, the actual
+  // array printed alongside this diff is the fastest way to see what moved.
+  assert.deepEqual(
+    merged.map((c) => c.members.map((m) => m.peak.name).join(" / ")),
+    ["Mt. Hiragatake / Mt. Shibutsu", "Mt. Kurodake / Mt. Washiba", "Mt. Kita / Mt. Ainodake"],
+    "the peaks still merged at maximum zoom have changed -- the fan may now have nothing left to do",
+  );
+});
+
+const usePanZoomSource = readFileSync(new URL("../app/map/use-pan-zoom.ts", import.meta.url), "utf8");
+
+test("the zoom cap this file assumes is the one the map enforces", () => {
+  assert.match(
+    usePanZoomSource,
+    new RegExp(`export const MAX_SCALE = ${MAX_SCALE};`),
+    "MAX_SCALE moved in app/map/use-pan-zoom.ts -- the test above is now checking a stale zoom limit",
   );
 });
