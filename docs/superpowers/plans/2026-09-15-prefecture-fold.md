@@ -128,7 +128,7 @@ export declare function countFullyClimbed(
 
 Run: `npm test`
 
-Expected: PASS, `# pass 38` (33 existing + 5 new), `# fail 0`.
+Expected: PASS, `# pass 40` (33 existing + 5 new), `# fail 0`.
 
 - [ ] **Step 5: Commit**
 
@@ -301,7 +301,7 @@ with:
 
 Run: `npm run typecheck && npm test`
 
-Expected: typecheck prints no errors; tests report `# pass 38`, `# fail 0`.
+Expected: typecheck prints no errors; tests report `# pass 40`, `# fail 0`.
 
 - [ ] **Step 7: Commit**
 
@@ -468,7 +468,7 @@ with:
 
 Run: `npm run typecheck && npm test`
 
-Expected: typecheck prints no errors; `# pass 38`, `# fail 0`.
+Expected: typecheck prints no errors; `# pass 40`, `# fail 0`.
 
 - [ ] **Step 5: Commit**
 
@@ -672,7 +672,7 @@ Run:
 npm run typecheck && npm test && node -e "const s=require('fs').readFileSync('app/globals.css','utf8');let d=0,m=0;for(const c of s){if(c==='{')d++;else if(c==='}'){d--;if(d<m)m=d;}}console.log('depth',d,'min',m)"
 ```
 
-Expected: no typecheck errors; `# pass 38`, `# fail 0`; `depth 0 min 0`.
+Expected: no typecheck errors; `# pass 40`, `# fail 0`; `depth 0 min 0`.
 
 - [ ] **Step 6: Commit**
 
@@ -724,7 +724,7 @@ Run:
 npm run typecheck && npm test && node -e "const s=require('fs').readFileSync('app/globals.css','utf8');let d=0,m=0;for(const c of s){if(c==='{')d++;else if(c==='}'){d--;if(d<m)m=d;}}console.log('depth',d,'min',m)"
 ```
 
-Expected: no typecheck errors; `# pass 38`, `# fail 0`; `depth 0 min 0`.
+Expected: no typecheck errors; `# pass 40`, `# fail 0`; `depth 0 min 0`.
 
 - [ ] **Step 3: Confirm the whole thing compiles as a production build**
 
@@ -751,14 +751,14 @@ None of this is reachable from `node --test`, so it has to be done in a browser 
 - [ ] Tab reaches each arrow in document order. Both Enter and Space toggle it.
 - [ ] A folded heading reads `4/9`; open, it reads `9`.
 - [ ] A prefecture where everyone has climbed everything reads `2/2` when folded.
-- [ ] The button reads 全閉 *Fold all* on load, flips to 全開 *Show all* after the first individual fold, and returns to 全閉 *Fold all* only when the last folded group reopens.
+- [ ] On first switching to 一覧 *Table* the button reads 全閉 *Fold all* — note the app opens on 地図 *Map*, so there is no button until you switch. It flips to 全開 *Show all* after the first individual fold, and returns to 全閉 *Fold all* only when the last folded group reopens.
 - [ ] *Fold all* leaves 28 heading rows and no mountain rows; the table header still lines up with the pinned name and height columns.
 - [ ] Fold a few groups, then add a friend. The folds survive (that is a soft `router.refresh()`).
 - [ ] Switch to 地図 *Map*: the fold-all button disappears. Switch back: it returns with the folds intact.
 - [ ] The line under the tabs still spans the full sheet, not just the two tabs.
 - [ ] On a phone, scroll the table right, then confirm the arrow is still at the left edge and still toggles.
 - [ ] With an empty roster (no people), a folded heading shows the plain count and never `9/9`.
-- [ ] **Safari specifically:** tick a checkbox, then click 全閉 with the mouse. Confirm focus is not stranded — the next Tab should resume near the tab row, not at the top of the document. Safari does not focus a button on click, so it is the one browser where the focused row gets unmounted from under the user; Chrome and Firefox focus the button on mousedown and are unaffected.
+- [ ] **Safari specifically:** tick a checkbox, then click 全閉 with the mouse. Confirm focus is not stranded — the next Tab should resume near the tab row, not at the top of the document. Safari and Firefox on macOS do not focus a button on click. This is now handled in code — both toggles call `event.currentTarget.focus()` before updating state — so this check is a regression guard rather than a known gap.
 - [ ] On a phone, fold and unfold a group while the table is scrolled right. The pinned heading's width changes with it, since `· 4/19` is wider than `· 19` — confirm that reads as breathing rather than as a glitch.
 - [ ] The fold-all button does not read as a third tab. It should sit at the right end of the tab row as bare text, with no box of its own.
 

@@ -20,7 +20,7 @@ a phone, where the whole table is now a horizontal scroller as well.
 | `app/checklist-table.tsx` | Group heading becomes a disclosure button; mountain rows render conditionally |
 | `lib/progress.mjs` | New — `countFullyClimbed`, pure |
 | `lib/progress.d.mts` | New — types for the above |
-| `app/globals.css` | `.table-controls`, `.fold-all`, `.group-toggle`, `.group-arrow`; mobile pinning; reduced-motion |
+| `app/globals.css` | `.table-controls`, `.fold-all`, `.group-toggle`, `.group-arrow`; `.view-tab-en` unscoped from `.view-tabs button` so both buttons share it; mobile pinning; reduced-motion |
 | `test/progress.test.mjs` | New |
 
 No runtime dependency is added. No schema change. No query change.
@@ -64,23 +64,27 @@ The key is `mountain.prefecture`. That is already the grouping identity in
 `ChecklistTable` and already the React key on each group's `Fragment`, so no new
 notion of identity is introduced.
 
-Two values are derived, not stored:
+Nothing else is stored. The global button's label and its action both read
+`collapsed.size === 0` directly, so the label cannot disagree with what is on
+screen — including when all 28 have been folded one at a time. Its target set is
+built inside the click handler:
 
-```ts
-const allPrefectures = useMemo(
-  () => new Set(mountains.map((m) => m.prefecture)),
-  [mountains],
-);
-const foldAllLabel = collapsed.size === 0 ? "Fold all" : "Show all";
+```tsx
+current.size === 0 ? new Set(mountains.map((m) => m.prefecture)) : new Set()
 ```
 
-The global button assigns `new Set(allPrefectures)` or an empty set — a fresh set
-each time, so the memoised one is never handed to the setter and then mutated.
-Reading the label off the same state the rows read means it cannot disagree with
-what is on screen, including when all 28 have been folded one at a time.
+An earlier draft of this section hoisted that into a `useMemo` named
+`allPrefectures`. It was inlined during review: the value is read only on a
+press, so there was nothing to cache between presses, and the memo cost an
+allocation on every render that *wasn't* one. It does duplicate one fact
+`ChecklistTable`'s `groups` also knows — that a group is one distinct
+`prefecture` string — and the two have to keep agreeing, because `collapsed`
+keys on exactly that.
 
-`ChecklistTable` gains two props, `collapsed: Set<string>` and
-`onToggleGroup: (prefecture: string) => void`, and owns no fold state of its own.
+`ChecklistTable` gains two props, `collapsed: ReadonlySet<string>` and
+`onToggleGroup: (prefecture: string) => void`, and owns no fold state of its
+own. `ReadonlySet` because the table must never mutate the container's state
+object in place — React compares by reference, so nothing would re-render.
 
 ### The heading is a real button
 
@@ -91,9 +95,12 @@ what is on screen, including when all 28 have been folded one at a time.
       type="button"
       className="group-toggle"
       aria-expanded={!isCollapsed}
-      onClick={() => onToggleGroup(group.prefecture)}
+      onClick={(event) => {
+        event.currentTarget.focus();
+        onToggleGroup(group.prefecture);
+      }}
     >
-      <span className="group-arrow" aria-hidden="true">▸</span>
+      <span className="group-arrow" aria-hidden="true" />
       <span lang="ja">{group.prefectureJa}</span>
       <span className="prefecture-en">
         {group.prefecture} · {countLabel}
@@ -104,18 +111,33 @@ what is on screen, including when all 28 have been folded one at a time.
 {!isCollapsed && group.mountains.map(/* unchanged */)}
 ```
 
-Both locals are per group:
+`personIds` and the `isClimbed` predicate are hoisted above the group loop,
+since both are the same for every heading. The rest is per group, and the count
+is computed only in the branch that displays it:
 
 ```ts
+const personIds = people.map((p) => p.id);
+const isClimbed = (personId: number, mountainId: number) =>
+  entries[key(personId, mountainId)]?.climbed ?? false;
+
+// ...per group:
 const isCollapsed = collapsed.has(group.prefecture);
 const n = group.mountains.length;
-const done = countFullyClimbed(
-  group.mountains.map((m) => m.id),
-  people.map((p) => p.id),
-  (personId, mountainId) => entries[key(personId, mountainId)]?.climbed ?? false,
-);
-const countLabel = isCollapsed && people.length > 0 ? `${done}/${n}` : `${n}`;
+const countLabel =
+  isCollapsed && personIds.length > 0
+    ? `${countFullyClimbed(group.mountains.map((m) => m.id), personIds, isClimbed)}/${n}`
+    : `${n}`;
 ```
+
+An open heading therefore never calls the counter at all, and folding 28 groups
+costs less work than leaving them open, which mounts 100 rows of inputs instead.
+
+`event.currentTarget.focus()` in the handler is not incidental. Safari and
+Firefox on macOS do not focus a button on click, so a fold that unmounts the
+checkbox holding focus would drop it to `<body>` and the next Tab would restart
+at the top of the document. Programmatic focus after a pointer event does not
+match `:focus-visible`, so mouse users see no stray ring. The map's fan controls
+manage focus deliberately for the same reason.
 
 A native `<button>` rather than a click handler on the `th`, so focus, Enter,
 Space and the screen-reader role all come for free.
@@ -123,23 +145,55 @@ Space and the screen-reader role all come for free.
 **It needs a full reset, and this is load-bearing.** The base `button` rule in
 `app/globals.css` sets `padding: 0.42rem 1.2rem`, a beni background, a 2px border
 and its own `letter-spacing`. Dropped unreset into a heading that has its own
-padding, mist background and colour, it would repaint the whole band. So
-`.group-toggle` resets `appearance`, `padding`, `border`, `background`, `color`,
-`font` and `letter-spacing` to inherit, and takes `display: flex` with
+mist background and colour, it would repaint the whole band. So `.group-toggle`
+resets `appearance`, `border`, `border-radius`, `background`, `color`, `font` and
+`letter-spacing` to inherit, and takes `display: flex` with
 `align-items: baseline` to hold the arrow and the two labels on one line. The
 zoom controls needed exactly this reset for exactly this reason; it is the second
-time this base rule has caught a small control.
+time this base rule has caught a small control. `font: inherit` rather than a
+`font-family`/`font-size` pair, because the shorthand carries `line-height` with
+it — the pair would leave the UA's `normal` in place and the heading would lose a
+pixel or two of height.
 
-One glyph rotated by CSS, not two glyphs swapped:
+The button also takes the heading's **vertical** padding, `2.25rem 0 0.45rem`,
+while the cell keeps only `0 0.6rem`. That relocation changes no pixel of layout
+and does not move the mist band, but it is what makes the whole ~78px band
+clickable. Left on the cell, the padding sat *outside* the button, so `width:
+100%` bought full width and a single ~21px line box of height — three quarters
+of what looks like a heading you can press doing nothing, and a ~21px touch
+target on mobile.
+
+### The arrow is drawn, not typed
 
 ```css
-.group-arrow { transition: transform 120ms ease; }
-[aria-expanded="true"] .group-arrow { transform: rotate(90deg); }
+.group-arrow {
+  width: 0.42em;
+  height: 0.42em;
+  background: var(--mizu);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+.group-toggle[aria-expanded="true"] .group-arrow { transform: rotate(90deg); }
 ```
 
-Swapping ▸ for ▾ moves the text beside it by whatever the two glyphs' advance
-widths differ by. Rotating one glyph cannot. The transition joins the existing
-`prefers-reduced-motion` block.
+An earlier draft specified the glyph `▸` (U+25B8) rotated by CSS. Review found
+that character is in **none** of the fonts this page declares — not Hiragino
+Mincho ProN, not Yu Mincho, not Songti SC, not Georgia, not the generic `serif`
+— so it fell through to whatever the system happened to substitute, at whatever
+advance width and optical size that font chose, with a tofu risk on minimal
+font sets. A `clip-path` triangle is the same shape everywhere, and an
+explicitly sized box gives the rotation an exact centre to pivot about.
+
+The polygon already points right, so the collapsed state needs no transform and
+`transform` carries nothing but the turn. Rotated rather than swapped for a
+second shape, so the label beside it never shifts sideways as it folds. The
+transition joins the existing `prefers-reduced-motion` block.
+
+One subtlety worth recording, because it cost a review round: the arrow is
+lifted off the text baseline with `position: relative; top: -0.08em`, **not**
+`margin-bottom`. A flex item with no in-flow line boxes has its baseline
+synthesized from its border box, so no margin edge can shift it — `margin-bottom`
+measurably moves the arrow 0px and only grows the flex line.
 
 ### Folding unmounts rows
 
@@ -187,6 +241,12 @@ all N" from the selected count. So with three people, untick one chip on the map
 and it reads "12 of 100 climbed by all 2" while a folded Nagano in the table
 still reads `0/19`. Same data, different denominators.
 
+There is a second such difference, smaller and also accepted: the map's total is
+`placed.length`, the peaks it could actually position, so a mountain with no
+coordinates is invisible to it — which is why the map surfaces a `missing` count
+at all. The table's denominator is every mountain in the prefecture, coordinates
+or not.
+
 That is accepted rather than fixed. The filter is a map control — the table
 shows a column per person instead — so the whole roster is the only roster the
 table has. What would be wrong is threading `selectedIds` into the table to make
@@ -222,8 +282,10 @@ way the name and height columns already do:
 .group-toggle { position: sticky; left: 0; width: max-content; }
 ```
 
-Above 720px there is no scroller to pin against, so it is `width: 100%` and the
-whole heading band is the tap target.
+Above 720px there is no scroller to pin against, so it is `width: 100%`. In both
+cases the button owns the heading's vertical padding, so the full height of the
+band is clickable; under 720px `max-content` narrows that target to the label,
+which is the price of the arrow always being reachable.
 
 `thead` is always rendered, so even with all 28 folded the fixed table layout
 still takes its column widths from the header row, and the pinned name and height
@@ -231,12 +293,21 @@ columns keep their offsets.
 
 ## Testing
 
-`test/progress.test.mjs` covers `countFullyClimbed`: an empty roster, nobody
-climbed, one person short of everyone, everyone climbed, and an empty mountain
-list.
+`test/progress.test.mjs` covers `countFullyClimbed` in seven cases: an empty
+roster, nobody climbed, one person short of everyone, everyone climbed, an empty
+mountain list, a person outside the roster who must not hold a peak back, and
+partial progress for a single-person roster. The sixth is the load-bearing one —
+without it, an implementation that ignored `personIds` and scanned everything the
+predicate knew about would pass every other test.
 
 By hand, because none of it is reachable from a node test:
 
+- The arrow renders as a solid triangle at all, pointing right when folded and
+  down when open. It is drawn with `clip-path`, so this is the check that it
+  paints rather than that a font resolved.
+- The arrow in the dark theme, and its `--beni` hover, since both come from
+  theme tokens.
+- With `prefers-reduced-motion`, the rotation stops rather than animating.
 - Tab reaches each arrow in document order; Enter and Space both toggle it.
 - The fold-all label flips to 全開 *Show all* on the first individual fold, and
   back to 全閉 *Fold all* only when the last one reopens.
@@ -245,6 +316,8 @@ By hand, because none of it is reachable from a node test:
   left edge and still toggles.
 - With all 28 folded, the table is 28 rows and the header still lines up with
   the pinned columns.
+- The two existing tab labels are unchanged, since `.view-tab-en` was unscoped
+  from `.view-tabs button` to be shared with the fold-all button.
 
 ## Accessibility
 
