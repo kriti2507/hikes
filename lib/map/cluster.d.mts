@@ -1,3 +1,5 @@
+export declare const MIN_SEPARATION_PX: number;
+
 export interface ClusterPoint {
   order: number;
   x: number;

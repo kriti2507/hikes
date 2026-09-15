@@ -1,13 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { cluster } from "@/lib/map/cluster.mjs";
+import { MIN_SEPARATION_PX, cluster } from "@/lib/map/cluster.mjs";
 import { project } from "@/lib/map/projection.mjs";
 import { type Entry, type Mountain, key } from "../checklist";
-
-// Screen pixels below which two peaks merge into a ridge. A triangle is 14px
-// wide, so this leaves a clear gap between neighbours.
-const MIN_SEPARATION_PX = 22;
 
 type PlacedPeak = {
   order: number;
