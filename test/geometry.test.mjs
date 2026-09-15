@@ -7,7 +7,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { project, LAT_MIN, LAT_MAX, LON_MIN, LON_MAX } from "../lib/map/projection.mjs";
+import { project, WIDTH, LAT_MIN, LAT_MAX, LON_MIN, LON_MAX } from "../lib/map/projection.mjs";
+import { cluster, MIN_SEPARATION_PX } from "../lib/map/cluster.mjs";
 import { ringArea, ringContains } from "../lib/map/rings.mjs";
 
 const read = (name) => JSON.parse(readFileSync(new URL(`../db/${name}`, import.meta.url)));
@@ -140,4 +141,26 @@ test("the four main islands are present and in size order", () => {
     .slice(0, 4)
     .map((ring) => ring.name);
   assert.deepEqual(largest, ["Honshu", "Hokkaido", "Kyushu", "Shikoku"]);
+});
+
+// MAX_SCALE lives in app/map/use-pan-zoom.ts, a "use client" module this
+// runner cannot import, so 16 is repeated here the way the fixed expectations
+// above are. A narrow map is the hard case: MIN_SEPARATION_PX is a screen
+// distance, so converting it to map units divides by a units-per-pixel that
+// shrinks as the map gets wider. On a wide enough map every pair separates
+// before the zoom limit and the fan never triggers.
+const MAX_SCALE = 16;
+const NARROW_MAP_PX = 600;
+
+test("some peaks cannot be prised apart by zooming alone", () => {
+  const unitsPerPixel = WIDTH / MAX_SCALE / NARROW_MAP_PX;
+  const merged = cluster(
+    peaks.map((peak) => ({ order: peak.number, ...project(peak.lat, peak.lon), peak })),
+    MIN_SEPARATION_PX * unitsPerPixel,
+  ).filter((c) => c.members.length > 1);
+
+  assert.ok(
+    merged.length > 0,
+    "every ridge now splits at maximum zoom -- the fan has nothing left to do",
+  );
 });
