@@ -756,6 +756,17 @@ button:disabled {
   color: var(--sumi-soft);
 }
 
+.login-note {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+  color: var(--sumi-soft);
+}
+
+.login-note code {
+  font-size: 0.8em;
+  letter-spacing: 0.04em;
+}
+
 /* ---------- misc ---------- */
 
 .error {
