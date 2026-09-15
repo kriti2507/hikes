@@ -79,13 +79,21 @@ export function MapView({
     setOpenId(null);
   }, [clusters, openId, element]);
 
-  // Any zoom-out collapses the fan. This is what keeps a fan from being left
-  // hanging over a crowded map at low zoom, and it subsumes the reclustering
-  // case too: the grouping only changes when the scale does, so a fanned
-  // ridge cannot dissolve underneath its own fan.
+  // A zoom-out collapses the fan outright -- it is no longer the cap, so
+  // zooming is the better answer again. But scale is not the only thing that
+  // can move the ridges: useMapMarkers reclusters on unitsPerPixel, which a
+  // window resize changes without touching scale at all, and that can shift
+  // which peak is members[0] of the fanned cluster. When that happens
+  // keyOf(c) stops matching fannedId, the ridge falls through to the plain
+  // ClusterMarker branch, and a stale fannedId is left pointing at nothing.
   useEffect(() => {
-    if (scale < MAX_SCALE) setFannedId(null);
-  }, [scale]);
+    if (fannedId === null) return;
+    if (scale < MAX_SCALE) {
+      setFannedId(null);
+      return;
+    }
+    if (!clusters.some((c) => c.members.length > 1 && keyOf(c) === fannedId)) setFannedId(null);
+  }, [scale, clusters, fannedId]);
 
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
@@ -203,8 +211,9 @@ export function MapView({
 
               if (keyOf(c) === fannedId) {
                 const offsets = fanOffsets(c.members.length);
-                // `fan` carries no styles — it is how Task 9 asks whether the
-                // element holding focus is inside the fan about to vanish.
+                // `fan` carries no styles of its own -- it exists so a
+                // later focus-rescue check can ask whether the element
+                // holding focus sits inside the fan that is about to vanish.
                 return (
                   <g className="fan" key={keyOf(c)} transform={transform}>
                     {c.members.map((peak, i) => {
@@ -219,7 +228,8 @@ export function MapView({
                       // than FAN_RADIUS_PX, so a spoke is never shorter than
                       // FAN_RADIUS_PX - PEAK_HEIGHT and never turns around.
                       const { dx, dy } = offsets[i];
-                      const k = (Math.hypot(dx, dy) - PEAK_HEIGHT) / Math.hypot(dx, dy);
+                      const length = Math.hypot(dx, dy);
+                      const k = (length - PEAK_HEIGHT) / length;
                       return (
                         <line
                           key={`s${peak.mountain.id}`}
@@ -232,9 +242,8 @@ export function MapView({
                       );
                     })}
 
-                    <circle
+                    <g
                       className="fan-anchor"
-                      r={3}
                       role="button"
                       tabIndex={0}
                       aria-label={`Draw these ${c.members.length} peaks back together`}
@@ -245,7 +254,14 @@ export function MapView({
                           setFannedId(null);
                         }
                       }}
-                    />
+                    >
+                      {/* Same generous invisible target PeakMarker uses,
+                          reusing its class rather than a second transparent-
+                          fill rule. 11px is safe here too: the nearest
+                          fanned peak sits FAN_RADIUS_PX (28px) away. */}
+                      <circle className="peak-target" r={11} />
+                      <circle className="fan-anchor-dot" r={3} />
+                    </g>
 
                     {/* Ordinary peak markers at the offsets: fill, number,
                         name, hit target, focus ring, keyboard activation and

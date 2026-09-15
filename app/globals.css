@@ -952,21 +952,27 @@ code {
 }
 
 /* A hairline at the weight the prefectural borders use, but solid: dashes
-   here would read as one more border instead of as a tether. */
+   here would read as one more border instead of as a tether. Decoration
+   only -- pointer-events: none keeps a near-miss on the anchor from landing
+   on a spoke instead and going nowhere. */
 .fan-spoke {
   stroke: var(--sumi-faint);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.fan-anchor {
+  cursor: pointer;
 }
 
 /* Paper-filled rather than hollow, so a spoke cannot be seen through it, and
    never inked, so it cannot be mistaken for a peak that has been climbed. */
-.fan-anchor {
+.fan-anchor-dot {
   fill: var(--washi);
   stroke: var(--sumi-faint);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  cursor: pointer;
 }
 
 .peak,
@@ -976,7 +982,7 @@ code {
 
 .peak:focus-visible .peak-outline,
 .cluster:focus-visible .peak-outline,
-.fan-anchor:focus-visible {
+.fan-anchor:focus-visible .fan-anchor-dot {
   stroke: var(--bero-ai);
   stroke-width: 2.5;
 }
