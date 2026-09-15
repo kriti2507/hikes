@@ -343,7 +343,11 @@ tr.group th {
   position: sticky;
   top: 2rem;
   z-index: 1;
-  padding: 2.25rem 0.6rem 0.45rem;
+  /* Only the horizontal padding stays here. The vertical padding moved onto
+     .group-toggle so the button's box fills the whole mist band -- the cell's
+     total height is unchanged, but the clickable area is no longer a single
+     line box sitting in the middle of it. */
+  padding: 0 0.6rem;
   background-color: var(--washi);
   background-image: var(--kasumi);
   /* Tiling at a fixed width keeps the cloud lobes their own shape. Stretching
@@ -367,6 +371,69 @@ tr.group th .prefecture-en {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--mizu);
+}
+
+/* The heading is a button now, so it arrives carrying the global button rule's
+   beni pill -- padding, 2px border, background, white text and its own
+   letter-spacing -- on top of the mist band. All of it has to go. `font:
+   inherit` rather than a font-family/font-size pair because it takes
+   line-height with it: the pair would leave the UA's `normal` in place and the
+   heading would lose a pixel or two of height. letter-spacing is not part of
+   that shorthand, so it is listed separately.
+
+   No `gap`: it would apply between the two labels as well, compounding with
+   the 0.7rem that .prefecture-en already owns. */
+.group-toggle {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+  padding: 2.25rem 0 0.45rem;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Drawn, not typed. U+25B8 is in none of the fonts this page declares -- not
+   Hiragino Mincho ProN, not Yu Mincho, not Georgia -- so a glyph here would be
+   rendered by whatever the system fell back to, at whatever advance width and
+   optical size that font chose. A clip-path triangle is the same shape in
+   every browser, and a box with an explicit width and height gives the
+   rotation an exact centre to turn about. Rotated rather than swapped for a
+   second shape, so the label beside it never shifts sideways as it folds. */
+.group-arrow {
+  display: block;
+  width: 0.42em;
+  height: 0.42em;
+  margin-right: 0.45rem;
+  /* A shape with no line boxes of its own has its baseline synthesized from
+     its border box, so its bottom edge lands exactly on the text baseline and
+     no margin can lift it off -- margin-bottom only grows the flex line. Shift
+     it in paint instead, to sit optically inside the label. */
+  position: relative;
+  top: -0.08em;
+  background: var(--mizu);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+/* The polygon already points right, so collapsed needs no transform and
+   `transform` is left free to carry nothing but the turn. */
+.group-toggle[aria-expanded="true"] .group-arrow {
+  transform: rotate(90deg);
+}
+
+/* The heading is a full-width control with no border or background of its own,
+   so the arrow is the only thing that can acknowledge the pointer. --beni on
+   hover is the same move .theme-toggle makes. */
+.group-toggle:hover .group-arrow {
+  background: var(--beni);
 }
 
 td.num,
@@ -837,6 +904,21 @@ code {
     overflow-wrap: break-word;
   }
 
+  /* The heading cell is as wide as the table, so scrolled right the arrow and
+     the name would be off-screen with no way back to them. Pinned at the left
+     edge, like the name and height columns already are. max-content rather
+     than 100%: a full-width sticky element has nothing to slide against and
+     would never appear to move. The tap target shrinks to the label, which is
+     the price of the arrow always being there -- and it now breathes a little
+     as you fold, since "· 4/19" is wider than "· 19". This overrides the base
+     rule's `width: 100%` on equal specificity, so it relies on coming later in
+     the file; keep it below that rule if these ever get reorganised. */
+  .group-toggle {
+    position: sticky;
+    left: 0;
+    width: max-content;
+  }
+
   td.mountain .kanji {
     font-size: 0.95rem;
   }
@@ -851,32 +933,54 @@ code {
 
   /* A declared width now the table can be wider than the screen: with nothing
      to absorb, an auto column would collapse to the widest word it cannot
-     break. Enough for the kanji, the kana and the English on one line each. */
+     break. Enough for the kanji, the kana and the English on one line each.
+     Declared once and reused as the height column's pin offset below -- the two
+     have to agree exactly or the pair pins with a seam between them, and
+     writing 9.5rem twice is how that drifts. */
+  table {
+    --name-w: 9.5rem;
+  }
+
+  /* Name and height both ride along while the people scroll past. `left: 0` for
+     the name rather than the number column's width: that offset would have to
+     track whatever # came out as once any surplus was shared around, and # is
+     decorative enough to just slide underneath. Height then pins flush against
+     the name column's right edge. Both need an opaque background, or the person
+     cells show through as they pass behind. */
   td.mountain,
-  th.mountain {
-    width: 9.5rem;
-    /* Pinned so the row keeps its name while the people scroll past. `left: 0`
-       rather than the number column's width: the offset would have to track
-       whatever that column's used width came out as after the surplus was
-       shared around, and # is decorative enough to just slide underneath. An
-       opaque background is what makes passing under look deliberate. */
+  th.mountain,
+  td.elev,
+  th.elev {
     position: sticky;
-    left: 0;
     background: var(--washi);
   }
 
-  /* Above the cells it shadows; the header above thead's own 2. */
-  td.mountain {
+  td.mountain,
+  th.mountain {
+    width: var(--name-w);
+    left: 0;
+  }
+
+  td.elev,
+  th.elev {
+    left: var(--name-w);
+  }
+
+  /* Above the cells they shadow; the headers above thead's own 2. */
+  td.mountain,
+  td.elev {
     z-index: 1;
   }
 
-  th.mountain {
+  th.mountain,
+  th.elev {
     z-index: 3;
   }
 
-  /* The row tint is painted per cell, so the pinned one has to mix its own or
-     it stays a blank washi gap across the hovered row. */
-  tbody tr:hover td.mountain {
+  /* The row tint is painted per cell, so the pinned ones have to mix their own
+     or they stay blank washi gaps across the hovered row. */
+  tbody tr:hover td.mountain,
+  tbody tr:hover td.elev {
     background: color-mix(in srgb, var(--yamabuki) 12%, var(--washi));
   }
 
@@ -939,7 +1043,8 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  td.person input[type="checkbox"] {
+  td.person input[type="checkbox"],
+  .group-arrow {
     transition: none;
   }
 }
@@ -949,12 +1054,21 @@ code {
 /* Tabs sit on the sheet like the paper tabs of an album. The hairline runs the
    full width of the strip and the view below is pulled up onto it: the table's
    opaque sticky header covers it, the map leaves it showing as the top rule of
-   the map area. Both read correctly, so neither is special-cased. */
-.view-tabs {
+   the map area. Both read correctly, so neither is special-cased.
+
+   The hairline and that -1px live on this wrapper rather than on .view-tabs,
+   which is where they used to be: as a flex item .view-tabs shrinks to its two
+   tabs, and the line would shrink with it. flex-end keeps the fold-all button
+   sitting on the line alongside them. */
+.table-controls {
   display: flex;
-  gap: 0;
+  align-items: flex-end;
   margin: 0 0 -1px;
   border-bottom: 1px solid var(--sumi);
+}
+
+.view-tabs {
+  display: flex;
 }
 
 .view-tabs button {
@@ -969,7 +1083,9 @@ code {
   cursor: pointer;
 }
 
-.view-tabs button .view-tab-en {
+/* Unscoped from .view-tabs button so the fold-all button shares one treatment
+   rather than duplicating it. */
+.view-tab-en {
   font-family: var(--font-en);
   font-size: 12px;
   font-style: italic;
@@ -979,6 +1095,32 @@ code {
   color: var(--sumi);
   background: var(--washi);
   border-color: var(--sumi);
+}
+
+/* Not styled as a tab, deliberately. The tabs' own box would undo in pixels
+   what the sibling-of-the-tablist markup buys in semantics -- a third bordered
+   box on the same hairline reads as a third view, and 全閉 parses as a view
+   name before it parses as a verb. Bare text at the right end of the strip is
+   on the tab row without pretending to be of it. Still an exhaustive reset
+   against the global button rule: every property that rule sets is named here,
+   which is why `border` and `background` appear only to be turned off. */
+.fold-all {
+  margin-left: auto;
+  padding: 6px 2px 7px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--sumi-faint);
+  font-family: var(--font-ja);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.fold-all:hover {
+  color: var(--sumi);
 }
 
 .map {
@@ -1311,6 +1453,7 @@ code {
    today this rule has nothing to disable. */
 @media (prefers-reduced-motion: reduce) {
   .chip,
+  .fold-all,
   .map-zoom button,
   .view-tabs button {
     transition: none;
