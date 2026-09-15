@@ -48,8 +48,8 @@ export function ChecklistTable({
     return [...byPrefecture.values()];
   }, [mountains]);
 
-  // Hoisted out of the loop below: both are the same for all 28 headings, and
-  // rebuilding the id list inside it meant 28 identical allocations a render.
+  // Hoisted out of the loop below: both are the same for every heading, and
+  // rebuilding the id list inside it means one identical allocation per group.
   const personIds = people.map((p) => p.id);
   const isClimbed = (personId: number, mountainId: number) =>
     entries[key(personId, mountainId)]?.climbed ?? false;
@@ -75,12 +75,13 @@ export function ChecklistTable({
           const isCollapsed = collapsed.has(group.prefecture);
           const n = group.mountains.length;
           // Only a folded heading shows the fraction, so only a folded heading
-          // pays for counting it. A peak counts once *everyone* has it, the
-          // rule the map already states out loud as "climbed by both" -- so the
-          // two views cannot report different things about the same data. With
-          // nobody on the roster that is vacuously true of every peak, so the
-          // fraction gives way to the plain count rather than claiming a full
-          // sweep of a list no one has touched.
+          // pays for counting it. A peak counts once *everyone on the roster*
+          // has it -- the same rule the map applies, except the map applies it
+          // to the people currently ticked in its filter, so the two agree only
+          // while nothing is filtered out. The table has no filter, so the whole
+          // roster is the only roster it has. An empty one makes "everyone has
+          // it" vacuously true, so the fraction gives way to the plain count --
+          // see lib/progress.mjs.
           const countLabel =
             isCollapsed && personIds.length > 0
               ? `${countFullyClimbed(
@@ -107,7 +108,7 @@ export function ChecklistTable({
                     <span className="group-arrow" aria-hidden="true" />
                     <span lang="ja">{group.prefectureJa}</span>
                     <span className="prefecture-en">
-                      {group.prefecture} · {countLabel}
+                      {group.prefecture} <span aria-hidden="true">·</span> {countLabel}
                     </span>
                   </button>
                 </th>
