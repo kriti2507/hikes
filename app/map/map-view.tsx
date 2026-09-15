@@ -2,14 +2,15 @@
 
 import { type CSSProperties, useEffect, useState } from "react";
 import { coastline, type GeometrySource, prefectures, source } from "@/lib/map/japan-geometry";
+import { fanOffsets } from "@/lib/map/fan.mjs";
 import { HEIGHT, WIDTH } from "@/lib/map/projection.mjs";
 import type { Entry, Mountain, Person } from "../checklist";
 import { ClusterMarker } from "./cluster-marker";
 import { PeakCard } from "./peak-card";
-import { PeakMarker } from "./peak-marker";
+import { PEAK_HEIGHT, PeakMarker } from "./peak-marker";
 import { PersonFilter } from "./person-filter";
 import { useMapMarkers } from "./use-map-markers";
-import { NAME_SCALE, usePanZoom } from "./use-pan-zoom";
+import { MAX_SCALE, NAME_SCALE, usePanZoom } from "./use-pan-zoom";
 
 // Looked up rather than branched on: `source` is generated with one value, so
 // `source === "placeholder"` is a type error the moment real geometry is built.
@@ -46,6 +47,10 @@ export function MapView({
   const { scale, viewBox, unitsPerPixel, measured, wasDragged, zoomBy, fit, fitBounds, handlers } =
     usePanZoom(element);
   const [openId, setOpenId] = useState<number | null>(null);
+  // The key of the ridge currently drawn fanned out, or null. A fan only
+  // exists at maximum zoom: it is the answer to "zooming cannot separate
+  // these", so below the cap zooming is still the better answer.
+  const [fannedId, setFannedId] = useState<string | null>(null);
 
   const { clusters, fillFor, missing, total, fullyClimbed } = useMapMarkers({
     mountains,
@@ -73,6 +78,14 @@ export function MapView({
     if (document.activeElement?.closest(".peak-card")) element?.focus();
     setOpenId(null);
   }, [clusters, openId, element]);
+
+  // Any zoom-out collapses the fan. This is what keeps a fan from being left
+  // hanging over a crowded map at low zoom, and it subsumes the reclustering
+  // case too: the grouping only changes when the scale does, so a fanned
+  // ridge cannot dissolve underneath its own fan.
+  useEffect(() => {
+    if (scale < MAX_SCALE) setFannedId(null);
+  }, [scale]);
 
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
@@ -188,21 +201,100 @@ export function MapView({
                 );
               }
 
+              if (keyOf(c) === fannedId) {
+                const offsets = fanOffsets(c.members.length);
+                // `fan` carries no styles — it is how Task 9 asks whether the
+                // element holding focus is inside the fan about to vanish.
+                return (
+                  <g className="fan" key={keyOf(c)} transform={transform}>
+                    {c.members.map((peak, i) => {
+                      // A spoke stops PEAK_HEIGHT short of the member it
+                      // points at, measured along its own ray. A triangle
+                      // rises from its anchor point back toward the circle,
+                      // so a spoke drawn the whole way would be painted
+                      // through the inside of the triangle it points at.
+                      // Shortening along the ray is right in every direction;
+                      // stopping at the base or the apex would only be right
+                      // straight above or below. The ring is never tighter
+                      // than FAN_RADIUS_PX, so a spoke is never shorter than
+                      // FAN_RADIUS_PX - PEAK_HEIGHT and never turns around.
+                      const { dx, dy } = offsets[i];
+                      const k = (Math.hypot(dx, dy) - PEAK_HEIGHT) / Math.hypot(dx, dy);
+                      return (
+                        <line
+                          key={`s${peak.mountain.id}`}
+                          className="fan-spoke"
+                          x1={0}
+                          y1={0}
+                          x2={dx * k}
+                          y2={dy * k}
+                        />
+                      );
+                    })}
+
+                    <circle
+                      className="fan-anchor"
+                      r={3}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Draw these ${c.members.length} peaks back together`}
+                      onClick={() => setFannedId(null)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setFannedId(null);
+                        }
+                      }}
+                    />
+
+                    {/* Ordinary peak markers at the offsets: fill, number,
+                        name, hit target, focus ring, keyboard activation and
+                        card all come from the component that already exists.
+                        A fan is a placement, not a new kind of marker. */}
+                    {c.members.map((peak, i) => (
+                      <g
+                        key={`m${peak.mountain.id}`}
+                        transform={`translate(${offsets[i].dx} ${offsets[i].dy})`}
+                      >
+                        <PeakMarker
+                          fill={fillFor(peak.mountain)}
+                          selected={openId === peak.mountain.id}
+                          number={peak.mountain.fukadaNumber}
+                          name={scale >= NAME_SCALE ? peak.mountain.nameEn : null}
+                          label={`${nameOf(peak.mountain)}, ${peak.mountain.elevationM} metres`}
+                          onActivate={() => setOpenId(peak.mountain.id)}
+                        />
+                      </g>
+                    ))}
+                  </g>
+                );
+              }
+
               const done = c.members.filter((m) => fillFor(m.mountain) === 1).length;
               return (
                 <g key={keyOf(c)} transform={transform}>
                   <ClusterMarker
                     count={c.members.length}
                     fill={done / c.members.length}
-                    label={`${c.members.length} peaks, ${done} climbed by everyone selected. Zoom in.`}
-                    onActivate={() =>
+                    label={`${c.members.length} peaks, ${done} climbed by everyone selected. ${
+                      scale >= MAX_SCALE ? "Show them separately." : "Zoom in."
+                    }`}
+                    onActivate={() => {
+                      // Zoom until you can't, then fan. At the cap fitBounds
+                      // would clamp to the scale already in force and tween
+                      // to the camera it started from, which is exactly the
+                      // click that used to do nothing.
+                      if (scale >= MAX_SCALE) {
+                        setFannedId(keyOf(c));
+                        return;
+                      }
                       fitBounds(
                         Math.min(...c.members.map((m) => m.x)),
                         Math.min(...c.members.map((m) => m.y)),
                         Math.max(...c.members.map((m) => m.x)),
                         Math.max(...c.members.map((m) => m.y)),
-                      )
-                    }
+                      );
+                    }}
                   />
                 </g>
               );
