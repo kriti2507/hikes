@@ -26,7 +26,7 @@ export function AddPerson({ onAdded }: { onAdded: () => void }) {
         });
       }}
     >
-      <label htmlFor="new-person">Add a person</label>
+      <label htmlFor="new-person">Add a friend</label>
       <input
         id="new-person"
         value={name}
