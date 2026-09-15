@@ -44,6 +44,17 @@ export type Entry = { climbed: boolean; dateClimbed: string | null };
 
 export const key = (personId: number, mountainId: number) => `${personId}:${mountainId}`;
 
+// Both of this component's toggles store the *absence* of something -- excluded
+// people, folded prefectures -- so both need the same copy-then-flip. A fresh
+// Set because React compares by reference, and an in-place mutation would not
+// re-render.
+const toggled = <T,>(current: Set<T>, value: T) => {
+  const next = new Set(current);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
+};
+
 export function Checklist({
   mountains,
   people,
@@ -161,14 +172,7 @@ export function Checklist({
                 entries={entries}
                 onSave={save}
                 collapsed={collapsed}
-                onToggleGroup={(prefecture) =>
-                  setCollapsed((current) => {
-                    const next = new Set(current);
-                    if (next.has(prefecture)) next.delete(prefecture);
-                    else next.add(prefecture);
-                    return next;
-                  })
-                }
+                onToggleGroup={(prefecture) => setCollapsed((c) => toggled(c, prefecture))}
               />
             </div>
           ) : (
@@ -177,14 +181,7 @@ export function Checklist({
               people={people}
               entries={entries}
               selectedIds={selectedIds}
-              onTogglePerson={(personId) =>
-                setExcludedIds((current) => {
-                  const next = new Set(current);
-                  if (next.has(personId)) next.delete(personId);
-                  else next.add(personId);
-                  return next;
-                })
-              }
+              onTogglePerson={(personId) => setExcludedIds((c) => toggled(c, personId))}
               onSave={save}
             />
           )}

@@ -19,19 +19,30 @@ export function ChecklistTable({
   people: Person[];
   entries: Record<string, Entry>;
   onSave: (personId: number, mountainId: number, next: Entry) => void;
-  collapsed: Set<string>;
+  collapsed: ReadonlySet<string>;
   onToggleGroup: (prefecture: string) => void;
 }) {
-  // Mountains arrive pre-sorted, so grouping is a single pass that preserves
-  // the prefecture order the query chose.
+  // Keyed by prefecture rather than merging only adjacent rows. prefecture_sort
+  // is a per-row column defaulting to 999, so an unnumbered addition can land
+  // apart from the rest of its prefecture -- and `collapsed` keys on the name,
+  // so two groups sharing it would fold and unfold as one. A Map keeps the
+  // prefecture order the query chose, since insertion order is iteration order.
   const groups = useMemo(() => {
-    const out: { prefecture: string; prefectureJa: string; mountains: Mountain[] }[] = [];
+    const byPrefecture = new Map<
+      string,
+      { prefecture: string; prefectureJa: string; mountains: Mountain[] }
+    >();
     for (const m of mountains) {
-      const last = out.at(-1);
-      if (last?.prefecture === m.prefecture) last.mountains.push(m);
-      else out.push({ prefecture: m.prefecture, prefectureJa: m.prefectureJa, mountains: [m] });
+      const existing = byPrefecture.get(m.prefecture);
+      if (existing) existing.mountains.push(m);
+      else
+        byPrefecture.set(m.prefecture, {
+          prefecture: m.prefecture,
+          prefectureJa: m.prefectureJa,
+          mountains: [m],
+        });
     }
-    return out;
+    return [...byPrefecture.values()];
   }, [mountains]);
 
   return (
