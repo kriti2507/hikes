@@ -20,6 +20,13 @@ const COASTLINE_NOTE: Record<GeometrySource, string> = {
   "natural-earth": " The coastline is Natural Earth 1:10m, thinned for this scale.",
 };
 
+// One name for a cluster, used both as its React key and as the identity the
+// fan remembers. cluster.mjs sorts members by `order` and keeps them sorted
+// through every merge, so members[0] is stable across renders -- that is what
+// makes this usable as a key at all.
+const keyOf = (c: { members: { mountain: Mountain }[] }) =>
+  c.members.length === 1 ? `m${c.members[0].mountain.id}` : `c${c.members[0].mountain.id}`;
+
 export function MapView({
   mountains,
   people,
@@ -70,13 +77,16 @@ export function MapView({
   const nameOf = (m: Mountain) => `${m.nameEn} (${m.nameKanji})`;
 
   const [vbX, vbY, vbW] = viewBox.split(" ").map(Number);
-  // Only a lone peak has a card. Deriving `open` this way rather than
-  // searching every cluster's members means a peak swallowed into a ridge
-  // loses its card in the same render as the merge — no frame where the card
-  // floats over a marker that is no longer its peak.
-  const open =
-    clusters.find((c) => c.members.length === 1 && c.members[0].mountain.id === openId)
-      ?.members[0] ?? null;
+  // Only a peak the map draws on its own has a card, and the card anchors to
+  // where that peak is *drawn*. Deriving this from the clusters rather than
+  // searching every member means a peak swallowed into a ridge loses its card
+  // in the same render as the merge — no frame where the card floats over a
+  // marker that is no longer its peak.
+  const open: { mountain: Mountain; x: number; y: number } | null =
+    openId === null
+      ? null
+      : (clusters.find((c) => c.members.length === 1 && c.members[0].mountain.id === openId)
+          ?.members[0] ?? null);
 
   // Past roughly three-fifths across or down, a card anchored on the near
   // side would hang off the frame, so it flips to the far side instead.
@@ -161,7 +171,7 @@ export function MapView({
                 const peak = c.members[0];
                 const fill = fillFor(peak.mountain);
                 return (
-                  <g key={`m${peak.mountain.id}`} transform={transform}>
+                  <g key={keyOf(c)} transform={transform}>
                     <PeakMarker
                       fill={fill}
                       selected={openId === peak.mountain.id}
@@ -180,7 +190,7 @@ export function MapView({
 
               const done = c.members.filter((m) => fillFor(m.mountain) === 1).length;
               return (
-                <g key={`c${c.members[0].mountain.id}`} transform={transform}>
+                <g key={keyOf(c)} transform={transform}>
                   <ClusterMarker
                     count={c.members.length}
                     fill={done / c.members.length}
