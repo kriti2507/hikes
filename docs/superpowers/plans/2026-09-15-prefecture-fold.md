@@ -758,6 +758,9 @@ None of this is reachable from `node --test`, so it has to be done in a browser 
 - [ ] The line under the tabs still spans the full sheet, not just the two tabs.
 - [ ] On a phone, scroll the table right, then confirm the arrow is still at the left edge and still toggles.
 - [ ] With an empty roster (no people), a folded heading shows the plain count and never `9/9`.
+- [ ] **Safari specifically:** tick a checkbox, then click 全閉 with the mouse. Confirm focus is not stranded — the next Tab should resume near the tab row, not at the top of the document. Safari does not focus a button on click, so it is the one browser where the focused row gets unmounted from under the user; Chrome and Firefox focus the button on mousedown and are unaffected.
+- [ ] On a phone, fold and unfold a group while the table is scrolled right. The pinned heading's width changes with it, since `· 4/19` is wider than `· 19` — confirm that reads as breathing rather than as a glitch.
+- [ ] The fold-all button does not read as a third tab. It should sit at the right end of the tab row as bare text, with no box of its own.
 
 ## Out of scope
 
