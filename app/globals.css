@@ -751,11 +751,24 @@ code {
     padding: 0 1.25rem;
   }
 
+  /* Collapsed to nothing rather than `display: none`, which looks equivalent
+     and is not. The prefecture header spans colSpan={5 + people.length} = 7,
+     so the table has seven columns whatever these two cells do; removing their
+     boxes entirely leaves columns 4 and 5 with no cells at all, which makes
+     them auto-width and lets them split the leftover space three ways with the
+     mountain column -- squeezing every name onto its own line and stranding
+     the difference as blank paper at the end of each row. Keeping the boxes at
+     zero width keeps the column count honest and hands the whole remainder to
+     the mountain column, which is what it was always meant to absorb. */
   td.season,
   th.season,
   td.notes,
   th.notes {
-    display: none;
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   /* Dropping two columns is not enough on a 375px screen — three people at the
@@ -796,27 +809,37 @@ code {
   td.person,
   th.person {
     width: 3.2rem;
-    /* `fixed` makes the width above binding on the column but does nothing to
-       stop content from spilling out of the cell and dragging the page into
-       horizontal scroll. Two things here do that: a person's name in the
-       header, and the date field below. Clip what is left over rather than let
-       the table decide the page is wider than the phone. */
+  }
+
+  /* Only the cells, not the header. `fixed` makes the width above binding on
+     the column but does nothing to stop the date field from spilling out and
+     dragging the page into horizontal scroll, so what is left over is clipped.
+     Applying this to th.person as well would cut a name down to its first
+     letter, since the header is one row tall and the rest is overflow. */
+  td.person {
     overflow: hidden;
   }
 
   th.person {
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   td.mountain .kanji {
     font-size: 0.95rem;
   }
 
-  /* Names like Kita-hotakadake have no space to break at, and a fixed column
-     will not widen to hold them -- without this they run out over the person
-     columns. */
+  /* `break-word`, not `anywhere`: names like Kita-hotakadake have no space to
+     break at and a fixed column will not widen to hold them, so they do need a
+     last-resort break. `anywhere` grants that at every character, which chops
+     even names that would have fitted -- Mt. Rishiri became Mt. / Rishiri. */
   td.mountain {
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+  }
+
+  /* "1,721 m" has a space in it, and this column is sized to the number, not
+     to the number plus a stranded unit on a second line. */
+  td.elev {
+    white-space: nowrap;
   }
 
   td.person input[type="checkbox"] {
