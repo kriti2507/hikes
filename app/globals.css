@@ -1449,20 +1449,116 @@ code {
   color: var(--sumi-faint);
 }
 
-.chip {
+.map-filter-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+/* The pill survives the chips it used to be, but it is now the label around a
+   real checkbox: a border that holds the box and the name together as one hit
+   area, rather than a button whose colour was the only thing saying whether the
+   person was on the map.
+
+   Not a flex row of [box][name], though that is what it looks like: .map-filter
+   aligns this strip on the baseline, and a flex container with nothing
+   baseline-aligned in it offers the bottom edge of its first item -- the box --
+   as its own. Laid out inline instead, the pill's baseline is the name's, which
+   is the one "Showing" beside it is sitting on. (`inline-block` blockifies as a
+   flex item of .map-filter-people; the inline formatting context inside it,
+   which is the part that matters here, is unaffected.) */
+.person-check {
+  display: inline-block;
+  padding: 2px 11px 2px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 11px;
   font-family: var(--font-en);
   font-size: 13px;
-  padding: 2px 12px;
-  border: 1px solid var(--beni);
-  border-radius: 11px;
+  color: var(--sumi-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  /* The name is the whole content; a stray selection on a double-tap would
+     highlight it instead of ticking the box. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* The same five pigments the banner tally and the table columns hand out, in
+   the same order, so a person is one colour across the whole page. Counting
+   from the container above rather than from .map-filter, which also holds the
+   label and the summary. */
+.map-filter-people .person-check:nth-child(5n + 1) { --seal: var(--beni); }
+.map-filter-people .person-check:nth-child(5n + 2) { --seal: var(--bero-ai); }
+.map-filter-people .person-check:nth-child(5n + 3) { --seal: var(--matcha); }
+.map-filter-people .person-check:nth-child(5n + 4) { --seal: var(--murasaki); }
+.map-filter-people .person-check:nth-child(5n + 5) { --seal: var(--yamabuki); }
+
+/* :has rather than a class React sets alongside `checked`: the box's own state
+   is then the only thing either rule reads, and the two cannot disagree. A
+   browser without it loses the wash and the border tint, and still shows a
+   ticked box -- the state is never carried by colour alone. */
+.person-check:has(input:checked) {
+  border-color: color-mix(in srgb, var(--seal, var(--beni)) 45%, transparent);
+  background: color-mix(in srgb, var(--seal, var(--beni)) 9%, transparent);
+  color: var(--sumi);
+}
+
+.person-check:hover {
+  border-color: var(--sumi-faint);
+}
+
+/* Restyled, not replaced -- same reason as the seal in the table: the native
+   control keeps its keyboard behaviour, its focus ring and its announced
+   state. Square and 2px-cornered, so it cannot be mistaken for a radio. */
+.person-check input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-block;
+  /* Two jobs. It is the containing block for the tick below, which is taken out
+     of flow -- and with nothing left in flow inside it, an inline-block takes
+     its baseline from its bottom margin edge, which is what `vertical-align`
+     below can then be trusted to mean. As an inline-grid with the tick as a
+     grid item it took the *tick's* baseline instead: about 2px higher, and only
+     while it was checked, so the box shifted down as it emptied. */
+  position: relative;
+  width: 13px;
+  height: 13px;
+  margin: 0 6px 0 0;
+  /* Centred on the letters, not hung off their baseline: a Georgia capital at
+     13px stands about 9.3px, so a 13px box overhangs it by 1.85px at each end
+     and that is how far below the line the box belongs. (Hung from the baseline
+     instead, all 3.7px of the difference lands underneath and the box visibly
+     sags away from the name it belongs to.) */
+  vertical-align: -2px;
+  border: 1px solid var(--sumi-faint);
+  border-radius: 2px;
   background: transparent;
-  color: var(--beni);
   cursor: pointer;
 }
 
-.chip.on {
-  background: var(--beni);
-  color: var(--washi);
+.person-check input[type="checkbox"]:checked {
+  border-color: var(--seal, var(--beni));
+  background: var(--seal, var(--beni));
+}
+
+/* Drawn, not typed, for the reason .group-arrow is: U+2713 is in none of the
+   fonts this page declares, so a glyph would come from whatever the system fell
+   back to, at whatever weight that font drew it. The polygon traces the two
+   strokes of a tick -- down to the corner at 38% 100%, up to the tip at 100%
+   22% -- and returns along their far edge. */
+.person-check input[type="checkbox"]:checked::after {
+  content: "";
+  /* 1px in from the padding box on all four sides, so the 9px tick is centred
+     by its offsets rather than by a grid whose baseline the box would inherit. */
+  position: absolute;
+  inset: 1px;
+  background: var(--washi);
+  clip-path: polygon(13% 48%, 0 62%, 38% 100%, 100% 22%, 86% 8%, 36% 70%);
+}
+
+.person-check input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--bero-ai);
+  outline-offset: 2px;
 }
 
 /* The frame is the containing block for the zoom controls and for every peak
@@ -1630,23 +1726,30 @@ code {
     padding: 8px 10px 9px;
   }
 
-  /* The filter summary is pushed right by margin-left: auto. Once the chips
+  /* The filter summary is pushed right by margin-left: auto. Once the pills
      wrap it lands alone on the last line, which reads as a stray -- left-align
      it with them instead. */
   .map-filter-summary {
     margin-left: 0;
   }
 
+  /* The whole pill is the hit area, so it is worth a few more pixels of one
+     where the pointer is a thumb. Still short of the 44px a tap target is
+     supposed to be -- five of those in a row would own the screen above the map
+     -- but a 25px pill was aimed with a mouse in mind. */
+  .person-check {
+    padding: 5px 13px 5px 10px;
+  }
 }
 
 /* The map's own motion -- panning, zooming, the fitBounds tween -- is direct
    manipulation or already gated behind window.matchMedia in use-pan-zoom.ts,
    which reduced-motion does not ask us to suppress. This block covers the
-   chips and controls that share the page's hover treatments, should any of
-   them pick up a transition in the future; none currently declares one, so
-   today this rule has nothing to disable. */
+   filter pills and the controls that share the page's hover treatments, should
+   any of them pick up a transition in the future; none currently declares one,
+   so today this rule has nothing to disable. */
 @media (prefers-reduced-motion: reduce) {
-  .chip,
+  .person-check,
   .fold-all,
   .map-zoom button,
   .view-tabs button {
