@@ -60,12 +60,16 @@ export function AdminProvider({ isAdmin, children }: { isAdmin: boolean; childre
         </p>
       )}
       {children}
-      {/* One node for the whole page. aria-hidden because `inert` has already
-          taken the control it describes out of the accessibility tree, so there
-          is nothing left there for this to annotate. */}
-      <div ref={tooltip} className="admin-tooltip" aria-hidden="true">
-        Only admin can make changes
-      </div>
+      {/* One node for the whole page, and only on a page that has something to
+          point it at: Locked renders no wrapper at all for an admin, so nothing
+          would ever call show(). aria-hidden because `inert` has already taken
+          the control it describes out of the accessibility tree, so there is
+          nothing left there for this to annotate. */}
+      {isAdmin ? null : (
+        <div ref={tooltip} className="admin-tooltip" aria-hidden="true">
+          Only admin can make changes
+        </div>
+      )}
     </AdminContext.Provider>
   );
 }
