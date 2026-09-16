@@ -445,8 +445,12 @@ Run: `npm run dev`
 
 With `SITE_PASSWORD` set in `.env.local`, visit `http://localhost:3000/login`:
 a wrong password redirects back with "Wrong password."; the right one lands on
-`/`; returning to `/login` now shows "You're logged in." and a Log out button
-that returns you to the password form.
+`/`; returning to `/login` now shows "You're logged in." and a Log out button.
+
+That button redirects to `/`, so right now `proxy.ts` bounces the cookie-less
+request straight back to the password form. After Task 7 it will land on the
+public home page instead. Both are correct for their moment — do not "fix" the
+later behaviour to match this one.
 
 Comment `SITE_PASSWORD` out of `.env.local`, restart the dev server, and visit
 `/login`: it shows the "No SITE_PASSWORD is set" note and no button. Restore
