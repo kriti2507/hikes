@@ -774,7 +774,13 @@ button:disabled {
 /* ---------- admin gating ---------- */
 
 /* An edit affordance as a visitor sees it: inert, and explaining itself on
-   hover. See app/auth.tsx -- the server is the actual boundary. */
+   hover. See app/auth.tsx -- the server is the actual boundary.
+
+   `inline-block` also starts a block formatting context, which contains the
+   margins of whatever it wraps instead of letting them collapse outwards. That
+   is invisible today because nothing above .add-person carries a bottom margin
+   to collapse with -- but give one to the table or the map and a visitor would
+   get different spacing there than an admin, who has no wrapper at all. */
 .admin-locked {
   display: inline-block;
   cursor: not-allowed;
