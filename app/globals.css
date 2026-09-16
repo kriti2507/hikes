@@ -748,6 +748,79 @@ button:disabled {
   font-size: 0.75rem;
 }
 
+/* ---------- confirm dialog ---------- */
+
+/* A native modal, so it is centred, focus-trapped and Escape-closing without
+   any of that being written here. The UA's own border and padding go, since the
+   paper below supplies both. */
+.confirm {
+  max-width: min(24rem, calc(100vw - 2.5rem));
+  padding: 0;
+  border: 1px solid var(--sumi);
+  border-radius: 6px;
+  background: var(--washi);
+  color: var(--sumi);
+  box-shadow: 0 14px 40px rgb(0 0 0 / 0.22);
+}
+
+/* A literal black rather than a mix of --sumi: ::backdrop only began
+   inheriting custom properties from its originating element recently, and a
+   var() that resolves to nothing here would leave the page unshaded and the
+   modal looking like part of it. Plain black at 45% reads as dusk over either
+   colour scheme. */
+.confirm::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+/* The padding lives on the panel rather than the dialog so the backdrop click
+   test in confirm-clear.tsx stays honest: a click in the padding would land on
+   the dialog element itself and read as a click outside. */
+.confirm-panel {
+  padding: 1.25rem 1.35rem 1.15rem;
+}
+
+.confirm h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.confirm-title-en {
+  font-family: var(--font-en);
+  font-size: 0.62rem;
+  font-style: italic;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sumi-faint);
+}
+
+.confirm-body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.confirm-note {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-en);
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--beni);
+}
+
+/* Cancel sits first in the source, so it is what showModal() focuses and what
+   Enter reaches; Clear is put on the right, where the eye finishes. */
+.confirm-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.15rem;
+}
+
 /* ---------- login ---------- */
 
 .login {

@@ -7,6 +7,7 @@ import { AddPerson } from "./add-person";
 import { AdminProvider } from "./auth";
 import { Banner } from "./banner";
 import { ChecklistTable } from "./checklist-table";
+import { ConfirmClear } from "./confirm-clear";
 import { MapView } from "./map/map-view";
 
 // Re-exported from here rather than a types file because app/page.tsx already
@@ -132,7 +133,7 @@ export function Checklist({
 
   // Optimistic: paint the change, then persist. Roll back on failure so the UI
   // never claims a summit the database rejected.
-  function save(personId: number, mountainId: number, next: Entry) {
+  function commit(personId: number, mountainId: number, next: Entry) {
     const k = key(personId, mountainId);
     const previous = entries[k] ?? { climbed: false, dateClimbed: null };
     setEntries((current) => ({ ...current, [k]: next }));
@@ -143,6 +144,48 @@ export function Checklist({
       setError("Could not save that change. Check your connection and try again.");
     });
   }
+
+  // Every seal on the page -- the table's and the map card's -- comes through
+  // here, which is why the confirmation lives at this level rather than in
+  // either of them. Ticking, and editing a date, go straight through; clearing
+  // a seal that is currently set stops to ask first.
+  //
+  // Nothing is written to `entries` on the way past, so the seal stays ticked
+  // while the dialog is open: the checkbox is controlled, and this state change
+  // re-renders it back to the value the database still holds.
+  function save(personId: number, mountainId: number, next: Entry) {
+    const climbed = entries[key(personId, mountainId)]?.climbed ?? false;
+    if (climbed && !next.climbed) {
+      setPendingClear({ personId, mountainId, next });
+      return;
+    }
+    commit(personId, mountainId, next);
+  }
+
+  // The pending change is kept whole rather than rebuilt on confirm, so what
+  // gets written is what the seal asked for and the two cannot drift.
+  const [pendingClear, setPendingClear] = useState<{
+    personId: number;
+    mountainId: number;
+    next: Entry;
+  } | null>(null);
+
+  // Null unless there is something to ask about, and null again if the roster
+  // or the mountain list changed underneath it -- a router.refresh() that
+  // deletes the person mid-dialog leaves nothing to name, so there is nothing
+  // to confirm either.
+  const clearRequest = useMemo(() => {
+    if (!pendingClear) return null;
+    const person = people.find((p) => p.id === pendingClear.personId);
+    const mountain = mountains.find((m) => m.id === pendingClear.mountainId);
+    if (!person || !mountain) return null;
+    return {
+      personName: person.name,
+      mountainKanji: mountain.nameKanji,
+      mountainEn: mountain.nameEn,
+      dateClimbed: entries[key(person.id, mountain.id)]?.dateClimbed ?? null,
+    };
+  }, [pendingClear, people, mountains, entries]);
 
   // Same optimistic shape as save(), and it has to be: a checkbox that waits
   // for a round trip before it moves reads as a broken checkbox.
@@ -300,6 +343,19 @@ export function Checklist({
           <AddPerson onAdded={() => router.refresh()} />
         </div>
 
+        {/* One for the page, like the locked-control tooltip above it: there is
+            only ever one seal being cleared at a time. In the top layer, so it
+            is not clipped by the table's horizontal scroller on a phone. */}
+        <ConfirmClear
+          request={clearRequest}
+          onConfirm={() => {
+            if (pendingClear) {
+              commit(pendingClear.personId, pendingClear.mountainId, pendingClear.next);
+            }
+            setPendingClear(null);
+          }}
+          onCancel={() => setPendingClear(null)}
+        />
       </AdminProvider>
     </main>
   );
