@@ -129,8 +129,8 @@ export function Checklist({
   }
 
   return (
-    <AdminProvider isAdmin={isAdmin}>
-      <main>
+    <main>
+      <AdminProvider isAdmin={isAdmin}>
         <Banner
           people={people}
           counts={counts}
@@ -229,7 +229,7 @@ export function Checklist({
 
           <AddPerson onAdded={() => router.refresh()} />
         </div>
-      </main>
-    </AdminProvider>
+      </AdminProvider>
+    </main>
   );
 }

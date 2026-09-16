@@ -283,6 +283,10 @@ main {
   margin-top: 0.45rem;
 }
 
+.banner-logout {
+  margin-top: 0.9rem;
+}
+
 .text-button {
   padding: 0;
   border: 0;
@@ -769,10 +773,6 @@ button:disabled {
 
 /* ---------- admin gating ---------- */
 
-.banner-logout {
-  margin-top: 0.9rem;
-}
-
 /* An edit affordance as a visitor sees it: inert, and explaining itself on
    hover. See app/auth.tsx -- the server is the actual boundary. */
 .admin-locked {
@@ -817,8 +817,10 @@ button:disabled {
 }
 
 /* One node, shared by every locked affordance and moved by hand. position:
-   fixed is viewport-relative here because no ancestor carries a transform --
-   notably it is a sibling of <main>, not a child of the map's panned group. */
+   fixed is viewport-relative despite sitting inside <main>: `position:
+   relative` does not create a containing block for fixed descendants, and
+   nothing on the way down carries a transform -- notably this is not a child
+   of the map's panned group. */
 .admin-tooltip {
   display: none;
   position: fixed;
