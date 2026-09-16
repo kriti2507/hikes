@@ -767,6 +767,70 @@ button:disabled {
   letter-spacing: 0.04em;
 }
 
+/* ---------- admin gating ---------- */
+
+/* An edit affordance as a visitor sees it: inert, and explaining itself on
+   hover. See app/auth.tsx -- the server is the actual boundary. */
+.admin-locked {
+  display: inline-block;
+  cursor: not-allowed;
+}
+
+/* Hover belongs to the wrapper, not to the controls inside it. */
+.admin-locked-content {
+  pointer-events: none;
+}
+
+/* Buttons and form fields are affordances, so dimming them says "not for you".
+   The seals are not -- see .locked-cell below. */
+.admin-locked.locked-control .admin-locked-content {
+  opacity: 0.55;
+}
+
+/* A table cell. Two reasons this is not the default: `td.person .date` is
+   width: 100%, which resolves against a shrink-to-fit inline-block and
+   collapses; and the seal is the data this page exists to show, so it keeps its
+   own opacity (0.3 unchecked, 1 checked) rather than being dimmed on top of it.
+   Dimming here would make an unchecked cell almost invisible to the very
+   audience the page is now public for. */
+.admin-locked.locked-cell,
+.admin-locked.locked-cell .admin-locked-content {
+  display: block;
+}
+
+/* A peak-card row. The li is a flex row of label + date, so the wrapper stands
+   in for it instead of collapsing both into one flex child. */
+.admin-locked.locked-row {
+  flex: 1;
+}
+
+.admin-locked.locked-row .admin-locked-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* One node, shared by every locked affordance and moved by hand. position:
+   fixed is viewport-relative here because no ancestor carries a transform --
+   notably it is a sibling of <main>, not a child of the map's panned group. */
+.admin-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 50;
+  transform: translate(-50%, calc(-100% - 10px));
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--rule);
+  background: var(--washi-deep);
+  color: var(--sumi-soft);
+  font-family: var(--font-en);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* ---------- misc ---------- */
 
 .error {
