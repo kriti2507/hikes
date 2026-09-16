@@ -4,6 +4,7 @@ import { Fragment, type CSSProperties, useMemo } from "react";
 import type { Entry, Mountain, Person } from "./checklist";
 import { key } from "./checklist";
 import { countFullyClimbed } from "@/lib/progress.mjs";
+import { Locked } from "./auth";
 
 // Degrees of tilt a seal can land at, picked by mountain id.
 const TILTS = [-3, -1.5, 0, 1.5, 3];
@@ -144,34 +145,36 @@ export function ChecklistTable({
                     const climbed = entry?.climbed ?? false;
                     return (
                       <td key={person.id} className="person">
-                        <input
-                          type="checkbox"
-                          checked={climbed}
-                          aria-label={`${person.name} climbed ${m.nameEn}`}
-                          // A seal is pressed by hand, so no two sit quite square.
-                          // Seeding the tilt from the id keeps it stable across
-                          // renders — random would reshuffle on every keystroke.
-                          style={{ "--tilt": `${TILTS[m.id % TILTS.length]}deg` } as CSSProperties}
-                          onChange={(event) =>
-                            onSave(person.id, m.id, {
-                              climbed: event.target.checked,
-                              // Unchecking discards the date: the row means
-                              // "not climbed", so a date would contradict it.
-                              dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
-                            })
-                          }
-                        />
-                        {climbed ? (
+                        <Locked className="locked-cell">
                           <input
-                            type="date"
-                            className="date"
-                            value={entry?.dateClimbed ?? ""}
-                            aria-label={`Date ${person.name} climbed ${m.nameEn}`}
+                            type="checkbox"
+                            checked={climbed}
+                            aria-label={`${person.name} climbed ${m.nameEn}`}
+                            // A seal is pressed by hand, so no two sit quite square.
+                            // Seeding the tilt from the id keeps it stable across
+                            // renders — random would reshuffle on every keystroke.
+                            style={{ "--tilt": `${TILTS[m.id % TILTS.length]}deg` } as CSSProperties}
                             onChange={(event) =>
-                              onSave(person.id, m.id, { climbed: true, dateClimbed: event.target.value || null })
+                              onSave(person.id, m.id, {
+                                climbed: event.target.checked,
+                                // Unchecking discards the date: the row means
+                                // "not climbed", so a date would contradict it.
+                                dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
+                              })
                             }
                           />
-                        ) : null}
+                          {climbed ? (
+                            <input
+                              type="date"
+                              className="date"
+                              value={entry?.dateClimbed ?? ""}
+                              aria-label={`Date ${person.name} climbed ${m.nameEn}`}
+                              onChange={(event) =>
+                                onSave(person.id, m.id, { climbed: true, dateClimbed: event.target.value || null })
+                              }
+                            />
+                          ) : null}
+                        </Locked>
                       </td>
                     );
                   })}

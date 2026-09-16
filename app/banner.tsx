@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { deletePerson, updatePerson } from "./actions";
 import { signOut } from "./login/actions";
 import { ThemeToggle } from "./theme-toggle";
-import { useAdmin } from "./auth";
+import { Locked, useAdmin } from "./auth";
 import type { Person } from "./checklist";
 
 export function Banner({
@@ -101,14 +101,16 @@ function PersonActions({ person, onChanged }: { person: Person; onChanged: () =>
 
   if (mode === "closed") {
     return (
-      <span className="person-actions">
-        <button type="button" className="text-button" onClick={() => open("edit")}>
-          Edit
-        </button>
-        <button type="button" className="text-button danger-text" onClick={() => open("delete")}>
-          Delete
-        </button>
-      </span>
+      <Locked className="locked-control">
+        <span className="person-actions">
+          <button type="button" className="text-button" onClick={() => open("edit")}>
+            Edit
+          </button>
+          <button type="button" className="text-button danger-text" onClick={() => open("delete")}>
+            Delete
+          </button>
+        </span>
+      </Locked>
     );
   }
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { type Entry, type Mountain, type Person, key } from "../checklist";
+import { Locked } from "../auth";
 
 export function PeakCard({
   mountain,
@@ -100,36 +101,38 @@ export function PeakCard({
           const climbed = entry?.climbed ?? false;
           return (
             <li key={person.id}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={climbed}
-                  aria-label={`${person.name} climbed ${mountain.nameEn}`}
-                  onChange={(event) =>
-                    onSave(person.id, mountain.id, {
-                      climbed: event.target.checked,
-                      // Unchecking discards the date, as in the table: the row
-                      // means "not climbed", so a date would contradict it.
-                      dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
-                    })
-                  }
-                />
-                {person.name}
-              </label>
-              {climbed ? (
-                <input
-                  type="date"
-                  className="date"
-                  value={entry?.dateClimbed ?? ""}
-                  aria-label={`Date ${person.name} climbed ${mountain.nameEn}`}
-                  onChange={(event) =>
-                    onSave(person.id, mountain.id, {
-                      climbed: true,
-                      dateClimbed: event.target.value || null,
-                    })
-                  }
-                />
-              ) : null}
+              <Locked className="locked-row">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={climbed}
+                    aria-label={`${person.name} climbed ${mountain.nameEn}`}
+                    onChange={(event) =>
+                      onSave(person.id, mountain.id, {
+                        climbed: event.target.checked,
+                        // Unchecking discards the date, as in the table: the row
+                        // means "not climbed", so a date would contradict it.
+                        dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
+                      })
+                    }
+                  />
+                  {person.name}
+                </label>
+                {climbed ? (
+                  <input
+                    type="date"
+                    className="date"
+                    value={entry?.dateClimbed ?? ""}
+                    aria-label={`Date ${person.name} climbed ${mountain.nameEn}`}
+                    onChange={(event) =>
+                      onSave(person.id, mountain.id, {
+                        climbed: true,
+                        dateClimbed: event.target.value || null,
+                      })
+                    }
+                  />
+                ) : null}
+              </Locked>
             </li>
           );
         })}
