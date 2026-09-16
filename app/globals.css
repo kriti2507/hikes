@@ -769,6 +769,10 @@ button:disabled {
 
 /* ---------- admin gating ---------- */
 
+.banner-logout {
+  margin-top: 0.9rem;
+}
+
 /* An edit affordance as a visitor sees it: inert, and explaining itself on
    hover. See app/auth.tsx -- the server is the actual boundary. */
 .admin-locked {

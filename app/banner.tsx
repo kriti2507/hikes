@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { deletePerson, updatePerson } from "./actions";
+import { signOut } from "./login/actions";
 import { ThemeToggle } from "./theme-toggle";
+import { useAdmin } from "./auth";
 import type { Person } from "./checklist";
 
 export function Banner({
@@ -16,6 +18,8 @@ export function Banner({
   total: number;
   onChanged: () => void;
 }) {
+  const { isAdmin } = useAdmin();
+
   return (
     <header className="banner">
       {/* Decorative: the print carries no information the text does not. */}
@@ -46,6 +50,16 @@ export function Banner({
             </li>
           ))}
         </ul>
+
+        {/* Only the admin sees this, so the page never advertises to a visitor
+            that an admin exists. */}
+        {isAdmin ? (
+          <form action={signOut} className="banner-logout">
+            <button type="submit" className="text-button">
+              Log out
+            </button>
+          </form>
+        ) : null}
       </div>
     </header>
   );

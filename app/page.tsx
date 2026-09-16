@@ -1,10 +1,11 @@
 import { query } from "@/lib/db";
+import { isAdmin } from "@/lib/auth";
 import { Checklist, type Ascent, type Mountain, type Person } from "./checklist";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  const [mountains, people, ascents] = await Promise.all([
+  const [mountains, people, ascents, admin] = await Promise.all([
     query<Mountain>(
       `select id,
               fukada_number  as "fukadaNumber",
@@ -35,7 +36,8 @@ export default async function Page() {
          from ascents
         where climbed or date_climbed is not null`,
     ),
+    isAdmin(),
   ]);
 
-  return <Checklist mountains={mountains} people={people} ascents={ascents} />;
+  return <Checklist mountains={mountains} people={people} ascents={ascents} isAdmin={admin} />;
 }
