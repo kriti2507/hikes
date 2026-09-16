@@ -80,12 +80,29 @@ choose). Run `npm run db:setup` once against the production database.
 ```
 mountains   one row per peak; fukada_number is nullable so non-hyakumeizan
             peaks can share the table
-people      one row per person; each becomes a column on the page
+people      one row per person; each becomes a column on the page.
+            is_public decides whether anyone who is not logged in sees them
 ascents     (person_id, mountain_id) -> climbed + optional date_climbed
 ```
 
 A missing `ascents` row means "not climbed", so adding a mountain or a person is
 a single INSERT with no backfill.
+
+### Who is shown publicly
+
+Reads are public — anyone with the URL sees the checklist — so each person has a
+**Public** switch in their column header, visible only once you are logged in.
+Unticked, that person is hidden from visitors completely: no column, no banner
+seal, no entry in the map filter, and none of their ascents are sent to the
+browser at all. The switch is enforced in `app/page.tsx`'s queries, not in the
+page's markup, which is what makes "hidden" mean hidden rather than invisible.
+
+`is_public` defaults to true, so a person added by the form is public until you
+untick them.
+
+```sql
+update people set is_public = false where name = 'Kriti';   -- or use the switch
+```
 
 ### Adding people
 

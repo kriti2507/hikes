@@ -33,8 +33,19 @@ create table if not exists mountains (
 create table if not exists people (
   id         serial primary key,
   name       text    not null unique,
-  sort_order smallint not null default 0
+  sort_order smallint not null default 0,
+  -- Whether this person is shown to someone who is not logged in. False hides
+  -- them completely -- no table column, no banner seal, no map filter entry,
+  -- and none of their ascents leave the server; see app/page.tsx, which is
+  -- where the rule is enforced.
+  is_public  boolean not null default true
 );
+
+-- Added after the fact, so a database created before it needs the column too.
+-- `if not exists` and the same default as above, which is what keeps everyone
+-- already on the roster visible: this switch is opt-out.
+alter table people
+  add column if not exists is_public boolean not null default true;
 
 create table if not exists ascents (
   person_id    integer not null references people (id) on delete cascade,
