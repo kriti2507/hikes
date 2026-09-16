@@ -713,7 +713,8 @@ button:disabled {
   padding: 1.5rem;
 }
 
-.login form {
+.login form,
+.login-panel {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -725,7 +726,8 @@ button:disabled {
 }
 
 /* Cartouche: the double-ruled box a print carries its series title in. */
-.login form::before {
+.login form::before,
+.login-panel::before {
   content: "";
   position: absolute;
   inset: 5px;

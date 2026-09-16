@@ -30,7 +30,7 @@ project. Vercel injects `DATABASE_URL` automatically. Copy the same pooled
 connection string into `.env.local` for local work.
 
 ```
-cp env.example .env.local   # then fill in both values
+cp env.example .env.local   # then fill in DATABASE_URL
 npm install
 npm run db:setup            # creates tables, loads the 100 mountains
 ```
@@ -45,13 +45,17 @@ Anyone can read the checklist. To change it — tick a peak, set a date, add or
 rename or delete a person — go to `/login` and enter that password. The page is
 not linked from anywhere; type the URL. A visitor sees every edit control still
 in place but inert, explaining itself on hover. Buttons and form fields are
-dimmed; the seals in the table are not, because they are the data the page
-exists to show. Either way the server rejects the write, so what a visitor sees
-is an explanation rather than the lock.
+dimmed; the seals in the table and on the peak cards are not, because they are
+the data the page exists to show. Either way the server rejects the write, so
+what a visitor sees is an explanation rather than the lock.
 
-Leaving `SITE_PASSWORD` unset means every request counts as the admin. That is
-the local default: clone, `npm run db:setup`, `npm run dev`, edit. Set it in
-production.
+Leaving `SITE_PASSWORD` unset means `npm run dev` counts every request as the
+admin. That is the local default: clone, `npm run db:setup`, `npm run dev`, edit.
+
+A production build reads the same missing variable the opposite way — nobody is
+admin, and the checklist is readable but frozen. The convenience is worth having
+locally; deployed, a dropped variable would otherwise hand edit rights to the
+internet while looking exactly as intended.
 
 There are no accounts, and the password is stored as plain text in the
 environment rather than hashed — it guards one person's checklist from passing

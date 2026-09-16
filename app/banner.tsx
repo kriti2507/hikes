@@ -51,8 +51,8 @@ export function Banner({
           ))}
         </ul>
 
-        {/* Only the admin sees this, so the page never advertises to a visitor
-            that an admin exists. */}
+        {/* Only the admin sees this, so a visitor is not invited to try a door
+            they cannot open. */}
         {isAdmin ? (
           <form action={signOut} className="banner-logout">
             <button type="submit" className="text-button">

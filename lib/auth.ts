@@ -27,7 +27,19 @@ export function sitePassword() {
 
 export async function isAdmin() {
   const password = sitePassword();
-  if (password === null) return true;
+  if (password === null) {
+    // Unset means "everyone is admin" only under `next dev`. A built deployment
+    // that lost the variable -- a project transfer, a preview branch with its
+    // own env -- would otherwise serve live edit controls to the internet while
+    // looking exactly as intended, and the first symptom would be a stranger
+    // editing rows. So it fails closed instead: the checklist stays readable,
+    // nobody can write, and the missing variable is loud.
+    if (process.env.NODE_ENV === "production") {
+      console.error("SITE_PASSWORD is not set. Nobody can edit until it is.");
+      return false;
+    }
+    return true;
+  }
 
   const token = (await cookies()).get(AUTH_COOKIE)?.value;
   return token !== undefined && token === (await expectedToken(password));
