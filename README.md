@@ -1,7 +1,8 @@
 # 日本百名山 — shared checklist
 
 A multi-person checklist for the 100 Famous Mountains of Japan (Fukada Kyūya, 1964).
-Next.js + Postgres, deployed on Vercel. One page, one shared password.
+Next.js + Postgres, deployed on Vercel. One page, readable by anyone; edits need
+the admin password.
 
 The mountain data was extracted from `hyakumeizan-checklist.pdf`: kanji, furigana,
 English name, prefecture, region, elevation, best season, and notes.
@@ -38,8 +39,22 @@ npm run db:setup            # creates tables, loads the 100 mountains
 
 ### 2. Password
 
-Set `SITE_PASSWORD` in `.env.local` and in Vercel's environment variables. One
-password for everyone; there are no accounts.
+Set `SITE_PASSWORD` in `.env.local` and in Vercel's environment variables.
+
+Anyone can read the checklist. To change it — tick a peak, set a date, add or
+rename or delete a person — go to `/login` and enter that password. The page is
+not linked from anywhere; type the URL. A visitor sees every edit control dimmed
+with a tooltip explaining why, and the server rejects the write regardless, so
+the dimming is an explanation rather than the lock.
+
+Leaving `SITE_PASSWORD` unset means every request counts as the admin. That is
+the local default: clone, `npm run db:setup`, `npm run dev`, edit. Set it in
+production.
+
+There are no accounts, and the password is stored as plain text in the
+environment rather than hashed — it guards one person's checklist from passing
+strangers, and a hash would only help against someone who can already read the
+deployment's environment.
 
 ### 3. Run
 
