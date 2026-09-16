@@ -25,6 +25,11 @@ export function sitePassword() {
   return process.env.SITE_PASSWORD || null;
 }
 
+// The unset-password warning is worth saying once a process, not once a
+// request: a deployment that lost the variable keeps serving, so the per-request
+// version would bury the rest of the log for as long as the mistake lasts.
+let warnedUnset = false;
+
 export async function isAdmin() {
   const password = sitePassword();
   if (password === null) {
@@ -35,7 +40,10 @@ export async function isAdmin() {
     // editing rows. So it fails closed instead: the checklist stays readable,
     // nobody can write, and the missing variable is loud.
     if (process.env.NODE_ENV === "production") {
-      console.error("SITE_PASSWORD is not set. Nobody can edit until it is.");
+      if (!warnedUnset) {
+        warnedUnset = true;
+        console.error("SITE_PASSWORD is not set. The checklist is readable but nobody can edit it.");
+      }
       return false;
     }
     return true;
