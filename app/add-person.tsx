@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addPerson } from "./actions";
+import { Locked } from "./auth";
 
 export function AddPerson({ onAdded }: { onAdded: () => void }) {
   const [name, setName] = useState("");
@@ -9,35 +10,37 @@ export function AddPerson({ onAdded }: { onAdded: () => void }) {
   const [failed, setFailed] = useState(false);
 
   return (
-    <form
-      className="add-person"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!name.trim()) return;
-        setFailed(false);
-        startTransition(async () => {
-          try {
-            await addPerson(name);
-            setName("");
-            onAdded();
-          } catch {
-            setFailed(true);
-          }
-        });
-      }}
-    >
-      <label htmlFor="new-person">Add a friend</label>
-      <input
-        id="new-person"
-        value={name}
-        placeholder="Name"
-        onChange={(event) => setName(event.target.value)}
-        disabled={pending}
-      />
-      <button type="submit" disabled={pending || !name.trim()}>
-        {pending ? "Adding…" : "Add"}
-      </button>
-      {failed ? <span className="error">Could not add that person.</span> : null}
-    </form>
+    <Locked className="locked-control">
+      <form
+        className="add-person"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!name.trim()) return;
+          setFailed(false);
+          startTransition(async () => {
+            try {
+              await addPerson(name);
+              setName("");
+              onAdded();
+            } catch {
+              setFailed(true);
+            }
+          });
+        }}
+      >
+        <label htmlFor="new-person">Add a friend</label>
+        <input
+          id="new-person"
+          value={name}
+          placeholder="Name"
+          onChange={(event) => setName(event.target.value)}
+          disabled={pending}
+        />
+        <button type="submit" disabled={pending || !name.trim()}>
+          {pending ? "Adding…" : "Add"}
+        </button>
+        {failed ? <span className="error">Could not add that person.</span> : null}
+      </form>
+    </Locked>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { type Entry, type Mountain, type Person, key } from "../checklist";
+import { Locked, useAdmin } from "../auth";
 
 export function PeakCard({
   mountain,
@@ -18,6 +19,7 @@ export function PeakCard({
   onClose: () => void;
   style: React.CSSProperties;
 }) {
+  const { isAdmin } = useAdmin();
   const card = useRef<HTMLDivElement>(null);
 
   // Where to send focus back to on a deliberate close. A ref to the marker
@@ -100,36 +102,45 @@ export function PeakCard({
           const climbed = entry?.climbed ?? false;
           return (
             <li key={person.id}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={climbed}
-                  aria-label={`${person.name} climbed ${mountain.nameEn}`}
-                  onChange={(event) =>
-                    onSave(person.id, mountain.id, {
-                      climbed: event.target.checked,
-                      // Unchecking discards the date, as in the table: the row
-                      // means "not climbed", so a date would contradict it.
-                      dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
-                    })
-                  }
-                />
-                {person.name}
-              </label>
-              {climbed ? (
-                <input
-                  type="date"
-                  className="date"
-                  value={entry?.dateClimbed ?? ""}
-                  aria-label={`Date ${person.name} climbed ${mountain.nameEn}`}
-                  onChange={(event) =>
-                    onSave(person.id, mountain.id, {
-                      climbed: true,
-                      dateClimbed: event.target.value || null,
-                    })
-                  }
-                />
-              ) : null}
+              {/* `readable`: this row names a person and says whether
+                  they climbed the peak, which is the card's whole content.
+                  See app/auth.tsx. */}
+              <Locked className="locked-row" readable>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={climbed}
+                    aria-label={`${person.name} climbed ${mountain.nameEn}`}
+                    aria-disabled={isAdmin ? undefined : true}
+                    tabIndex={isAdmin ? undefined : -1}
+                    onChange={(event) =>
+                      onSave(person.id, mountain.id, {
+                        climbed: event.target.checked,
+                        // Unchecking discards the date, as in the table: the row
+                        // means "not climbed", so a date would contradict it.
+                        dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
+                      })
+                    }
+                  />
+                  {person.name}
+                </label>
+                {climbed ? (
+                  <input
+                    type="date"
+                    className="date"
+                    value={entry?.dateClimbed ?? ""}
+                    aria-label={`Date ${person.name} climbed ${mountain.nameEn}`}
+                    aria-disabled={isAdmin ? undefined : true}
+                    tabIndex={isAdmin ? undefined : -1}
+                    onChange={(event) =>
+                      onSave(person.id, mountain.id, {
+                        climbed: true,
+                        dateClimbed: event.target.value || null,
+                      })
+                    }
+                  />
+                ) : null}
+              </Locked>
             </li>
           );
         })}

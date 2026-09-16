@@ -4,6 +4,7 @@ import { Fragment, type CSSProperties, useMemo } from "react";
 import type { Entry, Mountain, Person } from "./checklist";
 import { key } from "./checklist";
 import { countFullyClimbed } from "@/lib/progress.mjs";
+import { Locked, useAdmin } from "./auth";
 
 // Degrees of tilt a seal can land at, picked by mountain id.
 const TILTS = [-3, -1.5, 0, 1.5, 3];
@@ -23,6 +24,8 @@ export function ChecklistTable({
   collapsed: ReadonlySet<string>;
   onToggleGroup: (prefecture: string) => void;
 }) {
+  const { isAdmin } = useAdmin();
+
   // Keyed by prefecture rather than merging only adjacent rows. prefecture_sort
   // is a per-row column defaulting to 999, so an unnumbered addition can land
   // apart from the rest of its prefecture -- and `collapsed` keys on the name,
@@ -144,34 +147,43 @@ export function ChecklistTable({
                     const climbed = entry?.climbed ?? false;
                     return (
                       <td key={person.id} className="person">
-                        <input
-                          type="checkbox"
-                          checked={climbed}
-                          aria-label={`${person.name} climbed ${m.nameEn}`}
-                          // A seal is pressed by hand, so no two sit quite square.
-                          // Seeding the tilt from the id keeps it stable across
-                          // renders — random would reshuffle on every keystroke.
-                          style={{ "--tilt": `${TILTS[m.id % TILTS.length]}deg` } as CSSProperties}
-                          onChange={(event) =>
-                            onSave(person.id, m.id, {
-                              climbed: event.target.checked,
-                              // Unchecking discards the date: the row means
-                              // "not climbed", so a date would contradict it.
-                              dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
-                            })
-                          }
-                        />
-                        {climbed ? (
+                        {/* `readable`: a seal is the data this page exists to
+                            show, so a visitor's screen reader must still hear
+                            who climbed what. See app/auth.tsx. */}
+                        <Locked className="locked-cell" readable>
                           <input
-                            type="date"
-                            className="date"
-                            value={entry?.dateClimbed ?? ""}
-                            aria-label={`Date ${person.name} climbed ${m.nameEn}`}
+                            type="checkbox"
+                            checked={climbed}
+                            aria-label={`${person.name} climbed ${m.nameEn}`}
+                            aria-disabled={isAdmin ? undefined : true}
+                            tabIndex={isAdmin ? undefined : -1}
+                            // A seal is pressed by hand, so no two sit quite square.
+                            // Seeding the tilt from the id keeps it stable across
+                            // renders — random would reshuffle on every keystroke.
+                            style={{ "--tilt": `${TILTS[m.id % TILTS.length]}deg` } as CSSProperties}
                             onChange={(event) =>
-                              onSave(person.id, m.id, { climbed: true, dateClimbed: event.target.value || null })
+                              onSave(person.id, m.id, {
+                                climbed: event.target.checked,
+                                // Unchecking discards the date: the row means
+                                // "not climbed", so a date would contradict it.
+                                dateClimbed: event.target.checked ? (entry?.dateClimbed ?? null) : null,
+                              })
                             }
                           />
-                        ) : null}
+                          {climbed ? (
+                            <input
+                              type="date"
+                              className="date"
+                              value={entry?.dateClimbed ?? ""}
+                              aria-label={`Date ${person.name} climbed ${m.nameEn}`}
+                              aria-disabled={isAdmin ? undefined : true}
+                              tabIndex={isAdmin ? undefined : -1}
+                              onChange={(event) =>
+                                onSave(person.id, m.id, { climbed: true, dateClimbed: event.target.value || null })
+                              }
+                            />
+                          ) : null}
+                        </Locked>
                       </td>
                     );
                   })}

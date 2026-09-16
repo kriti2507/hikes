@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { query } from "@/lib/db";
-import { sitePassword } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
-// Reachable only behind middleware.ts, which covers server-action POSTs to "/"
-// because they use the page's own path.
+// Reads are public; every write gates itself. There is no route-level gate any
+// more -- proxy.ts is gone -- so requireAdmin() here is the whole boundary.
 
 export async function setAscent(
   personId: number,
@@ -13,6 +13,8 @@ export async function setAscent(
   climbed: boolean,
   dateClimbed: string | null,
 ) {
+  await requireAdmin();
+
   await query(
     `insert into ascents (person_id, mountain_id, climbed, date_climbed)
      values ($1, $2, $3, $4)
@@ -25,6 +27,8 @@ export async function setAscent(
 }
 
 export async function addPerson(name: string) {
+  await requireAdmin();
+
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Name is required");
 
@@ -37,10 +41,6 @@ export async function addPerson(name: string) {
   revalidatePath("/");
 }
 
-function confirmPassword(password: unknown) {
-  if (typeof password !== "string" || password !== sitePassword()) throw new Error("Wrong password");
-}
-
 function confirmPersonId(personId: number) {
   if (!Number.isSafeInteger(personId) || personId < 1) throw new Error("Invalid person");
 }
@@ -49,8 +49,8 @@ function isUniqueViolation(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
 }
 
-export async function updatePerson(personId: number, name: string, password: string) {
-  confirmPassword(password);
+export async function updatePerson(personId: number, name: string) {
+  await requireAdmin();
   confirmPersonId(personId);
 
   if (typeof name !== "string") throw new Error("Name is required");
@@ -75,8 +75,8 @@ export async function updatePerson(personId: number, name: string, password: str
   revalidatePath("/");
 }
 
-export async function deletePerson(personId: number, password: string) {
-  confirmPassword(password);
+export async function deletePerson(personId: number) {
+  await requireAdmin();
   confirmPersonId(personId);
 
   const deleted = await query<{ id: number }>(

@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { deletePerson, updatePerson } from "./actions";
+import { signOut } from "./login/actions";
 import { ThemeToggle } from "./theme-toggle";
+import { Locked, useAdmin } from "./auth";
 import type { Person } from "./checklist";
 
 export function Banner({
@@ -16,6 +18,8 @@ export function Banner({
   total: number;
   onChanged: () => void;
 }) {
+  const { isAdmin } = useAdmin();
+
   return (
     <header className="banner">
       {/* Decorative: the print carries no information the text does not. */}
@@ -46,6 +50,16 @@ export function Banner({
             </li>
           ))}
         </ul>
+
+        {/* Only the admin sees this, so a visitor is not invited to try a door
+            they cannot open. */}
+        {isAdmin ? (
+          <form action={signOut} className="banner-logout">
+            <button type="submit" className="text-button">
+              Log out
+            </button>
+          </form>
+        ) : null}
       </div>
     </header>
   );
@@ -54,21 +68,18 @@ export function Banner({
 function PersonActions({ person, onChanged }: { person: Person; onChanged: () => void }) {
   const [mode, setMode] = useState<"closed" | "edit" | "delete">("closed");
   const [name, setName] = useState(person.name);
-  const [password, setPassword] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function open(nextMode: "edit" | "delete") {
     setMode(nextMode);
     setName(person.name);
-    setPassword("");
     setError(null);
   }
 
   function close() {
     if (pending) return;
     setMode("closed");
-    setPassword("");
     setError(null);
   }
 
@@ -78,10 +89,9 @@ function PersonActions({ person, onChanged }: { person: Person; onChanged: () =>
 
     startTransition(async () => {
       try {
-        if (mode === "edit") await updatePerson(person.id, name, password);
-        else if (mode === "delete") await deletePerson(person.id, password);
+        if (mode === "edit") await updatePerson(person.id, name);
+        else if (mode === "delete") await deletePerson(person.id);
         setMode("closed");
-        setPassword("");
         onChanged();
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Could not save that change.");
@@ -91,14 +101,16 @@ function PersonActions({ person, onChanged }: { person: Person; onChanged: () =>
 
   if (mode === "closed") {
     return (
-      <span className="person-actions">
-        <button type="button" className="text-button" onClick={() => open("edit")}>
-          Edit
-        </button>
-        <button type="button" className="text-button danger-text" onClick={() => open("delete")}>
-          Delete
-        </button>
-      </span>
+      <Locked className="locked-control">
+        <span className="person-actions">
+          <button type="button" className="text-button" onClick={() => open("edit")}>
+            Edit
+          </button>
+          <button type="button" className="text-button danger-text" onClick={() => open("delete")}>
+            Delete
+          </button>
+        </span>
+      </Locked>
     );
   }
 
@@ -118,16 +130,6 @@ function PersonActions({ person, onChanged }: { person: Person; onChanged: () =>
       ) : (
         <p>Delete {person.name} and all of their ascents?</p>
       )}
-      <label htmlFor={`confirm-password-${person.id}`}>Password</label>
-      <input
-        id={`confirm-password-${person.id}`}
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        disabled={pending}
-        autoComplete="current-password"
-        required
-      />
       {error ? <span className="error">{error}</span> : null}
       <span className="person-form-buttons">
         <button

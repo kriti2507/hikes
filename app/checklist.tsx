@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { setAscent } from "./actions";
 import { AddPerson } from "./add-person";
+import { AdminProvider } from "./auth";
 import { Banner } from "./banner";
 import { ChecklistTable } from "./checklist-table";
 import { MapView } from "./map/map-view";
@@ -59,10 +60,12 @@ export function Checklist({
   mountains,
   people,
   ascents,
+  isAdmin,
 }: {
   mountains: Mountain[];
   people: Person[];
   ascents: Ascent[];
+  isAdmin: boolean;
 }) {
   const router = useRouter();
   const [entries, setEntries] = useState<Record<string, Entry>>(() =>
@@ -127,104 +130,106 @@ export function Checklist({
 
   return (
     <main>
-      <Banner
-        people={people}
-        counts={counts}
-        total={mountains.length}
-        onChanged={() => router.refresh()}
-      />
+      <AdminProvider isAdmin={isAdmin}>
+        <Banner
+          people={people}
+          counts={counts}
+          total={mountains.length}
+          onChanged={() => router.refresh()}
+        />
 
-      <div className="sheet">
-        {error ? <p className="error banner-error">{error}</p> : null}
+        <div className="sheet">
+          {error ? <p className="error banner-error">{error}</p> : null}
 
-        {people.length === 0 ? (
-          <p className="empty">No people yet — add someone below to start a column.</p>
-        ) : null}
+          {people.length === 0 ? (
+            <p className="empty">No people yet — add someone below to start a column.</p>
+          ) : null}
 
-        <div className="table-controls">
-          <div className="view-tabs" role="tablist" aria-label="Checklist view">
-            <button
-              type="button"
-              role="tab"
-              id="tab-table"
-              aria-controls="view-panel"
-              aria-selected={view === "table"}
-              className={view === "table" ? "on" : undefined}
-              onClick={() => setView("table")}
-            >
-              <span lang="ja">一覧</span> <span className="view-tab-en">Table</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="tab-map"
-              aria-controls="view-panel"
-              aria-selected={view === "map"}
-              className={view === "map" ? "on" : undefined}
-              onClick={() => setView("map")}
-            >
-              <span lang="ja">地図</span> <span className="view-tab-en">Map</span>
-            </button>
+          <div className="table-controls">
+            <div className="view-tabs" role="tablist" aria-label="Checklist view">
+              <button
+                type="button"
+                role="tab"
+                id="tab-table"
+                aria-controls="view-panel"
+                aria-selected={view === "table"}
+                className={view === "table" ? "on" : undefined}
+                onClick={() => setView("table")}
+              >
+                <span lang="ja">一覧</span> <span className="view-tab-en">Table</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="tab-map"
+                aria-controls="view-panel"
+                aria-selected={view === "map"}
+                className={view === "map" ? "on" : undefined}
+                onClick={() => setView("map")}
+              >
+                <span lang="ja">地図</span> <span className="view-tab-en">Map</span>
+              </button>
+            </div>
+
+            {/* Deliberately a sibling of the tablist, not a child: a tablist
+                should contain only tabs, and a plain button inside one reads to
+                assistive technology as a third, broken tab. Table view only,
+                because folding means nothing on the map. */}
+            {view === "table" && mountains.length > 0 ? (
+              <button
+                type="button"
+                className="fold-all"
+                onClick={(event) => {
+                  // Same reason as the per-group toggles: fold-all can unmount
+                  // whatever had focus, and this button survives to hold it.
+                  event.currentTarget.focus();
+                  setCollapsed((current) =>
+                    // Built here rather than memoised above: it is read only on a
+                    // press, so there is nothing to cache between them. It does
+                    // duplicate one fact ChecklistTable's `groups` also knows --
+                    // that a group is one distinct `prefecture` string -- and the
+                    // two have to keep agreeing, because `collapsed` keys on it.
+                    current.size === 0 ? new Set(mountains.map((m) => m.prefecture)) : new Set(),
+                  );
+                }}
+              >
+                <span lang="ja">{collapsed.size === 0 ? "全閉" : "全開"}</span>{" "}
+                <span className="view-tab-en">{collapsed.size === 0 ? "Fold all" : "Show all"}</span>
+              </button>
+            ) : null}
           </div>
 
-          {/* Deliberately a sibling of the tablist, not a child: a tablist
-              should contain only tabs, and a plain button inside one reads to
-              assistive technology as a third, broken tab. Table view only,
-              because folding means nothing on the map. */}
-          {view === "table" && mountains.length > 0 ? (
-            <button
-              type="button"
-              className="fold-all"
-              onClick={(event) => {
-                // Same reason as the per-group toggles: fold-all can unmount
-                // whatever had focus, and this button survives to hold it.
-                event.currentTarget.focus();
-                setCollapsed((current) =>
-                  // Built here rather than memoised above: it is read only on a
-                  // press, so there is nothing to cache between them. It does
-                  // duplicate one fact ChecklistTable's `groups` also knows --
-                  // that a group is one distinct `prefecture` string -- and the
-                  // two have to keep agreeing, because `collapsed` keys on it.
-                  current.size === 0 ? new Set(mountains.map((m) => m.prefecture)) : new Set(),
-                );
-              }}
-            >
-              <span lang="ja">{collapsed.size === 0 ? "全閉" : "全開"}</span>{" "}
-              <span className="view-tab-en">{collapsed.size === 0 ? "Fold all" : "Show all"}</span>
-            </button>
-          ) : null}
-        </div>
-
-        <div id="view-panel" role="tabpanel" aria-labelledby={view === "table" ? "tab-table" : "tab-map"}>
-          {view === "table" ? (
-            // The scroller only engages under 720px — see .table-scroll. An
-            // overflow container is also a containing block for sticky, so
-            // switching it on at desktop widths would cost the sticky header
-            // for a table that already fits.
-            <div className="table-scroll">
-              <ChecklistTable
+          <div id="view-panel" role="tabpanel" aria-labelledby={view === "table" ? "tab-table" : "tab-map"}>
+            {view === "table" ? (
+              // The scroller only engages under 720px — see .table-scroll. An
+              // overflow container is also a containing block for sticky, so
+              // switching it on at desktop widths would cost the sticky header
+              // for a table that already fits.
+              <div className="table-scroll">
+                <ChecklistTable
+                  mountains={mountains}
+                  people={people}
+                  entries={entries}
+                  onSave={save}
+                  collapsed={collapsed}
+                  onToggleGroup={(prefecture) => setCollapsed((c) => toggled(c, prefecture))}
+                />
+              </div>
+            ) : (
+              <MapView
                 mountains={mountains}
                 people={people}
                 entries={entries}
+                selectedIds={selectedIds}
+                onTogglePerson={(personId) => setExcludedIds((c) => toggled(c, personId))}
                 onSave={save}
-                collapsed={collapsed}
-                onToggleGroup={(prefecture) => setCollapsed((c) => toggled(c, prefecture))}
               />
-            </div>
-          ) : (
-            <MapView
-              mountains={mountains}
-              people={people}
-              entries={entries}
-              selectedIds={selectedIds}
-              onTogglePerson={(personId) => setExcludedIds((c) => toggled(c, personId))}
-              onSave={save}
-            />
-          )}
-        </div>
+            )}
+          </div>
 
-        <AddPerson onAdded={() => router.refresh()} />
-      </div>
+          <AddPerson onAdded={() => router.refresh()} />
+        </div>
+      </AdminProvider>
     </main>
   );
 }
