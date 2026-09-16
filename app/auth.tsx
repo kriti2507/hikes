@@ -75,7 +75,24 @@ export function AdminProvider({ isAdmin, children }: { isAdmin: boolean; childre
 }
 
 // Wraps one edit affordance. The admin gets the children untouched.
-export function Locked({ children, className }: { children: ReactNode; className?: string }) {
+//
+// `readable` is for the two call sites whose control IS the data: a seal in the
+// table and a name in a peak card say who climbed what, and that is the whole
+// reason the page was opened to visitors. `inert` would take them out of the
+// accessibility tree along with their operability, leaving a screen reader a
+// list of mountains and empty columns beside it. Those call sites opt out of
+// `inert` and mark their own controls `aria-disabled` with `tabIndex={-1}`
+// instead, which keeps the state announced while still refusing the keyboard.
+// Pure affordances -- a form, two buttons -- lose nothing to `inert` and keep it.
+export function Locked({
+  children,
+  className,
+  readable,
+}: {
+  children: ReactNode;
+  className?: string;
+  readable?: boolean;
+}) {
   const { isAdmin, show, hide } = useAdmin();
   if (isAdmin) return <>{children}</>;
 
@@ -94,9 +111,11 @@ export function Locked({ children, className }: { children: ReactNode; className
       {/* pointer-events: none on the content hands hover to the wrapper: a
           disabled form control swallows pointer events in Chrome and WebKit, so
           `disabled` alone would leave nothing to hover and no way to say why.
-          `inert` takes the content out of the tab order and the accessibility
-          tree -- React 19 accepts it as a boolean prop. */}
-      <div className="admin-locked-content" inert>
+          It is also what blocks the click under `readable`, where there is no
+          `inert` to do it. `inert` takes the content out of the tab order and
+          the accessibility tree -- React 19 accepts it as a boolean prop, and
+          omits the attribute entirely when it is false. */}
+      <div className="admin-locked-content" inert={!readable}>
         {children}
       </div>
     </div>
