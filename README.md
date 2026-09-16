@@ -43,9 +43,11 @@ Set `SITE_PASSWORD` in `.env.local` and in Vercel's environment variables.
 
 Anyone can read the checklist. To change it — tick a peak, set a date, add or
 rename or delete a person — go to `/login` and enter that password. The page is
-not linked from anywhere; type the URL. A visitor sees every edit control dimmed
-with a tooltip explaining why, and the server rejects the write regardless, so
-the dimming is an explanation rather than the lock.
+not linked from anywhere; type the URL. A visitor sees every edit control still
+in place but inert, explaining itself on hover. Buttons and form fields are
+dimmed; the seals in the table are not, because they are the data the page
+exists to show. Either way the server rejects the write, so what a visitor sees
+is an explanation rather than the lock.
 
 Leaving `SITE_PASSWORD` unset means every request counts as the admin. That is
 the local default: clone, `npm run db:setup`, `npm run dev`, edit. Set it in
