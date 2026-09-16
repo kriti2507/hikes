@@ -47,6 +47,18 @@ export function AdminProvider({ isAdmin, children }: { isAdmin: boolean; childre
 
   return (
     <AdminContext.Provider value={value}>
+      {/* Locked controls are `inert`, so they are absent from the accessibility
+          tree rather than merely disabled -- a screen reader would otherwise
+          find no edit controls and no reason for their absence. Said once here
+          rather than on each Locked: the table wraps one per person per peak,
+          and a few hundred identical announcements would be worse than the
+          silence. */}
+      {isAdmin ? null : (
+        <p className="visually-hidden">
+          You are viewing this checklist as a visitor. Editing controls are shown but inactive; log
+          in at /login to make changes.
+        </p>
+      )}
       {children}
       {/* One node for the whole page. aria-hidden because `inert` has already
           taken the control it describes out of the accessibility tree, so there
@@ -73,6 +85,7 @@ export function Locked({ children, className }: { children: ReactNode; className
       onPointerEnter={(event) => show(event.clientX, event.clientY)}
       onPointerMove={(event) => show(event.clientX, event.clientY)}
       onPointerLeave={hide}
+      onPointerCancel={hide}
     >
       {/* pointer-events: none on the content hands hover to the wrapper: a
           disabled form control swallows pointer events in Chrome and WebKit, so
