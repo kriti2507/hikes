@@ -313,6 +313,11 @@ table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
+  /* What `thead` comes out as, which nothing can measure until paint: 0.5rem of
+     padding either side of a 0.62rem line, plus the rule under it. The
+     prefecture bands pin directly below it, so they read it rather than
+     repeating the number. Retuned per breakpoint, where the padding changes. */
+  --thead-h: 2rem;
 }
 
 thead th {
@@ -342,10 +347,10 @@ tbody tr:hover td {
   background: color-mix(in srgb, var(--yamabuki) 12%, transparent);
 }
 
-/* Prefecture headers rise out of a mist band. */
+/* Prefecture headers rise out of a mist band, pinned directly under thead. */
 tr.group th {
   position: sticky;
-  top: 2rem;
+  top: var(--thead-h);
   z-index: 1;
   /* Only the horizontal padding stays here. The vertical padding moved onto
      .group-toggle so the button's box fills the whole mist band -- the cell's
@@ -946,11 +951,13 @@ code {
      column to buy room for one more checkbox costs more than it gains. So the
      table keeps honest widths and scrolls sideways instead.
 
-     The cost is the one the old note here predicted: an overflow container is a
-     containing block for sticky, so `thead th`'s top stickiness stops working
-     inside it. The mountain column is pinned to the left below to compensate --
-     losing the person's name off the top of a long scroll is survivable, losing
-     which mountain a row is would not be.
+     An overflow container is also a containing block for sticky, and declaring
+     one axis makes the other `auto` too -- so the scroller is the scrollport
+     `thead th` sticks against in *both* directions, and while it was only ever
+     as tall as its own rows there was no vertical scrolling inside it to stick
+     to. The page did all of it and the header rode away with the rows. The
+     .table-pane cap below is what gives the scroller a height of its own, so
+     the header and the prefecture bands pin here the way they do on desktop.
 
      `fixed` matters: with the default `auto`, the declared widths below are only
      suggestions, and the date field's ~110px intrinsic width would drag every
@@ -958,9 +965,69 @@ code {
      sum to less than the table get the surplus shared out proportionally; ones
      that sum to more overflow, which is exactly the scroll we want. */
   .table-scroll {
-    overflow-x: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    /* Sideways overscroll stays in the table -- a swipe that runs off the last
+       person should not trigger the browser's back gesture. Downward is left to
+       chain on purpose: that is how the banner above and "add someone" below
+       stay reachable once the rows have run out. */
     overscroll-behavior-x: contain;
   }
+
+  /* The tab strip and the view it labels, sized as one column: the strip keeps
+     its own height, the scroller takes the rest.
+
+     `max-height` rather than `height`, so a table short enough to fit -- a lone
+     prefecture, an empty database -- keeps its natural height instead of
+     holding a screen of blank paper open above "add someone".
+
+     dvh rather than vh: vh on a phone is measured with the URL bar retracted,
+     so the last rows would sit below the fold until it went. The cost is that
+     the pane's bottom edge shifts as the bar moves, which is the quieter of the
+     two faults.
+
+     `flex: 1 1 auto` on the two growing boxes, never `flex: 1`: that shorthand
+     sets flex-basis to 0, and since a scroll container's automatic minimum size
+     is 0 as well, the column would collapse to the bare tab strip on every
+     table short enough for the cap not to bind. `min-height: 0` is the other
+     half of the pair -- basis auto asks for the full height of the rows, and
+     this is what allows the shrink back under the cap that makes the scroll. */
+  .table-pane {
+    display: flex;
+    flex-direction: column;
+    max-height: 100dvh;
+  }
+
+  /* Against the base rule's `display: flex`, which this leaves alone -- the
+     strip is a flex row inside a flex column. `0 0` because the tabs are the
+     one part of the column that must not give: shrinking them squeezes the
+     labels, and there is nothing to gain by it. */
+  .table-pane .table-controls {
+    flex: 0 0 auto;
+  }
+
+  /* A pass-through: it exists for aria-controls and the tabpanel role, so all
+     it does here is hand its own height on to the scroller. A column like its
+     parent, so the pair of declarations the scroller carries means the same
+     thing in both -- as a row it would happen to work, by stretching the
+     scroller on the cross axis, and `flex: 1 1 auto` there would be about its
+     width instead. */
+  .table-pane .view-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  /* thead is shorter here than the base 2rem: 0.45rem of padding either side of
+     a 0.62rem line, plus the rule under it. The 0.1rem of daylight left by the
+     base value is enough for a sliver of the row beneath to show through
+     between the two pinned bands. */
+  table {
+    --thead-h: 1.9rem;
+  }
+
 
   table {
     table-layout: fixed;
@@ -1069,15 +1136,32 @@ code {
     left: var(--name-w);
   }
 
-  /* Above the cells they shadow; the headers above thead's own 2. */
+  /* Four layers now that the header pins vertically as well, and all four have
+     to be spelled out here: within one z-index the later cell in the document
+     paints over the earlier one, and a prefecture band is followed by its own
+     rows, so on equal footing the pinned name cells of the band's own group
+     would scrub across it as they slid underneath.
+
+     1 pinned name and height cells
+     2 the prefecture band they pass behind
+     3 thead, which both of those pass behind in turn
+     4 the pinned name and height headers, the corner where the two axes meet */
   td.mountain,
   td.elev {
     z-index: 1;
   }
 
+  tr.group th {
+    z-index: 2;
+  }
+
+  thead th {
+    z-index: 3;
+  }
+
   th.mountain,
   th.elev {
-    z-index: 3;
+    z-index: 4;
   }
 
   /* The row tint is painted per cell, so the pinned ones have to mix their own
@@ -1131,6 +1215,12 @@ code {
   tbody td,
   thead th {
     padding: 0.4rem 0.2rem;
+  }
+
+  /* Follows the padding above down: 0.4rem either side of the same line and
+     rule is about 1.8rem. Same arithmetic as the 720px tier. */
+  table {
+    --thead-h: 1.8rem;
   }
 }
 
@@ -1546,6 +1636,7 @@ code {
   .map-filter-summary {
     margin-left: 0;
   }
+
 }
 
 /* The map's own motion -- panning, zooming, the fitBounds tween -- is direct
