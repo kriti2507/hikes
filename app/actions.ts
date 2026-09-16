@@ -75,6 +75,30 @@ export async function updatePerson(personId: number, name: string) {
   revalidatePath("/");
 }
 
+// Whether a person is shown to visitors who are not logged in. The switch is
+// enforced in app/page.tsx's queries, which is the only place it can be: this
+// action just records it.
+//
+// No revalidatePath, unlike addPerson and updatePerson. Those change the shape
+// of the roster and the client has to be told; this one the client already
+// knows, having painted it optimistically before the call -- and a revalidate
+// would re-render a hundred rows for one checkbox.
+export async function setPersonPublic(personId: number, isPublic: boolean) {
+  await requireAdmin();
+  confirmPersonId(personId);
+
+  if (typeof isPublic !== "boolean") throw new Error("Invalid visibility");
+
+  const updated = await query<{ id: number }>(
+    `update people
+        set is_public = $1
+      where id = $2
+      returning id`,
+    [isPublic, personId],
+  );
+  if (updated.length === 0) throw new Error("Person not found");
+}
+
 export async function deletePerson(personId: number) {
   await requireAdmin();
   confirmPersonId(personId);

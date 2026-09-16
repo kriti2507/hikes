@@ -14,6 +14,7 @@ export function ChecklistTable({
   people,
   entries,
   onSave,
+  onSavePublic,
   collapsed,
   onToggleGroup,
 }: {
@@ -21,6 +22,7 @@ export function ChecklistTable({
   people: Person[];
   entries: Record<string, Entry>;
   onSave: (personId: number, mountainId: number, next: Entry) => void;
+  onSavePublic: (personId: number, next: boolean) => void;
   collapsed: ReadonlySet<string>;
   onToggleGroup: (prefecture: string) => void;
 }) {
@@ -58,17 +60,61 @@ export function ChecklistTable({
     entries[key(personId, mountainId)]?.climbed ?? false;
 
   return (
-    <table>
+    // --public-row tells tr.group th how far down to pin: the header grows by a
+    // line when the Public row is in it, and the prefecture bands sit directly
+    // under the header. Declared here rather than measured, for the same reason
+    // --thead-h is in the stylesheet -- there is nothing to measure it against
+    // until paint. See globals.css.
+    <table className={isAdmin ? "has-public-row" : undefined}>
       <thead>
         <tr>
           <th className="num">#</th>
           <th className="mountain">Mountain</th>
           <th className="elev">Height</th>
           <th className="season">Best time</th>
-          <th className="notes">Notes</th>
+          <th className="notes">
+            Notes
+            {/* The word the Public boxes need, parked in the one header cell
+                with a spare line and no width to lose: the notes column is
+                sized by its body text, which is wider than this, so the label
+                costs the table nothing. Per-column it cost ~35px of
+                min-content, which the table does not have -- at six people it
+                already fills the sheet exactly, so the surplus came straight
+                off the right edge as a scrollbar.
+
+                aria-hidden because it is not this column's heading and every
+                box carries its own label. Right-aligned, so it ends where the
+                first box begins; on mobile the notes column collapses to zero
+                and takes the word with it, which is what we want there too. */}
+            {isAdmin ? (
+              <span className="public-caption" aria-hidden="true">
+                Public
+              </span>
+            ) : null}
+          </th>
           {people.map((person) => (
             <th key={person.id} className="person">
               {person.name}
+              {/* Admin only, and not wrapped in Locked like every other edit
+                  affordance on this page. The rest are shown to visitors
+                  deliberately, inert, so the page explains that someone can
+                  edit it. This one's *state* is the private thing: a dimmed
+                  unticked box would tell a visitor that somebody is being kept
+                  from them, which is the fact it exists to keep. */}
+              {isAdmin ? (
+                <label
+                  className="public-toggle"
+                  title={`Show ${person.name} to visitors who are not logged in`}
+                >
+                  <input
+                    type="checkbox"
+                    className="tick"
+                    checked={person.isPublic}
+                    aria-label={`Show ${person.name} on the public page`}
+                    onChange={(event) => onSavePublic(person.id, event.target.checked)}
+                  />
+                </label>
+              ) : null}
             </th>
           ))}
         </tr>

@@ -320,6 +320,23 @@ table {
   --thead-h: 2rem;
 }
 
+/* A second line in every header cell when the admin's Public switch is there.
+   Measured in the browser rather than added up: the switch's own box is 13px
+   and it carries 0.3rem of margin above it, but the header row does not grow by
+   all of that -- part of the margin is taken up inside the line box the name
+   already had. thead comes out 13.48px taller at every breakpoint, the label
+   being shorter than the box, so hiding the word on mobile changes nothing.
+
+   In px, not rem, because what sets this height is a 13px box rather than
+   anything that scales with the text. Rounded down: --thead-h above is
+   deliberately a few px under the real header height so the band's blank top
+   edge tucks out of sight, and erring the same way here keeps logged-in
+   scrolling identical to logged-out. Rounding up instead opens a seam for the
+   rows to show through. */
+table.has-public-row {
+  --public-row: 13.5px;
+}
+
 thead th {
   position: sticky;
   top: 0;
@@ -350,7 +367,7 @@ tbody tr:hover td {
 /* Prefecture headers rise out of a mist band, pinned directly under thead. */
 tr.group th {
   position: sticky;
-  top: var(--thead-h);
+  top: calc(var(--thead-h) + var(--public-row, 0rem));
   z-index: 1;
   /* Only the horizontal padding stays here. The vertical padding moved onto
      .group-toggle so the button's box fills the whole mist band -- the cell's
@@ -504,6 +521,29 @@ td.person,
 th.person {
   width: 6.5rem;
   text-align: center;
+}
+
+/* The Public switch, under the name in the column header and admin-only -- see
+   checklist-table.tsx for why it is not shown to visitors at all, and for why
+   the word that names it lives over in the notes header rather than in here.
+   A flex row, so the box needs no vertical-align of its own: there is nothing
+   left in the cell for it to sit on a baseline with. */
+.public-toggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.3rem;
+  cursor: pointer;
+}
+
+/* The word, once, at the right-hand end of the notes header -- level with the
+   row of boxes it introduces and a size below the heading it shares a cell
+   with, so it does not read as part of "Notes". */
+.public-caption {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.5rem;
+  text-align: right;
+  color: var(--sumi-faint);
 }
 
 /* ---------- hanko seal checkbox ---------- */
@@ -1507,9 +1547,20 @@ code {
   border-color: var(--sumi-faint);
 }
 
-/* Restyled, not replaced -- same reason as the seal in the table: the native
-   control keeps its keyboard behaviour, its focus ring and its announced
-   state. Square and 2px-cornered, so it cannot be mistaken for a radio. */
+/* ---------- tick box ---------- */
+
+/* The plain checkbox of this page, shared by the map's person filter and the
+   Public switch in the table header. Deliberately not the hanko seal the table
+   cells use: a seal means "climbed", and the same mark in a header or beside a
+   filter would read as a tick-all for the column under it.
+
+   Restyled, not replaced -- same reason as the seal: the native control keeps
+   its keyboard behaviour, its focus ring and its announced state. Square and
+   2px-cornered, so it cannot be mistaken for a radio.
+
+   Only `vertical-align` is left to the call sites, because only they know what
+   size of text the box has to sit against. */
+.tick,
 .person-check input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
@@ -1523,19 +1574,17 @@ code {
   position: relative;
   width: 13px;
   height: 13px;
-  margin: 0 6px 0 0;
-  /* Centred on the letters, not hung off their baseline: a Georgia capital at
-     13px stands about 9.3px, so a 13px box overhangs it by 1.85px at each end
-     and that is how far below the line the box belongs. (Hung from the baseline
-     instead, all 3.7px of the difference lands underneath and the box visibly
-     sags away from the name it belongs to.) */
-  vertical-align: -2px;
+  margin: 0;
   border: 1px solid var(--sumi-faint);
   border-radius: 2px;
   background: transparent;
   cursor: pointer;
 }
 
+/* --seal is the person's own pigment, set on .person-check by the cycle above
+   and on th.person by the one in the table. Beni is the fallback for a box with
+   no person behind it. */
+.tick:checked,
 .person-check input[type="checkbox"]:checked {
   border-color: var(--seal, var(--beni));
   background: var(--seal, var(--beni));
@@ -1546,6 +1595,7 @@ code {
    back to, at whatever weight that font drew it. The polygon traces the two
    strokes of a tick -- down to the corner at 38% 100%, up to the tip at 100%
    22% -- and returns along their far edge. */
+.tick:checked::after,
 .person-check input[type="checkbox"]:checked::after {
   content: "";
   /* 1px in from the padding box on all four sides, so the 9px tick is centred
@@ -1556,9 +1606,23 @@ code {
   clip-path: polygon(13% 48%, 0 62%, 38% 100%, 100% 22%, 86% 8%, 36% 70%);
 }
 
+.tick:focus-visible,
 .person-check input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--bero-ai);
   outline-offset: 2px;
+}
+
+/* The filter's own two: the gap to the name, and the height it sits at. Both
+   belong to this call site -- the pill lays its box and name out inline so that
+   the pill's baseline is the name's, which leaves the box to be placed by hand.
+   Centred on the letters rather than hung off their baseline: a Georgia capital
+   at 13px stands about 9.3px, so a 13px box overhangs it by 1.85px at each end
+   and that is how far below the line it belongs. (Hung from the baseline
+   instead, all 3.7px of the difference lands underneath and the box visibly
+   sags away from the name beside it.) */
+.person-check input[type="checkbox"] {
+  margin-right: 6px;
+  vertical-align: -2px;
 }
 
 /* The frame is the containing block for the zoom controls and for every peak

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { setAscent } from "./actions";
+import { setAscent, setPersonPublic } from "./actions";
 import { AddPerson } from "./add-person";
 import { AdminProvider } from "./auth";
 import { Banner } from "./banner";
@@ -32,7 +32,12 @@ export type Mountain = {
   longitude: number | null;
 };
 
-export type Person = { id: number; name: string };
+// isPublic is the switch in the table header: false hides this person from
+// anyone who is not logged in. It is honoured in app/page.tsx's queries, so a
+// visitor never receives a private person at all -- which means every Person
+// that reaches a visitor's browser has it true, and only the admin ever sees
+// one that does not.
+export type Person = { id: number; name: string; isPublic: boolean };
 
 export type Ascent = {
   personId: number;
@@ -104,6 +109,17 @@ export function Checklist({
   // reconciled on every render.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
 
+  // Overrides, not a copy of the roster -- the same reason excludedIds stores
+  // exclusions: a person this map has never heard of falls back to the
+  // isPublic the server sent, so someone added or renamed by a
+  // router.refresh() needs no reconciling, and an id left behind by a delete
+  // is inert rather than wrong.
+  const [publicOverrides, setPublicOverrides] = useState<Map<number, boolean>>(() => new Map());
+  const roster = useMemo(
+    () => people.map((p) => ({ ...p, isPublic: publicOverrides.get(p.id) ?? p.isPublic })),
+    [people, publicOverrides],
+  );
+
   const counts = useMemo(() => {
     const out = new Map<number, number>(people.map((p) => [p.id, 0]));
     for (const person of people) {
@@ -128,11 +144,36 @@ export function Checklist({
     });
   }
 
+  // Same optimistic shape as save(), and it has to be: a checkbox that waits
+  // for a round trip before it moves reads as a broken checkbox.
+  //
+  // Rollback restores this person's previous *override* -- which may be no
+  // override at all -- rather than deleting the key. The action deliberately
+  // does not revalidate, so `people` still carries whatever isPublic the page
+  // was rendered with; falling back to that after a second toggle failed would
+  // undo a first one that succeeded. Only this person's key is touched, so a
+  // failure here cannot disturb a toggle of someone else in flight.
+  function savePublic(personId: number, next: boolean) {
+    const previous = publicOverrides.get(personId);
+    setPublicOverrides((current) => new Map(current).set(personId, next));
+    setError(null);
+
+    setPersonPublic(personId, next).catch(() => {
+      setPublicOverrides((current) => {
+        const rolled = new Map(current);
+        if (previous === undefined) rolled.delete(personId);
+        else rolled.set(personId, previous);
+        return rolled;
+      });
+      setError("Could not change who that person is shown to. Check your connection and try again.");
+    });
+  }
+
   return (
     <main>
       <AdminProvider isAdmin={isAdmin}>
         <Banner
-          people={people}
+          people={roster}
           counts={counts}
           total={mountains.length}
           onChanged={() => router.refresh()}
@@ -141,8 +182,17 @@ export function Checklist({
         <div className="sheet">
           {error ? <p className="error banner-error">{error}</p> : null}
 
-          {people.length === 0 ? (
-            <p className="empty">No people yet — add someone below to start a column.</p>
+          {/* An empty roster means two different things. The admin is looking at
+              a database with nobody in it and has the form below to fix that. A
+              visitor may be -- or may be looking at a roster where everyone is
+              private, which is not theirs to know either way, so the sentence
+              says nothing about whether anyone exists. */}
+          {roster.length === 0 ? (
+            <p className="empty">
+              {isAdmin
+                ? "No people yet — add someone below to start a column."
+                : "Nothing is being shown publicly yet."}
+            </p>
           ) : null}
 
           {/* Wraps the tab strip and the view it labels so that under 720px the
@@ -226,9 +276,10 @@ export function Checklist({
                 <div className="table-scroll">
                   <ChecklistTable
                     mountains={mountains}
-                    people={people}
+                    people={roster}
                     entries={entries}
                     onSave={save}
+                    onSavePublic={savePublic}
                     collapsed={collapsed}
                     onToggleGroup={(prefecture) => setCollapsed((c) => toggled(c, prefecture))}
                   />
@@ -236,7 +287,7 @@ export function Checklist({
               ) : (
                 <MapView
                   mountains={mountains}
-                  people={people}
+                  people={roster}
                   entries={entries}
                   selectedIds={selectedIds}
                   onTogglePerson={(personId) => setExcludedIds((c) => toggled(c, personId))}
